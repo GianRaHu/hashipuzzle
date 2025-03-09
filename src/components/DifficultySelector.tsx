@@ -19,11 +19,13 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => 
   ] as const;
 
   const handleSelect = (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => {
+    console.log(`Selected difficulty: ${difficulty}`);
     if (onSelect) {
       onSelect(difficulty);
     } else {
-      // If no onSelect provided, navigate directly
-      navigate(`/game/${difficulty}`);
+      // Force regenerate a new puzzle by adding a timestamp to the URL
+      const timestamp = Date.now();
+      navigate(`/game/${difficulty}?t=${timestamp}`);
     }
   };
 

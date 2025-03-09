@@ -26,7 +26,7 @@ const Index: React.FC = () => {
         </div>
         
         <div className="md:col-span-3 space-y-4">
-          <div className="p-4 rounded-lg">
+          <div className="p-4 rounded-lg bg-secondary/30">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-medium">Daily Challenge</h2>
               <Calendar className="h-5 w-5 text-primary" />
@@ -35,7 +35,7 @@ const Index: React.FC = () => {
             <p className="text-sm text-foreground/70 mb-3">
               {dailyCompleted
                 ? "You've completed today's challenge!"
-                : "Play today's unique puzzle."}
+                : "Play today's unique puzzle or browse past challenges."}
             </p>
             
             <Button 
@@ -43,7 +43,7 @@ const Index: React.FC = () => {
               className="w-full"
               variant={dailyCompleted ? "outline" : "default"}
             >
-              {dailyCompleted ? "Play Again" : "Play Daily Challenge"}
+              {dailyCompleted ? "View Calendar" : "Play Daily Challenge"}
             </Button>
           </div>
           

@@ -1,4 +1,3 @@
-
 import { Island, Puzzle, Bridge, generateId, canConnect } from './gameLogic';
 
 // Difficulty settings
@@ -168,10 +167,9 @@ export const generatePuzzle = (
 };
 
 // Generate a daily challenge
-export const generateDailyChallenge = (): Puzzle => {
+export const generateDailyChallenge = (date: Date = new Date()): Puzzle => {
   // Use the date as seed to generate a consistent puzzle for the day
-  const today = new Date();
-  const dateString = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  const dateString = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   
   // Simple deterministic seed from date string
   let seed = 0;

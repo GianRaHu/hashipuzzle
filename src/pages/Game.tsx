@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, getStats } from '../utils/storage';
@@ -14,6 +13,7 @@ const Game: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { difficulty } = useParams<{ difficulty: string }>();
+  const location = useLocation();
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [timer, setTimer] = useState<number>(0);
@@ -28,7 +28,7 @@ const Game: React.FC = () => {
     ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
     : 'easy';
   
-  // Generate a new puzzle when component mounts or difficulty changes
+  // Generate a new puzzle when component mounts or difficulty changes or URL timestamp changes
   useEffect(() => {
     if (validDifficulty) {
       console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
@@ -39,7 +39,7 @@ const Game: React.FC = () => {
       setGameCompleted(false);
       console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
     }
-  }, [validDifficulty]);
+  }, [validDifficulty, location.search]);
   
   // Update timer
   useEffect(() => {

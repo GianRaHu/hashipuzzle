@@ -8,6 +8,17 @@ import { generateDailyChallenge } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, formatTime, isDailyCompleted, setDailyCompleted } from '../utils/storage';
 import Board from '../components/Board';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from '@/components/ui/popover';
+import { 
+  Calendar as CalendarComponent,
+  CalendarProps 
+} from '@/components/ui/calendar';
+import { addDays, format, subDays } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const DailyChallenge: React.FC = () => {
   const navigate = useNavigate();
@@ -16,14 +27,21 @@ const DailyChallenge: React.FC = () => {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [timer, setTimer] = useState<number>(0);
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
-  // Generate the daily challenge when component mounts
+  // Calculate date range for calendar
+  const today = new Date();
+  const pastDaysLimit = 7;
+  const minSelectableDate = subDays(today, pastDaysLimit);
+  
+  // Generate the daily challenge when component mounts or selected date changes
   useEffect(() => {
-    console.log("Generating daily challenge");
-    const dailyPuzzle = generateDailyChallenge();
+    console.log(`Generating daily challenge for: ${format(selectedDate, 'yyyy-MM-dd')}`);
+    const dailyPuzzle = generateDailyChallenge(selectedDate);
     setPuzzle(dailyPuzzle);
+    setGameCompleted(false);
     console.log(`Generated daily puzzle with seed: ${dailyPuzzle.seed}`);
-  }, []);
+  }, [selectedDate]);
   
   // Update timer
   useEffect(() => {
@@ -45,21 +63,31 @@ const DailyChallenge: React.FC = () => {
       setGameCompleted(true);
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
-      setDailyCompleted();
+      
+      // Only update daily completion for today's challenge
+      if (format(selectedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+        setDailyCompleted();
+      }
       
       toast({
         title: "Daily Challenge Completed!",
-        description: `You completed today's challenge in ${formatTime(updatedPuzzle.endTime! - updatedPuzzle.startTime!)}`,
+        description: `You completed the challenge in ${formatTime(updatedPuzzle.endTime! - updatedPuzzle.startTime!)}`,
       });
     }
   };
   
   // Restart the daily puzzle
   const restartPuzzle = () => {
-    console.log("Restarting daily challenge");
-    const dailyPuzzle = generateDailyChallenge();
+    console.log(`Restarting daily challenge for: ${format(selectedDate, 'yyyy-MM-dd')}`);
+    const dailyPuzzle = generateDailyChallenge(selectedDate);
     setPuzzle(dailyPuzzle);
     setGameCompleted(false);
+  };
+
+  // Custom day renderer for the calendar
+  const dayRenderer: CalendarProps["modifiers"] = {
+    selected: (date) => format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd'),
+    today: (date) => format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'),
   };
   
   if (!puzzle) {
@@ -85,8 +113,29 @@ const DailyChallenge: React.FC = () => {
         
         <div className="flex flex-col items-center">
           <div className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4 text-primary" />
-            <h1 className="text-lg font-medium">Daily Challenge</h1>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="h-8 border-dashed flex items-center gap-1"
+                >
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span>{format(selectedDate, 'MMM dd, yyyy')}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <CalendarComponent 
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  disabled={(date) => {
+                    return date > today || date < minSelectableDate;
+                  }}
+                  modifiers={dayRenderer}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex items-center text-sm text-foreground/70">
             <Clock className="h-3 w-3 mr-1" />
@@ -109,7 +158,7 @@ const DailyChallenge: React.FC = () => {
       
       {gameCompleted && (
         <div className="mt-8 text-center bg-primary/10 p-4 rounded-lg animate-scale-in">
-          <h2 className="text-xl font-medium mb-2">Daily Challenge Completed!</h2>
+          <h2 className="text-xl font-medium mb-2">Challenge Completed!</h2>
           <p className="mb-4">Time: {formatTime(puzzle.endTime! - puzzle.startTime!)}</p>
           
           <div className="flex justify-center space-x-3">
