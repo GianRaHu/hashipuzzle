@@ -18,6 +18,7 @@ interface BoardProps {
 
 const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [selectedIsland, setSelectedIsland] = useState<IslandType | null>(null);
+  const [dragStartIsland, setDragStartIsland] = useState<IslandType | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   
   // Simplified island click handler for better performance
@@ -36,6 +37,22 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       setSelectedIsland(island);
     }
   };
+
+  // Handle drag start on island
+  const handleDragStart = (island: IslandType) => {
+    setDragStartIsland(island);
+  };
+
+  // Handle drag end on island
+  const handleDragEnd = (endIsland: IslandType) => {
+    if (dragStartIsland && dragStartIsland.id !== endIsland.id) {
+      if (canConnect(dragStartIsland, endIsland, puzzle.islands, puzzle.bridges)) {
+        const updatedPuzzle = toggleBridge(dragStartIsland, endIsland, puzzle);
+        onUpdate(updatedPuzzle);
+      }
+    }
+    setDragStartIsland(null);
+  };
   
   // Check if puzzle is solved
   useEffect(() => {
@@ -53,16 +70,19 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     if (!boardRef.current) return;
     
     const board = boardRef.current;
-    const preventTouch = (e: TouchEvent) => e.preventDefault();
+    const preventTouch = (e: TouchEvent) => {
+      // Only prevent default for drag gestures, not taps
+      if (dragStartIsland) {
+        e.preventDefault();
+      }
+    };
     
     board.addEventListener('touchmove', preventTouch, { passive: false });
-    board.addEventListener('touchstart', preventTouch, { passive: false });
     
     return () => {
       board.removeEventListener('touchmove', preventTouch);
-      board.removeEventListener('touchstart', preventTouch);
     };
-  }, []);
+  }, [dragStartIsland]);
 
   return (
     <div 
@@ -100,8 +120,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         <Island 
           key={island.id}
           island={island}
-          isSelected={selectedIsland?.id === island.id}
+          isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id}
           onClick={() => handleIslandClick(island)}
+          onDragStart={() => handleDragStart(island)}
+          onDragEnd={() => handleDragEnd(island)}
           gridSize={puzzle.size}
         />
       ))}

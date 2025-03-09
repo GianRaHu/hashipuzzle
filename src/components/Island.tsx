@@ -1,15 +1,27 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
 interface IslandProps {
   island: IslandType;
   isSelected: boolean;
   onClick: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
   gridSize: number;
 }
 
-const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }) => {
+const Island: React.FC<IslandProps> = ({ 
+  island, 
+  isSelected, 
+  onClick, 
+  onDragStart, 
+  onDragEnd, 
+  gridSize 
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const touchTimerRef = useRef<number | null>(null);
+  
   // Calculate the size and position
   const cellSize = 100 / gridSize;
   const xPos = island.col * cellSize + cellSize / 2;
@@ -21,7 +33,7 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
   
   // Determine visual state
   let stateClass = '';
-  if (isSelected) {
+  if (isSelected || isDragging) {
     stateClass = 'ring-2 ring-gameAccent ring-offset-2 ring-offset-background bg-gameAccent text-white';
   } else if (actualConnections === connectionsNeeded) {
     stateClass = 'bg-primary/20 text-primary font-bold';
@@ -29,11 +41,60 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
     stateClass = 'bg-secondary/80';
   }
 
-  // Handle all interactions to prevent delays
-  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
+  // Handle touch start
+  const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    onClick();
+    
+    // Start a timer to differentiate between tap and drag
+    touchTimerRef.current = window.setTimeout(() => {
+      setIsDragging(true);
+      onDragStart();
+      touchTimerRef.current = null;
+    }, 150); // Short delay to detect intention
+  };
+
+  // Handle touch move
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // If timer still active, clear it and start dragging
+    if (touchTimerRef.current !== null) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+      setIsDragging(true);
+      onDragStart();
+    }
+  };
+
+  // Handle touch end
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    // If timer is still active, it was a tap (not a drag)
+    if (touchTimerRef.current !== null) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+      onClick();
+    } else if (isDragging) {
+      // It was a drag
+      setIsDragging(false);
+      onDragEnd();
+    }
+  };
+
+  // Handle mouse events (for desktop)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    onDragStart();
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isDragging) {
+      setIsDragging(false);
+      onDragEnd();
+    } else {
+      onClick();
+    }
   };
 
   return (
@@ -53,8 +114,11 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
         fontSize: '1.2rem',
         fontWeight: 600
       }}
-      onClick={handleInteraction}
-      onTouchStart={handleInteraction}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       aria-label={`Island with value ${island.value}`}
     >
       {island.value}
