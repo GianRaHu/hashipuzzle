@@ -39,15 +39,15 @@ const GameStats: React.FC<GameStatsProps> = ({ stats }) => {
         <h3 className="text-sm font-medium mb-3">Best Times</h3>
         <div className="space-y-2">
           {Object.entries(stats.bestTime)
-            .filter(([_, time]) => time > 0)
+            .filter(([_, time]) => time && time > 0)
             .map(([difficulty, time]) => (
               <div key={difficulty} className="flex justify-between items-center">
                 <span className="capitalize">{difficulty}</span>
-                <span className="font-mono">{formatTime(time)}</span>
+                <span className="font-mono">{formatTime(time as number)}</span>
               </div>
             ))}
           
-          {Object.values(stats.bestTime).every(time => time === 0) && (
+          {Object.values(stats.bestTime).every(time => !time || time === 0) && (
             <p className="text-sm text-foreground/70 text-center py-2">
               No records yet. Play some games!
             </p>

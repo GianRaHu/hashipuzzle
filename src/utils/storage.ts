@@ -1,4 +1,20 @@
+
 import { Puzzle } from './gameLogic';
+
+// Define the GameStats type
+export interface GameStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  dailyStreak: number;
+  bestTime: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    expert?: number;
+    master?: number;
+    [key: string]: number | undefined;
+  };
+}
 
 // Save puzzle to local storage
 export const savePuzzle = (puzzle: Puzzle): void => {
@@ -12,15 +28,38 @@ export const getSavedPuzzle = (id: string): Puzzle | null => {
 };
 
 // Get game statistics from local storage
-export const getStats = () => {
+export const getStats = (): GameStats => {
   const stats = localStorage.getItem('hashi_stats');
-  return stats ? JSON.parse(stats) : { gamesPlayed: 0, dailyStreak: 0 };
+  return stats ? JSON.parse(stats) : { 
+    gamesPlayed: 0, 
+    gamesWon: 0, 
+    dailyStreak: 0,
+    bestTime: {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      expert: 0,
+      master: 0
+    }
+  };
 };
 
 // Update game statistics
 export const updateStats = (puzzle: Puzzle) => {
   const stats = getStats();
   stats.gamesPlayed += 1;
+  
+  // If puzzle is solved, increment wins and update best time
+  if (puzzle.solved && puzzle.endTime && puzzle.startTime) {
+    stats.gamesWon = (stats.gamesWon || 0) + 1;
+    const solveTime = puzzle.endTime - puzzle.startTime;
+    
+    // Update best time if this solve is faster or if there's no previous best time
+    if (puzzle.difficulty && (!stats.bestTime[puzzle.difficulty] || solveTime < stats.bestTime[puzzle.difficulty]!)) {
+      stats.bestTime[puzzle.difficulty] = solveTime;
+    }
+  }
+  
   localStorage.setItem('hashi_stats', JSON.stringify(stats));
 };
 
