@@ -25,7 +25,11 @@ const GameCompletedModal: React.FC<GameCompletedModalProps> = ({
           <Button onClick={resetPuzzle} variant="outline">
             New Puzzle
           </Button>
-          <Button onClick={() => navigate('/')} variant="default">
+          <Button 
+            onClick={() => navigate('/')} 
+            variant="default"
+            className="bg-gameAccent hover:bg-gameAccent/90"
+          >
             Back to Home
           </Button>
         </div>

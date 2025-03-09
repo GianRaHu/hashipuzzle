@@ -53,6 +53,8 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Custom game colors
+				gameAccent: '#E83015',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

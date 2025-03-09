@@ -16,7 +16,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   // Common bridge styles
   const bridgeStyle: React.CSSProperties = {
     position: 'absolute',
-    backgroundColor: 'hsl(var(--primary))',
+    backgroundColor: '#E83015', // Use the accent color directly
     transition: 'all 0.3s ease',
     zIndex: 5 // Lower than islands (10) to allow island clicks
   };
@@ -53,13 +53,13 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     return (
       <>
         <div 
-          className={`hashi-bridge ${animate ? 'animate-bridge-draw' : ''}`} 
+          className={`bg-gameAccent rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
           style={firstBridgeStyle}
           aria-hidden="true"
         />
         {bridge.count === 2 && (
           <div 
-            className={`hashi-bridge ${animate ? 'animate-bridge-draw' : ''}`} 
+            className={`bg-gameAccent rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
             style={secondBridgeStyle}
             aria-hidden="true"
           />
@@ -96,13 +96,13 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     return (
       <>
         <div 
-          className={`hashi-bridge ${animate ? 'animate-bridge-draw' : ''}`} 
+          className={`bg-gameAccent rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
           style={firstBridgeStyle}
           aria-hidden="true"
         />
         {bridge.count === 2 && (
           <div 
-            className={`hashi-bridge ${animate ? 'animate-bridge-draw' : ''}`} 
+            className={`bg-gameAccent rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
             style={secondBridgeStyle}
             aria-hidden="true"
           />

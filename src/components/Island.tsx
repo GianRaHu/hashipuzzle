@@ -22,7 +22,7 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
   // Determine visual state
   let stateClass = '';
   if (isSelected) {
-    stateClass = 'hashi-island-selected';
+    stateClass = 'ring-2 ring-gameAccent ring-offset-2 ring-offset-background bg-gameAccent text-white';
   } else if (actualConnections === connectionsNeeded) {
     stateClass = 'bg-primary/20 text-primary font-bold';
   } else if (actualConnections > 0) {
@@ -39,7 +39,7 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
   return (
     <button
       type="button"
-      className={`hashi-island ${stateClass} ${
+      className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${stateClass} ${
         actualConnections > connectionsNeeded ? 'bg-destructive/20 text-destructive' : ''
       }`}
       style={{
