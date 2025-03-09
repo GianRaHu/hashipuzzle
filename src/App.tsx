@@ -19,14 +19,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/game/:difficulty" element={<Game />} />
-          <Route path="/daily" element={<DailyChallenge />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="flex flex-col min-h-[100dvh] overflow-hidden">
+          <main className="flex-1 overflow-auto pb-20 md:pb-0 md:pt-16">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/game/:difficulty" element={<Game />} />
+              <Route path="/daily" element={<DailyChallenge />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Navbar />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

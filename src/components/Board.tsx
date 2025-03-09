@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
   Island as IslandType, 
@@ -18,8 +18,9 @@ interface BoardProps {
 
 const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [selectedIsland, setSelectedIsland] = useState<IslandType | null>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
   
-  // Handle island click
+  // Handle island click with debounce for mobile
   const handleIslandClick = (island: IslandType) => {
     console.log('Island clicked:', island.id);
     
@@ -54,18 +55,36 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   }, [puzzle, onUpdate]);
 
-  // Add handlers to prevent default touch behaviors that might interfere
-  const preventDefaultTouchBehavior = (e: React.TouchEvent) => {
-    e.preventDefault();
-  };
+  // Mobile touch optimization
+  useEffect(() => {
+    if (!boardRef.current) return;
+    
+    // Disable zoom and scrolling within the board
+    const board = boardRef.current;
+    
+    const preventTouchDefault = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+    
+    board.addEventListener('touchmove', preventTouchDefault, { passive: false });
+    board.addEventListener('touchstart', preventTouchDefault, { passive: false });
+    
+    return () => {
+      board.removeEventListener('touchmove', preventTouchDefault);
+      board.removeEventListener('touchstart', preventTouchDefault);
+    };
+  }, [boardRef.current]);
 
   return (
     <div 
+      ref={boardRef}
       className="relative w-full aspect-square max-w-lg mx-auto border border-border/30 rounded-lg glass-panel overflow-hidden"
       aria-label="Hashi puzzle board"
-      style={{ touchAction: "none" }} // Disable browser touch actions completely
-      onTouchMove={preventDefaultTouchBehavior}
-      onTouchStart={preventDefaultTouchBehavior}
+      style={{ 
+        touchAction: "none", // Disable browser touch actions completely
+        WebkitUserSelect: "none", // Prevent text selection
+        userSelect: "none" // Prevent text selection
+      }}
     >
       {/* Grid lines */}
       <div className="absolute inset-0 grid" style={{ 

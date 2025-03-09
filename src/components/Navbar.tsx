@@ -12,7 +12,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto bg-background/90 backdrop-blur-lg border-t md:border-b border-border/50 z-50 animate-fade-in">
+    <div className="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto bg-background/90 backdrop-blur-lg border-t md:border-b border-border/50 z-50 animate-fade-in touch-callout-none mobile-safe-area">
       <div className="container flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
         <div className="flex items-center">
           <h1 className="text-lg font-medium md:mr-8 hidden md:block">Lovable Hashi</h1>
@@ -26,7 +26,7 @@ const Navbar: React.FC = () => {
             }`}
             aria-label="Home"
           >
-            <Home className="h-5 w-5 md:mr-2" />
+            <Home className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
             <span className="text-xs mt-1 md:text-sm md:mt-0">Home</span>
           </Link>
           
@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
             }`}
             aria-label="Daily Challenge"
           >
-            <Calendar className="h-5 w-5 md:mr-2" />
+            <Calendar className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
             <span className="text-xs mt-1 md:text-sm md:mt-0">Daily</span>
           </Link>
           
@@ -48,7 +48,7 @@ const Navbar: React.FC = () => {
             }`}
             aria-label="Statistics"
           >
-            <BarChart3 className="h-5 w-5 md:mr-2" />
+            <BarChart3 className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
             <span className="text-xs mt-1 md:text-sm md:mt-0">Stats</span>
           </Link>
         </div>

@@ -30,11 +30,20 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
     stateClass = 'bg-secondary/80';
   }
 
-  // Handle touch and click
+  // Optimize touch interaction with passive listeners
   const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault(); // Prevent default behavior
-    e.stopPropagation(); // Stop event bubbling
-    onClick();
+    // On mobile, we want to handle events conservatively to avoid performance issues
+    if (e.type === 'touchstart') {
+      e.preventDefault(); // Prevent any browser-specific behaviors
+      e.stopPropagation(); // Stop bubbling to parent elements
+      
+      // Add small delay to ensure we don't have double-triggers
+      setTimeout(() => {
+        onClick();
+      }, 10);
+    } else {
+      onClick();
+    }
   };
 
   return (
@@ -48,9 +57,11 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
-        zIndex: 10, // Ensure islands are above bridges and can be clicked
-        minWidth: '2.5rem', // Ensure minimum touch target size
-        minHeight: '2.5rem' // Ensure minimum touch target size
+        zIndex: 10, // Ensure islands are above bridges
+        minWidth: '2.8rem', // Increased touch target size
+        minHeight: '2.8rem', // Increased touch target size
+        fontSize: '1.2rem', // Larger text for better visibility on mobile
+        fontWeight: 600 // Bold numbers for better readability
       }}
       onClick={handleInteraction}
       onTouchStart={handleInteraction}
