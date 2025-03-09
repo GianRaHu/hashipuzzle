@@ -24,14 +24,14 @@ const Index: React.FC = () => {
       
       <div className="grid md:grid-cols-7 gap-4 mb-8">
         <div className="md:col-span-4">
-          <div className="p-4 rounded-lg h-full flex flex-col border border-border/30">
+          <div className="p-4 rounded-lg h-full flex flex-col">
             <h2 className="text-xl font-medium mb-6">Play a New Game</h2>
             <DifficultySelector onSelect={handleDifficultySelect} />
           </div>
         </div>
         
         <div className="md:col-span-3 space-y-4">
-          <div className="p-4 rounded-lg border border-border/30">
+          <div className="p-4 rounded-lg">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-medium">Daily Challenge</h2>
               <Calendar className="h-5 w-5 text-primary" />
@@ -52,7 +52,7 @@ const Index: React.FC = () => {
             </Button>
           </div>
           
-          <div className="p-4 rounded-lg border border-border/30">
+          <div className="p-4 rounded-lg">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-medium">Your Stats</h2>
               <Trophy className="h-5 w-5 text-primary" />

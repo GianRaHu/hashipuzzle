@@ -9,7 +9,145 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      completed_puzzles: {
+        Row: {
+          completed_at: string
+          completion_time: number
+          difficulty: string
+          id: string
+          puzzle_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          completion_time: number
+          difficulty: string
+          id?: string
+          puzzle_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          completion_time?: number
+          difficulty?: string
+          id?: string
+          puzzle_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_puzzles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_challenges: {
+        Row: {
+          created_at: string
+          id: string
+          puzzle_data: Json
+          puzzle_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          puzzle_data: Json
+          puzzle_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          puzzle_data?: Json
+          puzzle_date?: string
+        }
+        Relationships: []
+      }
+      game_stats: {
+        Row: {
+          best_time_daily: number | null
+          best_time_easy: number | null
+          best_time_expert: number | null
+          best_time_hard: number | null
+          best_time_master: number | null
+          best_time_medium: number | null
+          created_at: string
+          daily_streak: number | null
+          games_played: number | null
+          games_won: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          best_time_daily?: number | null
+          best_time_easy?: number | null
+          best_time_expert?: number | null
+          best_time_hard?: number | null
+          best_time_master?: number | null
+          best_time_medium?: number | null
+          created_at?: string
+          daily_streak?: number | null
+          games_played?: number | null
+          games_won?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          best_time_daily?: number | null
+          best_time_easy?: number | null
+          best_time_expert?: number | null
+          best_time_hard?: number | null
+          best_time_master?: number | null
+          best_time_medium?: number | null
+          created_at?: string
+          daily_streak?: number | null
+          games_played?: number | null
+          games_won?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

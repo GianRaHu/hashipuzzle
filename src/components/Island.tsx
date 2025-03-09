@@ -62,4 +62,4 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
   );
 };
 
-export default Island;
+export default React.memo(Island);
