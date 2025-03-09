@@ -30,6 +30,13 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
     stateClass = 'bg-secondary/80';
   }
 
+  // Handle touch and click
+  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault(); // Prevent default behavior
+    e.stopPropagation(); // Stop event bubbling
+    onClick();
+  };
+
   return (
     <button
       type="button"
@@ -41,9 +48,12 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
-        zIndex: 10 // Ensure islands are above bridges and can be clicked
+        zIndex: 10, // Ensure islands are above bridges and can be clicked
+        minWidth: '2.5rem', // Ensure minimum touch target size
+        minHeight: '2.5rem' // Ensure minimum touch target size
       }}
-      onClick={onClick}
+      onClick={handleInteraction}
+      onTouchStart={handleInteraction}
       aria-label={`Island with value ${island.value}`}
     >
       {island.value}

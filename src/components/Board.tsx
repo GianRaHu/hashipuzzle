@@ -54,11 +54,18 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   }, [puzzle, onUpdate]);
 
+  // Add handlers to prevent default touch behaviors that might interfere
+  const preventDefaultTouchBehavior = (e: React.TouchEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <div 
       className="relative w-full aspect-square max-w-lg mx-auto border border-border/30 rounded-lg glass-panel overflow-hidden"
       aria-label="Hashi puzzle board"
-      style={{ touchAction: "manipulation" }} // Improve touch handling
+      style={{ touchAction: "none" }} // Disable browser touch actions completely
+      onTouchMove={preventDefaultTouchBehavior}
+      onTouchStart={preventDefaultTouchBehavior}
     >
       {/* Grid lines */}
       <div className="absolute inset-0 grid" style={{ 
