@@ -10,19 +10,34 @@ const difficultySettings = {
   master: { size: 9, islandCount: 18, maxValue: 8 }
 };
 
-// Generate a new puzzle
-export const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master'): Puzzle => {
+// Seeded random number generator
+const seededRandom = (seed: number) => {
+  return () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+};
+
+// Generate a new puzzle with optional seed
+export const generatePuzzle = (
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master', 
+  seed?: number
+): Puzzle => {
   const { size, islandCount, maxValue } = difficultySettings[difficulty];
+  
+  // Use provided seed or generate a random one
+  const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
+  const random = seededRandom(puzzleSeed);
   
   // Create empty grid
   const grid: (Island | null)[][] = Array(size).fill(null).map(() => Array(size).fill(null));
   
-  // Place islands randomly
+  // Place islands using seeded random
   const islands: Island[] = [];
   
   while (islands.length < islandCount) {
-    const row = Math.floor(Math.random() * size);
-    const col = Math.floor(Math.random() * size);
+    const row = Math.floor(random() * size);
+    const col = Math.floor(random() * size);
     
     // Skip if position already has an island
     if (grid[row][col]) continue;
@@ -54,7 +69,7 @@ export const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard' | 'expert'
     // Try to connect this island to any used island
     for (const usedIsland of usedIslands) {
       if (canConnect(nextIsland, usedIsland, islands, bridges)) {
-        const bridgeCount = Math.random() < 0.3 ? 2 : 1;
+        const bridgeCount = random() < 0.3 ? 2 : 1;
         
         const bridge: Bridge = {
           id: generateId(),
@@ -93,8 +108,8 @@ export const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard' | 'expert'
   
   // Add some additional bridges randomly to make the puzzle more complex
   for (let i = 0; i < islandCount / 2; i++) {
-    const island1 = islands[Math.floor(Math.random() * islands.length)];
-    const island2 = islands[Math.floor(Math.random() * islands.length)];
+    const island1 = islands[Math.floor(random() * islands.length)];
+    const island2 = islands[Math.floor(random() * islands.length)];
     
     if (island1.id !== island2.id && canConnect(island1, island2, islands, bridges)) {
       const existingBridge = bridges.find(
@@ -103,7 +118,7 @@ export const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard' | 'expert'
       );
       
       if (!existingBridge) {
-        const bridgeCount = Math.random() < 0.3 ? 2 : 1;
+        const bridgeCount = random() < 0.3 ? 2 : 1;
         
         const bridge: Bridge = {
           id: generateId(),
@@ -147,7 +162,8 @@ export const generatePuzzle = (difficulty: 'easy' | 'medium' | 'hard' | 'expert'
     islands,
     bridges: [],
     solved: false,
-    startTime: Date.now()
+    startTime: Date.now(),
+    seed: puzzleSeed
   };
 };
 
@@ -169,8 +185,8 @@ export const generateDailyChallenge = (): Puzzle => {
   const difficultyIndex = Math.abs(seed) % 5;
   const difficulty = difficulties[difficultyIndex];
   
-  // Generate puzzle with selected difficulty
-  const puzzle = generatePuzzle(difficulty);
+  // Generate puzzle with selected difficulty and seed
+  const puzzle = generatePuzzle(difficulty, Math.abs(seed));
   puzzle.id = `daily-${dateString}`;
   
   return puzzle;

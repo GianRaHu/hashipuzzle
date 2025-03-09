@@ -23,6 +23,7 @@ const Game: React.FC = () => {
     if (difficulty) {
       const newPuzzle = generatePuzzle(difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master');
       setPuzzle(newPuzzle);
+      console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
     }
   }, [difficulty]);
   
@@ -54,12 +55,26 @@ const Game: React.FC = () => {
     }
   };
   
-  // Reset the puzzle
+  // Reset the puzzle with a new seed
   const resetPuzzle = () => {
     if (difficulty) {
       const newPuzzle = generatePuzzle(difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master');
       setPuzzle(newPuzzle);
       setGameCompleted(false);
+      console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
+    }
+  };
+  
+  // Reset the puzzle with the same seed
+  const restartPuzzle = () => {
+    if (difficulty && puzzle?.seed) {
+      const newPuzzle = generatePuzzle(
+        difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master', 
+        puzzle.seed
+      );
+      setPuzzle(newPuzzle);
+      setGameCompleted(false);
+      console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
     }
   };
   
@@ -92,15 +107,29 @@ const Game: React.FC = () => {
           </div>
         </div>
         
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={resetPuzzle}
-          className="rounded-full"
-          aria-label="New puzzle"
-        >
-          <RotateCcw className="h-5 w-5" />
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={restartPuzzle}
+            className="rounded-full"
+            aria-label="Restart puzzle"
+            title="Restart with same layout"
+          >
+            <RotateCcw className="h-5 w-5" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={resetPuzzle}
+            className="rounded-full"
+            aria-label="New puzzle"
+            title="Generate new puzzle"
+          >
+            <RotateCcw className="h-5 w-5 rotate-180" />
+          </Button>
+        </div>
       </div>
       
       <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />

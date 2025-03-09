@@ -1,4 +1,3 @@
-
 // Types for our game
 export type Island = {
   id: string;
@@ -25,6 +24,7 @@ export type Puzzle = {
   solved: boolean;
   startTime?: number;
   endTime?: number;
+  seed?: number;  // Added seed for reproducible puzzles
 };
 
 // Generate a unique ID
@@ -156,6 +156,11 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
   
   // Check if puzzle is solved
   newPuzzle.solved = checkPuzzleSolved(newPuzzle);
+  
+  // If solved, set the end time
+  if (newPuzzle.solved && !puzzle.solved) {
+    newPuzzle.endTime = Date.now();
+  }
   
   return newPuzzle;
 };
