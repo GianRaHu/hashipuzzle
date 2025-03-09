@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Calendar, Home, BarChart3 } from 'lucide-react';
@@ -15,7 +14,7 @@ const Navbar: React.FC = () => {
     <div className="fixed bottom-0 left-0 right-0 md:top-0 md:bottom-auto bg-background/90 backdrop-blur-lg border-t md:border-b border-border/50 z-50 animate-fade-in touch-callout-none mobile-safe-area">
       <div className="container flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
         <div className="flex items-center">
-          <h1 className="text-lg font-medium md:mr-8 hidden md:block">Lovable Hashi</h1>
+          <h1 className="text-lg font-medium md:mr-8 hidden md:block">Hashi Puzzle</h1>
         </div>
         
         <div className="flex items-center justify-around w-full md:w-auto md:space-x-6">
