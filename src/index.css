@@ -1,4 +1,4 @@
-
+<lov-codelov-code>
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -79,8 +79,8 @@
 }
 
 @layer utilities {
-  .glass-panel {
-    @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-sm;
+  .content-container {
+    @apply px-4 pt-4 pb-20 md:py-12 md:px-6 mx-auto;
   }
   
   .hashi-island {
@@ -116,3 +116,4 @@
   @apply min-h-screen w-full overflow-hidden;
   min-height: 100dvh;
 }
+</lov-code>

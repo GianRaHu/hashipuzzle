@@ -16,31 +16,31 @@ const Index: React.FC = () => {
   };
 
   return (
-    <div className="container max-w-4xl px-4 pt-12 pb-24 md:py-16 mx-auto mt-16 animate-fade-in page-transition">
-      <div className="text-center mb-8">
+    <div className="content-container max-w-4xl animate-fade-in page-transition">
+      <div className="text-center mb-6">
         <h1 className="text-3xl font-medium mb-2">Lovable Hashi</h1>
         <p className="text-foreground/70">Connect the islands with bridges</p>
       </div>
       
-      <div className="grid md:grid-cols-7 gap-6 mb-12">
+      <div className="grid md:grid-cols-7 gap-4 mb-8">
         <div className="md:col-span-4">
-          <div className="glass-panel p-6 rounded-lg h-full flex flex-col">
+          <div className="p-4 rounded-lg h-full flex flex-col border border-border/30">
             <h2 className="text-xl font-medium mb-6">Play a New Game</h2>
             <DifficultySelector onSelect={handleDifficultySelect} />
           </div>
         </div>
         
-        <div className="md:col-span-3 space-y-6">
-          <div className="glass-panel p-6 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
+        <div className="md:col-span-3 space-y-4">
+          <div className="p-4 rounded-lg border border-border/30">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-medium">Daily Challenge</h2>
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             
-            <p className="text-sm text-foreground/70 mb-4">
+            <p className="text-sm text-foreground/70 mb-3">
               {dailyCompleted
                 ? "You've completed today's challenge!"
-                : "Play today's unique puzzle and build your streak."}
+                : "Play today's unique puzzle."}
             </p>
             
             <Button 
@@ -52,13 +52,13 @@ const Index: React.FC = () => {
             </Button>
           </div>
           
-          <div className="glass-panel p-6 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
+          <div className="p-4 rounded-lg border border-border/30">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-medium">Your Stats</h2>
               <Trophy className="h-5 w-5 text-primary" />
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4 mb-3">
               <div>
                 <p className="text-sm text-foreground/70">Games Played</p>
                 <p className="text-2xl font-medium">{stats.gamesPlayed}</p>
