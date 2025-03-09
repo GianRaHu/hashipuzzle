@@ -61,6 +61,7 @@ const Game: React.FC = () => {
       toast({
         title: "Puzzle solved!",
         description: `You completed the ${difficulty} puzzle in ${formatTime(updatedPuzzle.endTime! - updatedPuzzle.startTime!)}`,
+        duration: 5000,
       });
     }
   }, [currentMoveIndex, difficulty, gameCompleted, moveHistory, toast]);
@@ -209,17 +210,19 @@ const Game: React.FC = () => {
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         
         {gameCompleted && (
-          <div className="mt-8 text-center p-4 rounded-lg animate-scale-in bg-primary/5">
-            <h2 className="text-xl font-medium mb-2">Puzzle Completed!</h2>
-            <p className="mb-4">Time: {formatTime(puzzle.endTime! - puzzle.startTime!)}</p>
-            
-            <div className="flex justify-center space-x-3">
-              <Button onClick={resetPuzzle} variant="outline">
-                New Puzzle
-              </Button>
-              <Button onClick={() => navigate('/')} variant="default">
-                Back to Home
-              </Button>
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+            <div className="bg-card p-6 rounded-lg shadow-lg max-w-sm w-full animate-scale-in text-center">
+              <h2 className="text-xl font-medium mb-2">Puzzle Completed!</h2>
+              <p className="mb-4">Time: {formatTime(puzzle.endTime! - puzzle.startTime!)}</p>
+              
+              <div className="flex justify-center space-x-3">
+                <Button onClick={resetPuzzle} variant="outline">
+                  New Puzzle
+                </Button>
+                <Button onClick={() => navigate('/')} variant="default">
+                  Back to Home
+                </Button>
+              </div>
             </div>
           </div>
         )}
