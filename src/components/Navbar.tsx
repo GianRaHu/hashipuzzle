@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Home, BarChart3 } from 'lucide-react';
+import { Calendar, Home, BarChart3, Settings } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
@@ -49,6 +50,17 @@ const Navbar: React.FC = () => {
           >
             <BarChart3 className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
             <span className="text-xs mt-1 md:text-sm md:mt-0">Stats</span>
+          </Link>
+          
+          <Link 
+            to="/settings" 
+            className={`flex flex-col md:flex-row items-center justify-center p-2 transition-all duration-200 ${
+              isActive('/settings') ? 'text-primary' : 'text-foreground/70 hover:text-foreground'
+            }`}
+            aria-label="Settings"
+          >
+            <Settings className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
+            <span className="text-xs mt-1 md:text-sm md:mt-0">Settings</span>
           </Link>
         </div>
         

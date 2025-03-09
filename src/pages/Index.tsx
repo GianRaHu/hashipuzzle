@@ -25,7 +25,6 @@ const Index: React.FC = () => {
       <div className="grid md:grid-cols-7 gap-4 mb-8">
         <div className="md:col-span-4">
           <div className="p-4 rounded-lg h-full flex flex-col">
-            <h2 className="text-xl font-medium mb-6">Play a New Game</h2>
             <DifficultySelector onSelect={handleDifficultySelect} />
           </div>
         </div>

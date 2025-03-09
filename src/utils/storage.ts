@@ -16,9 +16,36 @@ export interface GameStats {
   };
 }
 
+// Game history type
+export interface GameHistoryEntry {
+  seed: number;
+  difficulty: string;
+  date: string;
+}
+
 // Save puzzle to local storage
 export const savePuzzle = (puzzle: Puzzle): void => {
   localStorage.setItem(`puzzle_${puzzle.id}`, JSON.stringify(puzzle));
+  
+  // Save to game history if it has a seed
+  if (puzzle.seed) {
+    const historyEntry: GameHistoryEntry = {
+      seed: puzzle.seed,
+      difficulty: puzzle.difficulty,
+      date: new Date().toLocaleString()
+    };
+    
+    const history = localStorage.getItem('hashi_game_history');
+    const gameHistory: GameHistoryEntry[] = history ? JSON.parse(history) : [];
+    
+    // Add to history and limit to last 50 games
+    gameHistory.unshift(historyEntry);
+    if (gameHistory.length > 50) {
+      gameHistory.pop();
+    }
+    
+    localStorage.setItem('hashi_game_history', JSON.stringify(gameHistory));
+  }
 };
 
 // Get saved puzzle from local storage
@@ -100,4 +127,10 @@ export const setDailyCompleted = (): void => {
   
   localStorage.setItem('last_streak_date', todayDate.toISOString().split('T')[0]);
   localStorage.setItem('hashi_stats', JSON.stringify(stats));
+};
+
+// Get game history
+export const getGameHistory = (): GameHistoryEntry[] => {
+  const history = localStorage.getItem('hashi_game_history');
+  return history ? JSON.parse(history) : [];
 };
