@@ -1,4 +1,4 @@
-<lov-codelov-code>
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -116,4 +116,3 @@
   @apply min-h-screen w-full overflow-hidden;
   min-height: 100dvh;
 }
-</lov-code>
