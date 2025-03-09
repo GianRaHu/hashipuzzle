@@ -1,13 +1,15 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
 interface DifficultySelectorProps {
-  onSelect: (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => void;
+  onSelect?: (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => void;
 }
 
 const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => {
+  const navigate = useNavigate();
   const difficulties = [
     { id: 'easy', label: 'Easy', description: 'Perfect for beginners' },
     { id: 'medium', label: 'Medium', description: 'A bit more challenging' },
@@ -15,6 +17,15 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => 
     { id: 'expert', label: 'Expert', description: 'Truly challenging puzzles' },
     { id: 'master', label: 'Master', description: 'The ultimate challenge' },
   ] as const;
+
+  const handleSelect = (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => {
+    if (onSelect) {
+      onSelect(difficulty);
+    } else {
+      // If no onSelect provided, navigate directly
+      navigate(`/game/${difficulty}`);
+    }
+  };
 
   return (
     <div className="space-y-4 w-full max-w-md mx-auto animate-fade-in">
@@ -26,7 +37,7 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => 
             key={difficulty.id}
             variant="outline"
             className="flex items-center justify-between px-4 py-6 h-auto text-left hover:bg-secondary/50 transition-all group"
-            onClick={() => onSelect(difficulty.id)}
+            onClick={() => handleSelect(difficulty.id)}
           >
             <div>
               <span className="font-medium block">{difficulty.label}</span>

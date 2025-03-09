@@ -13,7 +13,7 @@ import GameCompletedModal from '../components/game/GameCompletedModal';
 const Game: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { difficulty } = useParams<{ difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master' }>();
+  const { difficulty } = useParams<{ difficulty: string }>();
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [timer, setTimer] = useState<number>(0);
@@ -22,16 +22,24 @@ const Game: React.FC = () => {
   const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
   const stats = getStats();
   
-  // Generate a new puzzle when component mounts
+  // Validate difficulty
+  const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+  const validDifficulty = validDifficulties.includes(difficulty || '') 
+    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
+    : 'easy';
+  
+  // Generate a new puzzle when component mounts or difficulty changes
   useEffect(() => {
-    if (difficulty) {
-      const newPuzzle = generatePuzzle(difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master');
+    if (validDifficulty) {
+      console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
+      const newPuzzle = generatePuzzle(validDifficulty);
       setPuzzle(newPuzzle);
       setMoveHistory([newPuzzle]);
       setCurrentMoveIndex(0);
+      setGameCompleted(false);
       console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
     }
-  }, [difficulty]);
+  }, [validDifficulty]);
   
   // Update timer
   useEffect(() => {
@@ -69,8 +77,8 @@ const Game: React.FC = () => {
   
   // Reset the puzzle with a new seed
   const resetPuzzle = () => {
-    if (difficulty) {
-      const newPuzzle = generatePuzzle(difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master');
+    if (validDifficulty) {
+      const newPuzzle = generatePuzzle(validDifficulty);
       setPuzzle(newPuzzle);
       setGameCompleted(false);
       setMoveHistory([newPuzzle]);
@@ -81,11 +89,8 @@ const Game: React.FC = () => {
   
   // Reset the puzzle with the same seed
   const restartPuzzle = () => {
-    if (difficulty && puzzle?.seed) {
-      const newPuzzle = generatePuzzle(
-        difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master', 
-        puzzle.seed
-      );
+    if (validDifficulty && puzzle?.seed) {
+      const newPuzzle = generatePuzzle(validDifficulty, puzzle.seed);
       setPuzzle(newPuzzle);
       setGameCompleted(false);
       setMoveHistory([newPuzzle]);

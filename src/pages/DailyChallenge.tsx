@@ -19,6 +19,7 @@ const DailyChallenge: React.FC = () => {
   
   // Generate the daily challenge when component mounts
   useEffect(() => {
+    console.log("Generating daily challenge");
     const dailyPuzzle = generateDailyChallenge();
     setPuzzle(dailyPuzzle);
     console.log(`Generated daily puzzle with seed: ${dailyPuzzle.seed}`);
@@ -55,6 +56,7 @@ const DailyChallenge: React.FC = () => {
   
   // Restart the daily puzzle
   const restartPuzzle = () => {
+    console.log("Restarting daily challenge");
     const dailyPuzzle = generateDailyChallenge();
     setPuzzle(dailyPuzzle);
     setGameCompleted(false);

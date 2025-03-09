@@ -10,10 +10,6 @@ const Index: React.FC = () => {
   const navigate = useNavigate();
   const stats = getStats();
   const dailyCompleted = isDailyCompleted();
-  
-  const handleDifficultySelect = (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => {
-    navigate(`/game/${difficulty}`);
-  };
 
   return (
     <div className="content-container max-w-4xl animate-fade-in page-transition">
@@ -25,7 +21,7 @@ const Index: React.FC = () => {
       <div className="grid md:grid-cols-7 gap-4 mb-8">
         <div className="md:col-span-4">
           <div className="p-4 rounded-lg h-full flex flex-col">
-            <DifficultySelector onSelect={handleDifficultySelect} />
+            <DifficultySelector />
           </div>
         </div>
         
