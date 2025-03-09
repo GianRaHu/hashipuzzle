@@ -40,7 +40,8 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
         position: 'absolute',
         left: `${xPos}%`,
         top: `${yPos}%`,
-        transform: 'translate(-50%, -50%)'
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10 // Ensure islands are above bridges and can be clicked
       }}
       onClick={onClick}
       aria-label={`Island with value ${island.value}`}

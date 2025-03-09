@@ -17,7 +17,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   const bridgeStyle: React.CSSProperties = {
     position: 'absolute',
     backgroundColor: 'hsl(var(--primary))',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s ease',
+    zIndex: 5 // Lower than islands (10) to allow island clicks
   };
   
   const isHorizontal = bridge.orientation === 'horizontal';

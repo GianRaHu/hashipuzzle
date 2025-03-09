@@ -21,6 +21,8 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   
   // Handle island click
   const handleIslandClick = (island: IslandType) => {
+    console.log('Island clicked:', island.id);
+    
     if (selectedIsland) {
       if (selectedIsland.id === island.id) {
         // Deselect if clicking the same island
@@ -56,11 +58,13 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     <div 
       className="relative w-full aspect-square max-w-lg mx-auto border border-border/30 rounded-lg glass-panel overflow-hidden"
       aria-label="Hashi puzzle board"
+      style={{ touchAction: "manipulation" }} // Improve touch handling
     >
       {/* Grid lines */}
       <div className="absolute inset-0 grid" style={{ 
         gridTemplateColumns: `repeat(${puzzle.size}, 1fr)`,
-        gridTemplateRows: `repeat(${puzzle.size}, 1fr)`
+        gridTemplateRows: `repeat(${puzzle.size}, 1fr)`,
+        pointerEvents: "none" // Prevent grid lines from capturing clicks
       }}>
         {Array.from({ length: puzzle.size * puzzle.size }).map((_, index) => (
           <div 
