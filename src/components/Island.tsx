@@ -22,7 +22,7 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
   // Determine visual state
   let stateClass = '';
   if (isSelected) {
-    stateClass = 'hashi-island-selected scale-110';
+    stateClass = 'hashi-island-selected';
   } else if (actualConnections === connectionsNeeded) {
     stateClass = 'bg-primary/20 text-primary font-bold';
   } else if (actualConnections > 0) {
@@ -48,8 +48,8 @@ const Island: React.FC<IslandProps> = ({ island, isSelected, onClick, gridSize }
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        minWidth: '3rem',
-        minHeight: '3rem',
+        minWidth: '2.75rem',
+        minHeight: '2.75rem',
         fontSize: '1.2rem',
         fontWeight: 600
       }}
