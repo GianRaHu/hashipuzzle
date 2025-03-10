@@ -4,6 +4,7 @@ import { Puzzle } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, getStats } from '../utils/storage';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
 
 import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
@@ -16,6 +17,8 @@ const Game: React.FC = () => {
   const location = useLocation();
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [timer, setTimer] = useState<number>(0);
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
@@ -31,26 +34,51 @@ const Game: React.FC = () => {
   // Generate a new puzzle when component mounts or difficulty changes or URL timestamp changes
   useEffect(() => {
     if (validDifficulty) {
-      console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
-      const newPuzzle = generatePuzzle(validDifficulty);
-      setPuzzle(newPuzzle);
-      setMoveHistory([newPuzzle]);
-      setCurrentMoveIndex(0);
-      setGameCompleted(false);
-      console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
+      setLoading(true);
+      setLoadingProgress(0);
+      
+      // Simulate progressive loading
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      // Use setTimeout to delay puzzle generation
+      setTimeout(() => {
+        console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
+        const newPuzzle = generatePuzzle(validDifficulty);
+        
+        // Complete the loading progress
+        clearInterval(loadingInterval);
+        setLoadingProgress(100);
+        
+        // Add a small delay before showing the puzzle
+        setTimeout(() => {
+          setPuzzle(newPuzzle);
+          setMoveHistory([newPuzzle]);
+          setCurrentMoveIndex(0);
+          setGameCompleted(false);
+          setLoading(false);
+          console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
+        }, 500);
+      }, 1000);
+      
+      return () => clearInterval(loadingInterval);
     }
   }, [validDifficulty, location.search]);
   
   // Update timer
   useEffect(() => {
-    if (!puzzle || gameCompleted) return;
+    if (!puzzle || gameCompleted || loading) return;
     
     const interval = setInterval(() => {
       setTimer(Date.now() - puzzle.startTime!);
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [puzzle, gameCompleted]);
+  }, [puzzle, gameCompleted, loading]);
   
   // Handle puzzle updates
   const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
@@ -126,6 +154,24 @@ const Game: React.FC = () => {
     });
   };
   
+  // Get best time for this difficulty
+  const bestTime = stats.bestTime[difficulty as string] || 0;
+
+  // Display loading screen while waiting for the puzzle to be generated
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in">
+        <h1 className="text-lg font-medium capitalize mb-8">{difficulty} Puzzle</h1>
+        <div className="w-full max-w-md space-y-4">
+          <Progress value={loadingProgress} className="h-2 w-full" />
+          <p className="text-center text-sm text-muted-foreground">
+            Generating puzzle...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!puzzle) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -133,9 +179,6 @@ const Game: React.FC = () => {
       </div>
     );
   }
-
-  // Get best time for this difficulty
-  const bestTime = stats.bestTime[difficulty as string] || 0;
 
   return (
     <div className="min-h-screen flex flex-col animate-fade-in page-transition">
