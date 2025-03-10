@@ -1,7 +1,7 @@
 
 import { Island, Puzzle, Bridge, generateId } from './gameLogic';
 
-// Difficulty settings
+// Difficulty settings - defines parameters for each difficulty level
 const difficultySettings = {
   easy: { size: 7, islandCount: 8, maxValue: 4 },
   medium: { size: 7, islandCount: 10, maxValue: 6 },
@@ -10,7 +10,7 @@ const difficultySettings = {
   master: { size: 9, islandCount: 18, maxValue: 8 }
 };
 
-// Seeded random number generator
+// Seeded random number generator for reproducible puzzles
 const seededRandom = (seed: number) => {
   return () => {
     seed = (seed * 9301 + 49297) % 233280;
@@ -24,7 +24,7 @@ const isValidPosition = (
   col: number, 
   grid: (Island | null)[][], 
   gridSize: number,
-  bridgeGrid: number[][]
+  bridgeMap: Map<string, boolean>
 ): boolean => {
   // Check if position is within grid
   if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) {
@@ -37,68 +37,19 @@ const isValidPosition = (
   }
   
   // Check if position is occupied by a bridge
-  if (bridgeGrid[row][col] !== 0) {
+  const key = `${row},${col}`;
+  if (bridgeMap.has(key)) {
     return false;
   }
   
   return true;
 };
 
-// Find possible connection targets for a given island
-const findPossibleTargets = (
-  island: Island,
-  grid: (Island | null)[][],
-  bridgeGrid: number[][],
-  gridSize: number
-): Island[] => {
-  const targets: Island[] = [];
-  const { row, col } = island;
-  
-  // Check right
-  for (let c = col + 1; c < gridSize; c++) {
-    if (bridgeGrid[row][c] < 0) break; // Path blocked by a bridge
-    if (grid[row][c]) {
-      targets.push(grid[row][c]!);
-      break;
-    }
-  }
-  
-  // Check left
-  for (let c = col - 1; c >= 0; c--) {
-    if (bridgeGrid[row][c] < 0) break; // Path blocked by a bridge
-    if (grid[row][c]) {
-      targets.push(grid[row][c]!);
-      break;
-    }
-  }
-  
-  // Check down
-  for (let r = row + 1; r < gridSize; r++) {
-    if (bridgeGrid[r][col] < 0) break; // Path blocked by a bridge
-    if (grid[r][col]) {
-      targets.push(grid[r][col]!);
-      break;
-    }
-  }
-  
-  // Check up
-  for (let r = row - 1; r >= 0; r--) {
-    if (bridgeGrid[r][col] < 0) break; // Path blocked by a bridge
-    if (grid[r][col]) {
-      targets.push(grid[r][col]!);
-      break;
-    }
-  }
-  
-  return targets;
-};
-
-// Mark the path between two islands as used by bridges
+// Mark path between islands as used by bridges
 const markPath = (
   island1: Island,
   island2: Island,
-  bridgeGrid: number[][],
-  count: number = 1
+  bridgeMap: Map<string, boolean>
 ): void => {
   if (island1.row === island2.row) {
     // Horizontal bridge
@@ -107,9 +58,7 @@ const markPath = (
     const maxCol = Math.max(island1.col, island2.col);
     
     for (let c = minCol + 1; c < maxCol; c++) {
-      // Use negative values to mark bridge paths
-      // -1 for horizontal, -2 for vertical
-      bridgeGrid[r][c] = -1;
+      bridgeMap.set(`${r},${c}`, true);
     }
   } else {
     // Vertical bridge
@@ -118,254 +67,344 @@ const markPath = (
     const maxRow = Math.max(island1.row, island2.row);
     
     for (let r = minRow + 1; r < maxRow; r++) {
-      // Use negative values to mark bridge paths
-      bridgeGrid[r][c] = -2;
+      bridgeMap.set(`${r},${c}`, true);
     }
   }
 };
 
-// Generate a new puzzle with optional seed
+// Check if a path between islands is clear
+const isPathClear = (
+  island1: Island,
+  island2: Island,
+  islands: Island[],
+  bridgeMap: Map<string, boolean>
+): boolean => {
+  // Can only connect if they're in the same row or column
+  if (island1.row !== island2.row && island1.col !== island2.col) {
+    return false;
+  }
+  
+  if (island1.row === island2.row) {
+    // Horizontal check
+    const r = island1.row;
+    const minCol = Math.min(island1.col, island2.col);
+    const maxCol = Math.max(island1.col, island2.col);
+    
+    // Check for islands in between
+    const hasIslandBetween = islands.some(island => 
+      island.row === r && island.col > minCol && island.col < maxCol
+    );
+    
+    if (hasIslandBetween) {
+      return false;
+    }
+    
+    // Check for bridges in between
+    for (let c = minCol + 1; c < maxCol; c++) {
+      if (bridgeMap.has(`${r},${c}`)) {
+        return false;
+      }
+    }
+  } else {
+    // Vertical check
+    const c = island1.col;
+    const minRow = Math.min(island1.row, island2.row);
+    const maxRow = Math.max(island1.row, island2.row);
+    
+    // Check for islands in between
+    const hasIslandBetween = islands.some(island => 
+      island.col === c && island.row > minRow && island.row < maxRow
+    );
+    
+    if (hasIslandBetween) {
+      return false;
+    }
+    
+    // Check for bridges in between
+    for (let r = minRow + 1; r < maxRow; r++) {
+      if (bridgeMap.has(`${r},${c}`)) {
+        return false;
+      }
+    }
+  }
+  
+  return true;
+};
+
+// Find possible islands to connect to
+const findConnectableIslands = (
+  targetIsland: Island,
+  islands: Island[],
+  bridgeMap: Map<string, boolean>,
+  maxValue: number
+): Island[] => {
+  return islands.filter(island => 
+    island.id !== targetIsland.id && 
+    island.value < maxValue && 
+    targetIsland.value < maxValue &&
+    isPathClear(targetIsland, island, islands, bridgeMap)
+  );
+};
+
+// Create a new puzzle using a step-by-step approach
 export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master', 
   seed?: number
 ): Puzzle => {
+  console.log(`Generating puzzle with difficulty: ${difficulty}`);
   const { size, islandCount, maxValue } = difficultySettings[difficulty];
   
   // Use provided seed or generate a random one
   const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
+  console.log(`Using seed: ${puzzleSeed}`);
   const random = seededRandom(puzzleSeed);
   
   // Create empty grid for islands
   const grid: (Island | null)[][] = Array(size).fill(null).map(() => Array(size).fill(null));
   
-  // Create grid to track bridge positions
-  // 0 = empty, -1 = horizontal bridge, -2 = vertical bridge, positive = island value
-  const bridgeGrid: number[][] = Array(size).fill(0).map(() => Array(size).fill(0));
+  // Use a Map for bridge tracking (faster lookups)
+  const bridgeMap = new Map<string, boolean>();
   
   const islands: Island[] = [];
-  const bridges: Bridge[] = [];
+  const bridgeConnections: {
+    startIslandId: string;
+    endIslandId: string;
+    count: 1 | 2;
+    orientation: 'horizontal' | 'vertical';
+  }[] = [];
   
-  // Step 1: Place first island randomly
-  let startRow = Math.floor(random() * size);
-  let startCol = Math.floor(random() * size);
+  // Step 1: Place first island
+  let attempts = 0;
+  let maxAttempts = 100;
+  let success = false;
   
-  const firstIsland: Island = {
-    id: generateId(),
-    row: startRow,
-    col: startCol,
-    value: 0, // Will be incremented as bridges are added
-    connectedTo: []
-  };
-  
-  islands.push(firstIsland);
-  grid[startRow][startCol] = firstIsland;
-  bridgeGrid[startRow][startCol] = 1;
-  
-  // Step 2: Build the puzzle by adding islands and connecting them
-  const connectedIslands = new Set<string>([firstIsland.id]);
-  
-  while (islands.length < islandCount) {
-    // Get a random connected island to branch from
-    const connectedArray = Array.from(connectedIslands);
-    const sourceIsland = islands.find(
-      island => island.id === connectedArray[Math.floor(random() * connectedArray.length)]
-    )!;
+  while (attempts < maxAttempts && !success) {
+    attempts++;
     
-    // Try to place a new island that can connect to the source island
-    let placed = false;
+    // Clear previous state
+    grid.forEach(row => row.fill(null));
+    bridgeMap.clear();
+    islands.length = 0;
+    bridgeConnections.length = 0;
     
-    // Try each direction (randomize order)
-    const directions = [
-      [0, 1],  // right
-      [1, 0],  // down
-      [0, -1], // left
-      [-1, 0]  // up
-    ].sort(() => random() - 0.5);
+    // Place first island in a somewhat central position
+    const centerOffset = Math.floor(size / 3);
+    const startRow = Math.floor(random() * centerOffset) + centerOffset;
+    const startCol = Math.floor(random() * centerOffset) + centerOffset;
     
-    for (const [dr, dc] of directions) {
-      if (placed) break;
+    const firstIsland: Island = {
+      id: generateId(),
+      row: startRow,
+      col: startCol,
+      value: 0,
+      connectedTo: []
+    };
+    
+    islands.push(firstIsland);
+    grid[startRow][startCol] = firstIsland;
+    
+    // Step 2: Add more islands and connect them
+    while (islands.length < islandCount) {
+      // 1. Select a random position for a new island
+      let placed = false;
+      let positionAttempts = 0;
+      const maxPositionAttempts = 50;
       
-      // Find the furthest valid position in this direction
-      let distance = 1;
-      let validPositions = [];
-      
-      while (true) {
-        const newRow = sourceIsland.row + dr * distance;
-        const newCol = sourceIsland.col + dc * distance;
+      while (!placed && positionAttempts < maxPositionAttempts) {
+        positionAttempts++;
         
-        // Check if position is out of bounds
-        if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size) {
-          break;
+        const row = Math.floor(random() * size);
+        const col = Math.floor(random() * size);
+        
+        if (isValidPosition(row, col, grid, size, bridgeMap)) {
+          const newIsland: Island = {
+            id: generateId(),
+            row,
+            col,
+            value: 0, 
+            connectedTo: []
+          };
+          
+          // 2. Try to connect new island to existing island(s)
+          let connected = false;
+          
+          // Try to connect to existing islands
+          for (const existingIsland of islands) {
+            if (isPathClear(newIsland, existingIsland, islands, bridgeMap)) {
+              // Can connect to this island
+              const bridgeCount = Math.random() < 0.3 ? 2 : 1;
+              
+              // Create connection
+              bridgeConnections.push({
+                startIslandId: existingIsland.id,
+                endIslandId: newIsland.id,
+                count: bridgeCount as 1 | 2,
+                orientation: newIsland.row === existingIsland.row ? 'horizontal' : 'vertical'
+              });
+              
+              // Update island values
+              existingIsland.value += bridgeCount;
+              newIsland.value += bridgeCount;
+              
+              // Mark path as used
+              markPath(existingIsland, newIsland, bridgeMap);
+              
+              connected = true;
+              break;
+            }
+          }
+          
+          if (connected) {
+            // Successfully placed and connected the island
+            islands.push(newIsland);
+            grid[row][col] = newIsland;
+            placed = true;
+          }
         }
-        
-        // Check if we hit another island
-        if (grid[newRow][newCol] !== null) {
-          break;
-        }
-        
-        // Check if position is valid for a new island
-        if (isValidPosition(newRow, newCol, grid, size, bridgeGrid)) {
-          validPositions.push({ row: newRow, col: newCol, distance });
-        }
-        
-        // If this position has a bridge, we can't go further
-        if (bridgeGrid[newRow][newCol] !== 0) {
-          break;
-        }
-        
-        distance++;
       }
       
-      if (validPositions.length > 0) {
-        // Choose a random valid position, preferring those further away
-        const { row, col } = validPositions[Math.floor(random() * validPositions.length)];
+      // If we couldn't place a new island, try connecting existing islands more
+      if (!placed) {
+        let madeConnection = false;
         
-        // Create new island
-        const newIsland: Island = {
+        // Randomly try to add more connections between existing islands
+        for (let i = 0; i < islands.length && !madeConnection; i++) {
+          const island = islands[i];
+          
+          // Find islands that can be connected to this one
+          const connectableIslands = findConnectableIslands(island, islands, bridgeMap, maxValue);
+          
+          if (connectableIslands.length > 0) {
+            // Choose a random island to connect to
+            const targetIsland = connectableIslands[Math.floor(random() * connectableIslands.length)];
+            
+            // Determine bridge count
+            const bridgeCount = Math.random() < 0.3 ? 2 : 1;
+            
+            // Check if there's already a bridge between these islands
+            const existingConnectionIndex = bridgeConnections.findIndex(
+              conn => (conn.startIslandId === island.id && conn.endIslandId === targetIsland.id) ||
+                      (conn.startIslandId === targetIsland.id && conn.endIslandId === island.id)
+            );
+            
+            if (existingConnectionIndex !== -1) {
+              // Already has a bridge, ensure we don't exceed max
+              const existingConnection = bridgeConnections[existingConnectionIndex];
+              if (existingConnection.count === 1 && 
+                  island.value < maxValue && 
+                  targetIsland.value < maxValue) {
+                // Upgrade to double bridge
+                existingConnection.count = 2;
+                island.value += 1;
+                targetIsland.value += 1;
+                madeConnection = true;
+              }
+            } else {
+              // Create new bridge
+              bridgeConnections.push({
+                startIslandId: island.id,
+                endIslandId: targetIsland.id,
+                count: bridgeCount as 1 | 2,
+                orientation: island.row === targetIsland.row ? 'horizontal' : 'vertical'
+              });
+              
+              // Update island values
+              island.value += bridgeCount;
+              targetIsland.value += bridgeCount;
+              
+              // Mark path as used
+              markPath(island, targetIsland, bridgeMap);
+              
+              madeConnection = true;
+            }
+          }
+        }
+        
+        // If we still couldn't make a connection, we're done with this puzzle attempt
+        if (!madeConnection) {
+          break;
+        }
+      }
+      
+      // If we've reached the target island count, we're done
+      if (islands.length >= islandCount) {
+        success = true;
+        break;
+      }
+    }
+  }
+  
+  // If we couldn't generate a valid puzzle, just return a simple one
+  if (!success) {
+    console.log("Failed to generate ideal puzzle, creating a simple fallback");
+    // Create a fallback puzzle with reduced complexity
+    const reducedDifficulty = {
+      size: Math.max(5, size - 2),
+      islandCount: Math.max(4, islandCount - 4),
+      maxValue: Math.max(3, maxValue - 2)
+    };
+    
+    // Create a simple grid pattern
+    const grid = Array(reducedDifficulty.size).fill(null).map(() => Array(reducedDifficulty.size).fill(null));
+    const islands: Island[] = [];
+    const bridgeConnections: any[] = [];
+    
+    // Add islands in a pattern
+    for (let i = 0; i < reducedDifficulty.islandCount; i++) {
+      const row = Math.floor(i / 3) * 2;
+      const col = (i % 3) * 2;
+      
+      if (row < reducedDifficulty.size && col < reducedDifficulty.size) {
+        const island: Island = {
           id: generateId(),
-          row, 
+          row,
           col,
           value: 0,
           connectedTo: []
         };
-        
-        // Determine bridge count (1 or 2)
-        const bridgeCount = random() < 0.3 ? 2 : 1;
-        
-        // Create bridge
-        const bridge: Bridge = {
-          id: generateId(),
-          startIslandId: sourceIsland.id,
-          endIslandId: newIsland.id,
-          count: bridgeCount as 1 | 2,
-          orientation: dr === 0 ? 'horizontal' : 'vertical'
-        };
-        
-        // Add new island and bridge
-        islands.push(newIsland);
-        bridges.push(bridge);
-        
-        // Update grid
-        grid[row][col] = newIsland;
-        bridgeGrid[row][col] = 1;
-        
-        // Mark path as used by bridges
-        markPath(sourceIsland, newIsland, bridgeGrid);
-        
-        // Update island values
-        sourceIsland.value += bridgeCount;
-        newIsland.value += bridgeCount;
-        
-        // Add to connected islands
-        connectedIslands.add(newIsland.id);
-        
-        placed = true;
+        islands.push(island);
+        grid[row][col] = island;
       }
     }
     
-    // If we couldn't place a new island, try connecting existing islands
-    if (!placed && islands.length > 1) {
-      let connected = false;
-      
-      // Try to connect random pairs of existing islands
-      for (let attempts = 0; attempts < 10 && !connected; attempts++) {
-        const island1 = islands[Math.floor(random() * islands.length)];
-        const possibleTargets = findPossibleTargets(island1, grid, bridgeGrid, size);
+    // Connect adjacent islands
+    for (let i = 0; i < islands.length; i++) {
+      for (let j = i + 1; j < islands.length; j++) {
+        const island1 = islands[i];
+        const island2 = islands[j];
         
-        if (possibleTargets.length > 0) {
-          const island2 = possibleTargets[Math.floor(random() * possibleTargets.length)];
+        if ((island1.row === island2.row && Math.abs(island1.col - island2.col) === 2) ||
+            (island1.col === island2.col && Math.abs(island1.row - island2.row) === 2)) {
           
-          // Check if adding more bridges would exceed maxValue
-          if (island1.value >= maxValue || island2.value >= maxValue) {
-            continue;
-          }
+          const bridgeCount = (Math.random() < 0.3 && island1.value < 2 && island2.value < 2) ? 2 : 1;
           
-          // Determine bridge count (1 or 2)
-          const existingBridge = bridges.find(
-            b => (b.startIslandId === island1.id && b.endIslandId === island2.id) || 
-                 (b.startIslandId === island2.id && b.endIslandId === island1.id)
-          );
+          bridgeConnections.push({
+            startIslandId: island1.id,
+            endIslandId: island2.id,
+            count: bridgeCount as 1 | 2,
+            orientation: island1.row === island2.row ? 'horizontal' : 'vertical'
+          });
           
-          if (existingBridge) {
-            if (existingBridge.count === 2 || island1.value >= maxValue - 1 || island2.value >= maxValue - 1) {
-              continue;
-            }
-            
-            // Upgrade to double bridge
-            existingBridge.count = 2;
-            island1.value += 1;
-            island2.value += 1;
-            connected = true;
-          } else {
-            const bridgeCount = (island1.value < maxValue - 1 && island2.value < maxValue - 1 && random() < 0.3) ? 2 : 1;
-            
-            // Create new bridge
-            const bridge: Bridge = {
-              id: generateId(),
-              startIslandId: island1.id,
-              endIslandId: island2.id,
-              count: bridgeCount as 1 | 2,
-              orientation: island1.row === island2.row ? 'horizontal' : 'vertical'
-            };
-            
-            bridges.push(bridge);
-            
-            // Mark path as used by bridges
-            markPath(island1, island2, bridgeGrid);
-            
-            // Update island values
-            island1.value += bridgeCount;
-            island2.value += bridgeCount;
-            connected = true;
-          }
+          island1.value += bridgeCount;
+          island2.value += bridgeCount;
         }
       }
-      
-      // If we still couldn't connect, just place a new random island
-      if (!connected) {
-        let maxAttempts = 100;
-        while (maxAttempts > 0) {
-          const row = Math.floor(random() * size);
-          const col = Math.floor(random() * size);
-          
-          if (isValidPosition(row, col, grid, size, bridgeGrid)) {
-            const newIsland: Island = {
-              id: generateId(),
-              row, 
-              col,
-              value: 0,
-              connectedTo: []
-            };
-            
-            islands.push(newIsland);
-            grid[row][col] = newIsland;
-            bridgeGrid[row][col] = 1;
-            break;
-          }
-          
-          maxAttempts--;
-        }
-      }
-    }
-    
-    // If we've tried everything and can't add more islands, break out
-    if (islands.length === islandCount || islands.length === size * size) {
-      break;
     }
   }
   
-  // Reset connectedTo arrays for gameplay
-  islands.forEach(island => {
-    island.connectedTo = [];
-  });
+  // Convert bridge connections to actual Bridge objects
+  const bridges: Bridge[] = bridgeConnections.map(conn => ({
+    id: generateId(),
+    ...conn
+  }));
   
-  // Create the actual game puzzle with no bridges initially
+  // Create the puzzle
   return {
     id: generateId(),
     difficulty,
     size,
     islands,
-    bridges: [],
+    bridges: [], // Start with no bridges for gameplay
     solved: false,
     startTime: Date.now(),
     seed: puzzleSeed

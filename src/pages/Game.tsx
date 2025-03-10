@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
@@ -23,6 +24,7 @@ const Game: React.FC = () => {
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
+  const [generateError, setGenerateError] = useState<boolean>(false);
   const stats = getStats();
   
   // Validate difficulty
@@ -36,6 +38,7 @@ const Game: React.FC = () => {
     if (validDifficulty) {
       setLoading(true);
       setLoadingProgress(0);
+      setGenerateError(false);
       
       // Simulate progressive loading
       const loadingInterval = setInterval(() => {
@@ -47,27 +50,47 @@ const Game: React.FC = () => {
       
       // Use setTimeout to delay puzzle generation
       setTimeout(() => {
-        console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
-        const newPuzzle = generatePuzzle(validDifficulty);
-        
-        // Complete the loading progress
-        clearInterval(loadingInterval);
-        setLoadingProgress(100);
-        
-        // Add a small delay before showing the puzzle
-        setTimeout(() => {
-          setPuzzle(newPuzzle);
-          setMoveHistory([newPuzzle]);
-          setCurrentMoveIndex(0);
-          setGameCompleted(false);
-          setLoading(false);
-          console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
-        }, 500);
+        try {
+          console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
+          const newPuzzle = generatePuzzle(validDifficulty);
+          
+          // Complete the loading progress
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          // Add a small delay before showing the puzzle
+          setTimeout(() => {
+            setPuzzle(newPuzzle);
+            setMoveHistory([newPuzzle]);
+            setCurrentMoveIndex(0);
+            setGameCompleted(false);
+            setLoading(false);
+            console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
+          }, 500);
+        } catch (error) {
+          console.error("Error generating puzzle:", error);
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          setGenerateError(true);
+          
+          // Show error toast
+          toast({
+            title: "Error generating puzzle",
+            description: "Please try again or select a different difficulty level.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          // Navigate back after short delay
+          setTimeout(() => {
+            navigate('/');
+          }, 3000);
+        }
       }, 1000);
       
       return () => clearInterval(loadingInterval);
     }
-  }, [validDifficulty, location.search]);
+  }, [validDifficulty, location.search, navigate, toast]);
   
   // Update timer
   useEffect(() => {
@@ -106,24 +129,93 @@ const Game: React.FC = () => {
   // Reset the puzzle with a new seed
   const resetPuzzle = () => {
     if (validDifficulty) {
-      const newPuzzle = generatePuzzle(validDifficulty);
-      setPuzzle(newPuzzle);
-      setGameCompleted(false);
-      setMoveHistory([newPuzzle]);
-      setCurrentMoveIndex(0);
-      console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
+      setLoading(true);
+      setLoadingProgress(0);
+      
+      // Simulate progressive loading
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      setTimeout(() => {
+        try {
+          const newPuzzle = generatePuzzle(validDifficulty);
+          
+          // Complete the loading progress
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          setTimeout(() => {
+            setPuzzle(newPuzzle);
+            setGameCompleted(false);
+            setMoveHistory([newPuzzle]);
+            setCurrentMoveIndex(0);
+            setLoading(false);
+            console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
+          }, 500);
+        } catch (error) {
+          console.error("Error generating puzzle:", error);
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          setGenerateError(true);
+          
+          toast({
+            title: "Error generating puzzle",
+            description: "Please try again or select a different difficulty level.",
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
+      }, 1000);
     }
   };
   
   // Reset the puzzle with the same seed
   const restartPuzzle = () => {
     if (validDifficulty && puzzle?.seed) {
-      const newPuzzle = generatePuzzle(validDifficulty, puzzle.seed);
-      setPuzzle(newPuzzle);
-      setGameCompleted(false);
-      setMoveHistory([newPuzzle]);
-      setCurrentMoveIndex(0);
-      console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
+      setLoading(true);
+      setLoadingProgress(0);
+      
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      setTimeout(() => {
+        try {
+          const newPuzzle = generatePuzzle(validDifficulty, puzzle.seed);
+          
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          setTimeout(() => {
+            setPuzzle(newPuzzle);
+            setGameCompleted(false);
+            setMoveHistory([newPuzzle]);
+            setCurrentMoveIndex(0);
+            setLoading(false);
+            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
+          }, 500);
+        } catch (error) {
+          console.error("Error restarting puzzle:", error);
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          toast({
+            title: "Error restarting puzzle",
+            description: "Please try again.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          setLoading(false);
+        }
+      }, 1000);
     }
   };
 
@@ -165,7 +257,7 @@ const Game: React.FC = () => {
         <div className="w-full max-w-md space-y-4">
           <Progress value={loadingProgress} className="h-2 w-full" />
           <p className="text-center text-sm text-muted-foreground">
-            Generating puzzle...
+            {generateError ? "Error generating puzzle..." : "Generating puzzle..."}
           </p>
         </div>
       </div>
@@ -184,7 +276,7 @@ const Game: React.FC = () => {
     <div className="min-h-screen flex flex-col animate-fade-in page-transition">
       <GameHeader 
         timer={timer}
-        bestTime={bestTime}
+        bestTime={stats.bestTime[difficulty as string] || 0}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         restartPuzzle={restartPuzzle}
