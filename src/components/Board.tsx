@@ -10,6 +10,7 @@ import {
 } from '../utils/gameLogic';
 import Island from './Island';
 import Bridge from './Bridge';
+import GridBackground from './GridBackground';
 
 interface BoardProps {
   puzzle: Puzzle;
@@ -95,6 +96,9 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         userSelect: "none"
       }}
     >
+      {/* Grid Background */}
+      <GridBackground gridSize={puzzle.size} islands={puzzle.islands} />
+      
       {/* Bridges */}
       {puzzle.bridges.map(bridge => {
         const startIsland = getIslandById(puzzle.islands, bridge.startIslandId);

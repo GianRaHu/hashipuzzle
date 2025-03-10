@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
@@ -27,20 +26,17 @@ const Game: React.FC = () => {
   const [generateError, setGenerateError] = useState<boolean>(false);
   const stats = getStats();
   
-  // Validate difficulty
   const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
     ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
     : 'easy';
   
-  // Generate a new puzzle when component mounts or difficulty changes or URL timestamp changes
   useEffect(() => {
     if (validDifficulty) {
       setLoading(true);
       setLoadingProgress(0);
       setGenerateError(false);
       
-      // Simulate progressive loading
       const loadingInterval = setInterval(() => {
         setLoadingProgress(prev => {
           const newProgress = prev + Math.random() * 15;
@@ -48,17 +44,14 @@ const Game: React.FC = () => {
         });
       }, 200);
       
-      // Use setTimeout to delay puzzle generation
       setTimeout(() => {
         try {
           console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
           const newPuzzle = generatePuzzle(validDifficulty);
           
-          // Complete the loading progress
           clearInterval(loadingInterval);
           setLoadingProgress(100);
           
-          // Add a small delay before showing the puzzle
           setTimeout(() => {
             setPuzzle(newPuzzle);
             setMoveHistory([newPuzzle]);
@@ -73,7 +66,6 @@ const Game: React.FC = () => {
           setLoadingProgress(100);
           setGenerateError(true);
           
-          // Show error toast
           toast({
             title: "Error generating puzzle",
             description: "Please try again or select a different difficulty level.",
@@ -81,10 +73,7 @@ const Game: React.FC = () => {
             duration: 5000,
           });
           
-          // Navigate back after short delay
-          setTimeout(() => {
-            navigate('/');
-          }, 3000);
+          navigate('/');
         }
       }, 1000);
       
@@ -92,7 +81,6 @@ const Game: React.FC = () => {
     }
   }, [validDifficulty, location.search, navigate, toast]);
   
-  // Update timer
   useEffect(() => {
     if (!puzzle || gameCompleted || loading) return;
     
@@ -103,16 +91,13 @@ const Game: React.FC = () => {
     return () => clearInterval(interval);
   }, [puzzle, gameCompleted, loading]);
   
-  // Handle puzzle updates
   const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
     setPuzzle(updatedPuzzle);
     
-    // Add to move history, truncating any "future" moves if we're undoing
     const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
     setMoveHistory(newHistory);
     setCurrentMoveIndex(newHistory.length - 1);
     
-    // Check if puzzle is solved
     if (updatedPuzzle.solved && !gameCompleted) {
       setGameCompleted(true);
       savePuzzle(updatedPuzzle);
@@ -126,13 +111,11 @@ const Game: React.FC = () => {
     }
   }, [currentMoveIndex, difficulty, gameCompleted, moveHistory, toast]);
   
-  // Reset the puzzle with a new seed
   const resetPuzzle = () => {
     if (validDifficulty) {
       setLoading(true);
       setLoadingProgress(0);
       
-      // Simulate progressive loading
       const loadingInterval = setInterval(() => {
         setLoadingProgress(prev => {
           const newProgress = prev + Math.random() * 15;
@@ -144,7 +127,6 @@ const Game: React.FC = () => {
         try {
           const newPuzzle = generatePuzzle(validDifficulty);
           
-          // Complete the loading progress
           clearInterval(loadingInterval);
           setLoadingProgress(100);
           
@@ -173,7 +155,6 @@ const Game: React.FC = () => {
     }
   };
   
-  // Reset the puzzle with the same seed
   const restartPuzzle = () => {
     if (validDifficulty && puzzle?.seed) {
       setLoading(true);
@@ -219,7 +200,6 @@ const Game: React.FC = () => {
     }
   };
 
-  // Undo move
   const handleUndo = useCallback(() => {
     if (currentMoveIndex > 0) {
       const previousMove = moveHistory[currentMoveIndex - 1];
@@ -228,7 +208,6 @@ const Game: React.FC = () => {
     }
   }, [currentMoveIndex, moveHistory]);
 
-  // Redo move
   const handleRedo = useCallback(() => {
     if (currentMoveIndex < moveHistory.length - 1) {
       const nextMove = moveHistory[currentMoveIndex + 1];
@@ -237,7 +216,6 @@ const Game: React.FC = () => {
     }
   }, [currentMoveIndex, moveHistory]);
 
-  // Show help
   const showHelp = () => {
     toast({
       title: "How to Play",
@@ -246,10 +224,8 @@ const Game: React.FC = () => {
     });
   };
   
-  // Get best time for this difficulty
   const bestTime = stats.bestTime[difficulty as string] || 0;
 
-  // Display loading screen while waiting for the puzzle to be generated
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in">
@@ -285,7 +261,6 @@ const Game: React.FC = () => {
         canRedo={currentMoveIndex < moveHistory.length - 1}
       />
       
-      {/* Main content with proper spacing from header */}
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center">
         <h1 className="text-lg font-medium capitalize mb-4">{difficulty} Puzzle</h1>
         

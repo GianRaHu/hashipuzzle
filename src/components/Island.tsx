@@ -33,18 +33,25 @@ const Island: React.FC<IslandProps> = ({
   
   // Determine visual state
   let stateClass = '';
+  let bgColorClass = 'bg-secondary';
   
   if (isSelected || isDragging) {
     stateClass = 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/20 text-primary font-bold';
   } else if (actualConnections === connectionsNeeded) {
     // Connections match exactly - show green ring
     stateClass = 'ring-2 ring-green-500 text-green-600 font-bold';
+    bgColorClass = 'bg-green-100 dark:bg-green-900/20';
   } else if (actualConnections > connectionsNeeded) {
-    // Too many connections - show red ring
-    stateClass = 'ring-2 ring-destructive text-destructive font-bold';
-  } else if (actualConnections > 0) {
+    // Too many connections - show yellow warning
+    stateClass = 'ring-2 ring-yellow-500 text-yellow-600 font-bold';
+    bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/20';
+  } else if (actualConnections === 0) {
+    // No connections yet - show neutral ring
+    stateClass = 'ring-2 ring-secondary/70';
+  } else if (actualConnections < connectionsNeeded) {
     // Some connections but not complete
-    stateClass = 'bg-secondary/20';
+    stateClass = 'ring-2 ring-primary/50';
+    bgColorClass = 'bg-secondary/70';
   }
 
   // Handle touch start
@@ -106,7 +113,7 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${stateClass}`}
+      className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,
