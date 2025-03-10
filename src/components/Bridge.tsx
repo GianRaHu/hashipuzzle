@@ -32,11 +32,14 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = minCol * cellSize + cellSize / 2;
     const yPos = startIsland.row * cellSize + cellSize / 2;
     
+    const firstBridgeOffset = isSingleBridge ? 0 : 2; // No offset for single, 2px up for double
+    const secondBridgeOffset = 2; // 2px down for second bridge
+    
     // For single bridge, center it
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${xPos}%`,
-      top: `${yPos}%`, // Centered for single bridge
+      top: `${yPos - firstBridgeOffset}%`,
       width: animate ? '0%' : `${width}%`,
       height: '2px',
       transform: 'translateY(-50%)'
@@ -46,7 +49,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${xPos}%`,
-      top: isSingleBridge ? `${yPos}%` : `${yPos + 1}%`,
+      top: `${yPos + secondBridgeOffset}%`,
       width: bridge.count === 2 && animate ? '0%' : `${width}%`,
       height: '2px',
       transform: 'translateY(-50%)',
@@ -57,7 +60,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       <>
         <div 
           className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
-          style={isSingleBridge ? firstBridgeStyle : { ...firstBridgeStyle, top: `${yPos - 1}%` }}
+          style={firstBridgeStyle}
           aria-hidden="true"
         />
         {bridge.count === 2 && (
@@ -77,20 +80,23 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = startIsland.col * cellSize + cellSize / 2;
     const yPos = minRow * cellSize + cellSize / 2;
     
-    // For single bridge, center it
+    const firstBridgeOffset = isSingleBridge ? 0 : 2; // No offset for single, 2px left for double
+    const secondBridgeOffset = 2; // 2px right for second bridge
+    
+    // For single bridge, center it; for double bridge, offset left
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos}%`, // Centered for single bridge
+      left: `${xPos - firstBridgeOffset}%`,
       top: `${yPos}%`,
       width: '2px',
       height: animate ? '0%' : `${height}%`,
       transform: 'translateX(-50%)'
     };
     
-    // For double bridge, space them slightly
+    // For double bridge, offset right
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: isSingleBridge ? `${xPos}%` : `${xPos + 1}%`,
+      left: `${xPos + secondBridgeOffset}%`,
       top: `${yPos}%`,
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${height}%`,
@@ -102,7 +108,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       <>
         <div 
           className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
-          style={isSingleBridge ? firstBridgeStyle : { ...firstBridgeStyle, left: `${xPos - 1}%` }}
+          style={firstBridgeStyle}
           aria-hidden="true"
         />
         {bridge.count === 2 && (

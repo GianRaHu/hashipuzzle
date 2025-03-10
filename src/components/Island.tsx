@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -6,7 +5,7 @@ interface IslandProps {
   island: IslandType;
   isSelected: boolean;
   onClick: () => void;
-  onDragStart: () => void;
+  onDragStart: (event: React.MouseEvent | React.TouchEvent) => void;
   onDragEnd: () => void;
   gridSize: number;
 }
@@ -21,6 +20,7 @@ const Island: React.FC<IslandProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const touchTimerRef = useRef<number | null>(null);
+  const moveDetectedRef = useRef<boolean>(false);
   
   // Calculate the size and position
   const cellSize = 100 / gridSize;
@@ -56,58 +56,81 @@ const Island: React.FC<IslandProps> = ({
 
   // Handle touch start
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    
     // Start a timer to differentiate between tap and drag
+    moveDetectedRef.current = false;
+    
     touchTimerRef.current = window.setTimeout(() => {
-      setIsDragging(true);
-      onDragStart();
+      if (!moveDetectedRef.current) {
+        // It was a tap, not a drag
+        onClick();
+      }
       touchTimerRef.current = null;
     }, 150); // Short delay to detect intention
   };
 
   // Handle touch move
   const handleTouchMove = (e: React.TouchEvent) => {
-    // If timer still active, clear it and start dragging
+    moveDetectedRef.current = true;
+    
+    // If we detect movement, it's a drag
+    if (!isDragging) {
+      setIsDragging(true);
+      onDragStart(e);
+    }
+    
+    // Clear the tap timer if it's still active
     if (touchTimerRef.current !== null) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
-      setIsDragging(true);
-      onDragStart();
     }
   };
 
   // Handle touch end
   const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
+    // If a drag was in progress, end it
+    if (isDragging) {
+      setIsDragging(false);
+      onDragEnd();
+    }
     
-    // If timer is still active, it was a tap (not a drag)
+    // Clear any active timers
     if (touchTimerRef.current !== null) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
-      onClick();
-    } else if (isDragging) {
-      // It was a drag
-      setIsDragging(false);
-      onDragEnd();
+      
+      // If no movement was detected and timer was canceled before firing,
+      // treat as a tap
+      if (!moveDetectedRef.current) {
+        onClick();
+      }
     }
   };
 
   // Handle mouse events (for desktop)
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+    // Enable drag mode immediately for mouse
     setIsDragging(true);
-    onDragStart();
+    onDragStart(e);
   };
 
   const handleMouseUp = (e: React.MouseEvent) => {
-    e.preventDefault();
+    // If was dragging, end drag
     if (isDragging) {
       setIsDragging(false);
       onDragEnd();
     } else {
+      // Otherwise, it's a click
       onClick();
     }
+  };
+
+  // Handle mouse click (for desktop - click without drag)
+  const handleClick = (e: React.MouseEvent) => {
+    // Only treat as click if it wasn't part of a drag
+    if (!isDragging) {
+      onClick();
+    }
+    e.preventDefault();
   };
 
   return (
@@ -130,6 +153,7 @@ const Island: React.FC<IslandProps> = ({
       onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onClick={handleClick}
       aria-label={`Island with value ${island.value}`}
     >
       {island.value}

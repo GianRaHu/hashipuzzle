@@ -24,6 +24,7 @@ const Game: React.FC = () => {
   const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
   const [generateError, setGenerateError] = useState<boolean>(false);
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
   const stats = getStats();
   
   const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
@@ -84,14 +85,25 @@ const Game: React.FC = () => {
   useEffect(() => {
     if (!puzzle || gameCompleted || loading) return;
     
+    if (!gameStarted) return;
+    
     const interval = setInterval(() => {
       setTimer(Date.now() - puzzle.startTime!);
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [puzzle, gameCompleted, loading]);
+  }, [puzzle, gameCompleted, loading, gameStarted]);
   
   const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
+    if (!gameStarted) {
+      setGameStarted(true);
+      
+      updatedPuzzle = {
+        ...updatedPuzzle,
+        startTime: Date.now()
+      };
+    }
+    
     setPuzzle(updatedPuzzle);
     
     const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
@@ -109,7 +121,7 @@ const Game: React.FC = () => {
         duration: 5000,
       });
     }
-  }, [currentMoveIndex, difficulty, gameCompleted, moveHistory, toast]);
+  }, [currentMoveIndex, difficulty, gameCompleted, gameStarted, moveHistory, toast]);
   
   const resetPuzzle = () => {
     if (validDifficulty) {
@@ -156,6 +168,9 @@ const Game: React.FC = () => {
   };
   
   const restartPuzzle = () => {
+    setGameStarted(false);
+    setTimer(0);
+    
     if (validDifficulty && puzzle?.seed) {
       setLoading(true);
       setLoadingProgress(0);
@@ -256,9 +271,9 @@ const Game: React.FC = () => {
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         restartPuzzle={restartPuzzle}
-        showHelp={showHelp}
         canUndo={currentMoveIndex > 0}
         canRedo={currentMoveIndex < moveHistory.length - 1}
+        gameStarted={gameStarted}
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center">

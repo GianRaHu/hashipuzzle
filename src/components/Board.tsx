@@ -20,28 +20,51 @@ interface BoardProps {
 const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [selectedIsland, setSelectedIsland] = useState<IslandType | null>(null);
   const [dragStartIsland, setDragStartIsland] = useState<IslandType | null>(null);
+  const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
+  const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   
-  // Simplified island click handler for better performance
+  // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
     if (selectedIsland) {
       if (selectedIsland.id === island.id) {
+        // Deselect if clicking the same island
         setSelectedIsland(null);
       } else if (canConnect(selectedIsland, island, puzzle.islands, puzzle.bridges)) {
+        // Connect islands if possible
         const updatedPuzzle = toggleBridge(selectedIsland, island, puzzle);
         onUpdate(updatedPuzzle);
         setSelectedIsland(null);
       } else {
+        // Select the new island if can't connect
         setSelectedIsland(island);
       }
     } else {
+      // No island selected yet, select this one
       setSelectedIsland(island);
     }
   };
 
   // Handle drag start on island
-  const handleDragStart = (island: IslandType) => {
+  const handleDragStart = (island: IslandType, event: React.MouseEvent | React.TouchEvent) => {
     setDragStartIsland(island);
+    setIsPointerDown(true);
+    
+    // Get pointer position
+    let clientX: number, clientY: number;
+    
+    if ('touches' in event) {
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else {
+      clientX = event.clientX;
+      clientY = event.clientY;
+    }
+    
+    setDragPosition({ x: clientX, y: clientY });
+    
+    // Prevent default behavior
+    event.preventDefault();
   };
 
   // Handle drag end on island
@@ -52,8 +75,48 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         onUpdate(updatedPuzzle);
       }
     }
+    
+    // Reset drag state
     setDragStartIsland(null);
+    setIsPointerDown(false);
+    setDragPosition(null);
   };
+  
+  // Handle board mouse move (for drawing drag line)
+  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isPointerDown || !dragStartIsland) return;
+    
+    let clientX: number, clientY: number;
+    
+    if ('touches' in e) {
+      if (e.touches.length === 0) return;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    setDragPosition({ x: clientX, y: clientY });
+    e.preventDefault();
+  };
+  
+  // Handle pointer up anywhere in the document (to end drag)
+  useEffect(() => {
+    const handlePointerUp = () => {
+      setIsPointerDown(false);
+      setDragPosition(null);
+      setDragStartIsland(null);
+    };
+    
+    document.addEventListener('mouseup', handlePointerUp);
+    document.addEventListener('touchend', handlePointerUp);
+    
+    return () => {
+      document.removeEventListener('mouseup', handlePointerUp);
+      document.removeEventListener('touchend', handlePointerUp);
+    };
+  }, []);
   
   // Check if puzzle is solved
   useEffect(() => {
@@ -66,14 +129,14 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   }, [puzzle, onUpdate]);
 
-  // Optimized touch handling
+  // Disable browser's touch actions
   useEffect(() => {
     if (!boardRef.current) return;
     
     const board = boardRef.current;
     const preventTouch = (e: TouchEvent) => {
-      // Only prevent default for drag gestures, not taps
-      if (dragStartIsland) {
+      // Only prevent default for drag gestures
+      if (dragStartIsland || isPointerDown) {
         e.preventDefault();
       }
     };
@@ -83,7 +146,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     return () => {
       board.removeEventListener('touchmove', preventTouch);
     };
-  }, [dragStartIsland]);
+  }, [dragStartIsland, isPointerDown]);
 
   return (
     <div 
@@ -95,6 +158,8 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         WebkitUserSelect: "none",
         userSelect: "none"
       }}
+      onMouseMove={handlePointerMove}
+      onTouchMove={handlePointerMove}
     >
       {/* Grid Background */}
       <GridBackground gridSize={puzzle.size} islands={puzzle.islands} />
@@ -126,13 +191,69 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
           island={island}
           isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id}
           onClick={() => handleIslandClick(island)}
-          onDragStart={() => handleDragStart(island)}
+          onDragStart={(e) => handleDragStart(island, e)}
           onDragEnd={() => handleDragEnd(island)}
           gridSize={puzzle.size}
         />
       ))}
+      
+      {/* Drag Line Visualization */}
+      {dragStartIsland && dragPosition && boardRef.current && (
+        <DragLine 
+          startIsland={dragStartIsland} 
+          dragPosition={dragPosition}
+          boardRef={boardRef}
+          gridSize={puzzle.size}
+        />
+      )}
     </div>
   );
+};
+
+// Helper component to visualize drag
+interface DragLineProps {
+  startIsland: IslandType;
+  dragPosition: { x: number, y: number };
+  boardRef: React.RefObject<HTMLDivElement>;
+  gridSize: number;
+}
+
+const DragLine: React.FC<DragLineProps> = ({ startIsland, dragPosition, boardRef, gridSize }) => {
+  if (!boardRef.current) return null;
+  
+  const boardRect = boardRef.current.getBoundingClientRect();
+  const cellSize = 100 / gridSize;
+  
+  // Calculate start position (island center) in pixels
+  const startX = (startIsland.col * cellSize + cellSize / 2) * boardRect.width / 100;
+  const startY = (startIsland.row * cellSize + cellSize / 2) * boardRect.height / 100;
+  
+  // Calculate end position (cursor position relative to board)
+  const endX = dragPosition.x - boardRect.left;
+  const endY = dragPosition.y - boardRect.top;
+  
+  // Calculate the line's length and angle
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  
+  // Style for the drag line
+  const lineStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: `${startX}px`,
+    top: `${startY}px`,
+    width: `${length}px`,
+    height: '2px',
+    backgroundColor: 'hsl(var(--primary))',
+    opacity: 0.7,
+    transformOrigin: '0 0',
+    transform: `rotate(${angle}deg)`,
+    pointerEvents: 'none',
+    zIndex: 4
+  };
+  
+  return <div style={lineStyle} />;
 };
 
 export default Board;

@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, CornerUpLeft, CornerUpRight, RotateCcw, HelpCircle, Clock } from 'lucide-react';
+import { Home, CornerUpLeft, CornerUpRight, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/storage';
+import HelpDialog from './HelpDialog';
 
 interface GameHeaderProps {
   timer: number;
@@ -11,9 +12,9 @@ interface GameHeaderProps {
   handleUndo: () => void;
   handleRedo: () => void;
   restartPuzzle: () => void;
-  showHelp: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  gameStarted: boolean;
 }
 
 const GameHeader: React.FC<GameHeaderProps> = ({
@@ -22,9 +23,9 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   handleUndo,
   handleRedo,
   restartPuzzle,
-  showHelp,
   canUndo,
-  canRedo
+  canRedo,
+  gameStarted
 }) => {
   const navigate = useNavigate();
 
@@ -47,6 +48,11 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           {bestTime > 0 && (
             <span className="text-muted-foreground text-xs">
               Best: {formatTime(bestTime)}
+            </span>
+          )}
+          {!gameStarted && timer === 0 && (
+            <span className="text-xs text-muted-foreground italic ml-1">
+              (tap to start)
             </span>
           )}
         </div>
@@ -85,15 +91,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             <RotateCcw className="h-4 w-4" />
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={showHelp}
-            className="rounded-full h-8 w-8"
-            aria-label="Help"
-          >
-            <HelpCircle className="h-4 w-4" />
-          </Button>
+          <HelpDialog />
         </div>
       </div>
     </header>
