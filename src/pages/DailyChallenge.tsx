@@ -11,6 +11,7 @@ import GameCompletedModal from '../components/game/GameCompletedModal';
 import DailyPuzzleList from '../components/game/DailyPuzzleList';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
+import GameHeader from '../components/game/GameHeader';
 
 const DailyChallenge: React.FC = () => {
   const navigate = useNavigate();
