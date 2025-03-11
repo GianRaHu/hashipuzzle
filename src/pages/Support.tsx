@@ -1,100 +1,145 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  HeartHandshake, 
+  Coffee, 
+  DollarSign, 
+  ArrowRight, 
+  CreditCard, 
+  BadgeCheck 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Heart, Mail, MessageSquare, CreditCard } from 'lucide-react';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
 
 const Support: React.FC = () => {
+  const handleSupport = (amount: string) => {
+    // In a real app, this would open a payment provider
+    alert(`Thank you for your support! You selected: ${amount}`);
+  };
+
   return (
-    <div className="content-container animate-fade-in page-transition">
+    <div className="content-container max-w-4xl animate-fade-in page-transition scrollable-container">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-medium mb-2">Support</h1>
-        <p className="text-muted-foreground">Help us make Hashi even better</p>
+        <HeartHandshake className="h-12 w-12 mx-auto text-primary mb-4" />
+        <h1 className="text-3xl font-medium mb-2">Support Hashi Puzzle</h1>
+        <p className="text-foreground/70 max-w-md mx-auto">
+          Our puzzle game is completely free without ads. If you enjoy playing, consider supporting our work.
+        </p>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="relative overflow-hidden">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-500" />
-              Why Support Us?
+            <CardTitle className="flex items-center">
+              <Coffee className="h-5 w-5 mr-2" />
+              Coffee
             </CardTitle>
             <CardDescription>
-              Your support helps us to improve the app and build new puzzle games
+              A small token of appreciation
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              As an independent team, we rely on our community to continue creating high-quality puzzles and experiences. Every contribution helps us dedicate more time to improving Hashi.
-            </p>
+            <div className="text-3xl font-bold">$3</div>
+            <p className="text-sm text-muted-foreground mt-1">One-time payment</p>
           </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={() => handleSupport('Coffee ($3)')} 
+              className="w-full"
+              variant="outline"
+            >
+              Buy me a coffee
+            </Button>
+          </CardFooter>
+          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-primary/10 rounded-full h-24 w-24 blur-xl" />
         </Card>
         
-        <Card>
+        <Card className="relative overflow-hidden border-primary">
+          <div className="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg">
+            Popular
+          </div>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              Support Options
+            <CardTitle className="flex items-center">
+              <DollarSign className="h-5 w-5 mr-2 text-primary" />
+              Fan
             </CardTitle>
             <CardDescription>
-              Choose how you'd like to support Hashi
+              Support continued development
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-between"
-              disabled
-            >
-              <span className="flex items-center gap-2">
-                <Heart className="h-4 w-4 text-red-500" />
-                <span>Tip Jar (Coming Soon)</span>
-              </span>
-              <span className="text-sm text-muted-foreground">$2+</span>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-between"
-              disabled
-            >
-              <span className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                <span>Premium (Coming Soon)</span>
-              </span>
-              <span className="text-sm text-muted-foreground">$4.99</span>
-            </Button>
+          <CardContent>
+            <div className="text-3xl font-bold">$10</div>
+            <p className="text-sm text-muted-foreground mt-1">One-time payment</p>
           </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={() => handleSupport('Fan ($10)')} 
+              className="w-full"
+            >
+              Become a fan
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </CardFooter>
+          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-primary/20 rounded-full h-32 w-32 blur-xl" />
         </Card>
         
-        <Card className="md:col-span-2">
+        <Card className="relative overflow-hidden">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              Contact Us
+            <CardTitle className="flex items-center">
+              <BadgeCheck className="h-5 w-5 mr-2" />
+              Sponsor
             </CardTitle>
             <CardDescription>
-              Have questions or feedback?
+              For our biggest supporters
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              We'd love to hear from you! Reach out with your questions, feature requests, or just to say hello.
-            </p>
-            
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              disabled
-            >
-              <Mail className="h-4 w-4" />
-              <span>Contact (Coming Soon)</span>
-            </Button>
+          <CardContent>
+            <div className="text-3xl font-bold">$25</div>
+            <p className="text-sm text-muted-foreground mt-1">One-time payment</p>
           </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={() => handleSupport('Sponsor ($25)')} 
+              className="w-full"
+              variant="outline"
+            >
+              Become a sponsor
+            </Button>
+          </CardFooter>
+          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-primary/10 rounded-full h-24 w-24 blur-xl" />
         </Card>
       </div>
       
-      <div className="h-16"></div>
+      <div className="mt-10 bg-secondary/50 p-6 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4">Why Support Us?</h2>
+        <ul className="space-y-2">
+          <li className="flex items-start">
+            <div className="bg-primary/20 rounded-full p-1 mr-3 mt-1">
+              <CreditCard className="h-4 w-4 text-primary" />
+            </div>
+            <span>We don't have ads or in-app purchases</span>
+          </li>
+          <li className="flex items-start">
+            <div className="bg-primary/20 rounded-full p-1 mr-3 mt-1">
+              <CreditCard className="h-4 w-4 text-primary" />
+            </div>
+            <span>Your support helps us to improve the app and build new puzzle games</span>
+          </li>
+          <li className="flex items-start">
+            <div className="bg-primary/20 rounded-full p-1 mr-3 mt-1">
+              <CreditCard className="h-4 w-4 text-primary" />
+            </div>
+            <span>We're a small independent team creating puzzles we love</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 };

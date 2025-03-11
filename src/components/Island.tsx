@@ -19,7 +19,7 @@ const Island: React.FC<IslandProps> = ({
   onDragEnd, 
   gridSize 
 }) => {
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState(false);
   const touchTimerRef = useRef<number | null>(null);
   const moveDetectedRef = useRef<boolean>(false);
   
@@ -34,25 +34,25 @@ const Island: React.FC<IslandProps> = ({
   
   // Determine visual state
   let stateClass = '';
-  let bgColorClass = 'bg-secondary/80'; // Added transparency to all islands
+  let bgColorClass = 'bg-secondary';
   
   if (isSelected || isDragging) {
     stateClass = 'ring-1 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
   } else if (actualConnections === connectionsNeeded) {
     // Connections match exactly - show green ring
     stateClass = 'ring-1 ring-green-500 text-green-600 font-bold';
-    bgColorClass = 'bg-green-100/80 dark:bg-green-900/20';
+    bgColorClass = 'bg-green-100 dark:bg-green-900/20';
   } else if (actualConnections > connectionsNeeded) {
     // Too many connections - show yellow warning
     stateClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
-    bgColorClass = 'bg-yellow-100/80 dark:bg-yellow-900/20';
+    bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/20';
   } else if (actualConnections === 0) {
     // No connections yet - show white ring
     stateClass = 'ring-1 ring-white dark:ring-slate-300';
   } else if (actualConnections < connectionsNeeded) {
     // Some connections but not complete - show red ring
     stateClass = 'ring-1 ring-red-500 text-red-600';
-    bgColorClass = 'bg-red-50/80 dark:bg-red-900/10';
+    bgColorClass = 'bg-red-50 dark:bg-red-900/10';
   }
 
   // Handle touch start
@@ -137,15 +137,15 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
+      className={`w-9 h-9 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        minWidth: '2rem',
-        minHeight: '2rem',
+        minWidth: '2.25rem',
+        minHeight: '2.25rem',
         fontSize: '1.1rem',
         fontWeight: 600
       }}

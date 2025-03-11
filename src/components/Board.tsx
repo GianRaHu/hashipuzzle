@@ -24,7 +24,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
   const [dragOverIsland, setDragOverIsland] = useState<IslandType | null>(null);
-  const [dragProcessed, setDragProcessed] = useState<boolean>(false); // Track if drag has been processed
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
@@ -53,7 +52,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const handleDragStart = (island: IslandType, event: React.MouseEvent | React.TouchEvent) => {
     setDragStartIsland(island);
     setIsPointerDown(true);
-    setDragProcessed(false); // Reset the drag processed flag
     
     // Get pointer position
     let clientX: number, clientY: number;
@@ -77,11 +75,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     // If we have a drag over island during drag end, use that island
     const targetIsland = dragOverIsland || endIsland;
     
-    if (dragStartIsland && dragStartIsland.id !== targetIsland.id && !dragProcessed) {
+    if (dragStartIsland && dragStartIsland.id !== targetIsland.id) {
       if (canConnect(dragStartIsland, targetIsland, puzzle.islands, puzzle.bridges)) {
         const updatedPuzzle = toggleBridge(dragStartIsland, targetIsland, puzzle);
         onUpdate(updatedPuzzle);
-        setDragProcessed(true); // Mark as processed to prevent multiple bridges
       }
     }
     
@@ -122,12 +119,12 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       const islandX = (island.col * cellSize + cellSize / 2) * boardRect.width / 100;
       const islandY = (island.row * cellSize + cellSize / 2) * boardRect.height / 100;
       
-      // Check if pointer is within island radius (using 25px as approximate radius - smaller than before)
+      // Check if pointer is within island radius (using 30px as approximate radius)
       const dx = relativeX - islandX;
       const dy = relativeY - islandY;
       const distanceSquared = dx * dx + dy * dy;
       
-      return distanceSquared <= 625; // 25px radius squared
+      return distanceSquared <= 900; // 30px radius squared
     });
     
     setDragOverIsland(draggedOverIsland || null);
@@ -138,12 +135,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   // Handle pointer up anywhere in the document (to end drag)
   useEffect(() => {
     const handlePointerUp = () => {
-      if (dragStartIsland && dragOverIsland && !dragProcessed) {
+      if (dragStartIsland && dragOverIsland) {
         // Complete the connection if drag ends over another island
         if (canConnect(dragStartIsland, dragOverIsland, puzzle.islands, puzzle.bridges)) {
           const updatedPuzzle = toggleBridge(dragStartIsland, dragOverIsland, puzzle);
           onUpdate(updatedPuzzle);
-          setDragProcessed(true); // Mark as processed to prevent multiple bridges
         }
       }
       
@@ -151,7 +147,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       setDragPosition(null);
       setDragStartIsland(null);
       setDragOverIsland(null);
-      setDragProcessed(false); // Reset for next interaction
     };
     
     document.addEventListener('mouseup', handlePointerUp);
@@ -161,7 +156,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       document.removeEventListener('mouseup', handlePointerUp);
       document.removeEventListener('touchend', handlePointerUp);
     };
-  }, [dragOverIsland, dragStartIsland, dragProcessed, onUpdate, puzzle]);
+  }, [dragOverIsland, dragStartIsland, onUpdate, puzzle]);
   
   // Check if puzzle is solved
   useEffect(() => {
