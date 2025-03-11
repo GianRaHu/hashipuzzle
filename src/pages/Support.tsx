@@ -130,7 +130,7 @@ const Support: React.FC = () => {
             <div className="bg-primary/20 rounded-full p-1 mr-3 mt-1">
               <CreditCard className="h-4 w-4 text-primary" />
             </div>
-            <span>Your support helps us add new features and puzzles</span>
+            <span>Your support helps us to improve the app and build new puzzle games</span>
           </li>
           <li className="flex items-start">
             <div className="bg-primary/20 rounded-full p-1 mr-3 mt-1">

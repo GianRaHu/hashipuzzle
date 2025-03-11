@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isDailyCompleted, formatDate } from '@/utils/storage';
+import { isDailyCompleted, formatTime } from '@/utils/storage';
 import { format, subDays } from 'date-fns';
 
 interface DailyPuzzleListProps {
@@ -20,9 +20,13 @@ const DailyPuzzleList: React.FC<DailyPuzzleListProps> = ({ onSelectDate, selecte
     subDays(today, i)
   );
   
+  // Format a date for display
+  const formatDate = (date: Date): string => {
+    return format(date, 'EEEE, MMMM do');
+  };
+  
   return (
     <div className="max-w-md mx-auto">
-      <h2 className="text-xl font-semibold mb-4 text-center">Daily Challenges</h2>
       <p className="text-sm text-muted-foreground mb-6 text-center">
         Choose a daily challenge from today or the past week
       </p>
@@ -42,7 +46,7 @@ const DailyPuzzleList: React.FC<DailyPuzzleListProps> = ({ onSelectDate, selecte
             >
               <span className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                <span>{isToday ? "Today" : format(date, 'EEEE, MMMM do')}</span>
+                <span>{isToday ? "Today" : formatDate(date)}</span>
               </span>
               
               <div className="flex items-center space-x-2">

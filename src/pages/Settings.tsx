@@ -1,14 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Moon, Sun, Laptop, Trash, User, BellRing, Volume2 } from 'lucide-react';
+import { 
+  Moon, Sun, Laptop, Trash, User, LogIn, 
+  LogOut, UserPlus, BellRing, Volume2,
+  Settings as SettingsIcon
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import {
   Tabs,
@@ -19,6 +25,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -31,7 +39,32 @@ const Settings = () => {
     autoSave: true
   });
   
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  
   useEffect(() => {
+    // Check if user is already signed in
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
+      setLoading(false);
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        setUser(session?.user || null);
+      });
+      
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    };
+    
+    checkUser();
+    
     // Load game history from localStorage
     const history = localStorage.getItem('hashi_game_history');
     if (history) {
@@ -64,6 +97,88 @@ const Settings = () => {
       description: "Your game history has been cleared."
     });
   };
+  
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Signed in successfully",
+        description: "Welcome back to Hashi Puzzle!"
+      });
+      
+      setEmail('');
+      setPassword('');
+    } catch (error: any) {
+      setAuthError(error.message);
+      toast({
+        title: "Error signing in",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Account created",
+        description: "Please check your email to confirm your account."
+      });
+      
+      setEmail('');
+      setPassword('');
+    } catch (error: any) {
+      setAuthError(error.message);
+      toast({
+        title: "Error creating account",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="content-container max-w-4xl animate-fade-in page-transition scrollable-container">
@@ -76,13 +191,111 @@ const Settings = () => {
           <TabsTrigger value="history">Game History</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="account" className="mt-4">
+        <TabsContent value="account" className="mt-4 space-y-6">
+          {/* Authentication Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
+              <CardTitle className="flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Account
+              </CardTitle>
               <CardDescription>
-                Manage your account preferences
+                {user 
+                  ? "Manage your account" 
+                  : "Sign in to sync your progress and settings across devices"}
               </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              {loading ? (
+                <div className="py-4 text-center text-muted-foreground">
+                  Loading account information...
+                </div>
+              ) : user ? (
+                <div className="space-y-4">
+                  <div className="bg-secondary/40 p-4 rounded-md">
+                    <p className="font-medium">{user.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Account created: {new Date(user.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {authError && (
+                    <div className="p-3 text-sm text-red-500 bg-red-100 dark:bg-red-950/30 rounded">
+                      {authError}
+                    </div>
+                  )}
+                  
+                  <form className="space-y-4" onSubmit={handleSignIn}>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input 
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        type="submit"
+                        className="flex-1"
+                        disabled={authLoading}
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={handleSignUp}
+                        disabled={authLoading}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Sign Up
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Game Settings Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <SettingsIcon className="h-5 w-5 mr-2" />
+                Game Settings
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col space-y-4">

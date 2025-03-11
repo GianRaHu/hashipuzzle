@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
@@ -8,6 +7,7 @@ import { Puzzle } from '../utils/gameLogic';
 import { generateDailyChallenge } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, formatTime, isDailyCompleted, setDailyCompleted } from '../utils/storage';
 import Board from '../components/Board';
+import GameCompletedModal from '../components/game/GameCompletedModal';
 import DailyPuzzleList from '../components/game/DailyPuzzleList';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
@@ -160,7 +160,7 @@ const DailyChallenge: React.FC = () => {
   // Display puzzle list if no date selected yet
   if (showPuzzleList) {
     return (
-      <div className="container max-w-4xl px-4 py-12 md:py-16 mx-auto mt-16 animate-fade-in page-transition scrollable-container">
+      <div className="content-container max-w-4xl px-4 py-12 md:py-16 mx-auto mt-16 animate-fade-in page-transition scrollable-container">
         <div className="flex justify-between items-center mb-6">
           <Button 
             variant="ghost" 
@@ -288,19 +288,11 @@ const DailyChallenge: React.FC = () => {
       <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
       
       {gameCompleted && (
-        <div className="mt-8 text-center bg-primary/10 p-4 rounded-lg animate-scale-in">
-          <h2 className="text-xl font-medium mb-2">Challenge Completed!</h2>
-          <p className="mb-4">Time: {formatTime(puzzle.endTime! - puzzle.startTime!)}</p>
-          
-          <div className="flex justify-center space-x-3">
-            <Button onClick={restartPuzzle} variant="outline">
-              Play Again
-            </Button>
-            <Button onClick={handleBackToPuzzleList} variant="default">
-              More Challenges
-            </Button>
-          </div>
-        </div>
+        <GameCompletedModal
+          time={puzzle.endTime! - puzzle.startTime!}
+          resetPuzzle={restartPuzzle}
+          seed={puzzle.seed}
+        />
       )}
     </div>
   );

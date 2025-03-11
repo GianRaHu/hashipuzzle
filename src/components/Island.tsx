@@ -47,12 +47,12 @@ const Island: React.FC<IslandProps> = ({
     stateClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
     bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/20';
   } else if (actualConnections === 0) {
-    // No connections yet - show neutral ring
-    stateClass = 'ring-1 ring-secondary/70';
+    // No connections yet - show white ring
+    stateClass = 'ring-1 ring-white dark:ring-slate-300';
   } else if (actualConnections < connectionsNeeded) {
-    // Some connections but not complete
-    stateClass = 'ring-1 ring-primary/50';
-    bgColorClass = 'bg-secondary/70';
+    // Some connections but not complete - show red ring
+    stateClass = 'ring-1 ring-red-500 text-red-600';
+    bgColorClass = 'bg-red-50 dark:bg-red-900/10';
   }
 
   // Handle touch start
@@ -137,15 +137,15 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
+      className={`w-9 h-9 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        minWidth: '2.5rem',
-        minHeight: '2.5rem',
+        minWidth: '2.25rem',
+        minHeight: '2.25rem',
         fontSize: '1.1rem',
         fontWeight: 600
       }}

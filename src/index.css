@@ -84,13 +84,13 @@
 
 @layer utilities {
   .content-container {
-    @apply px-4 pt-4 pb-20 md:py-12 md:px-6 mx-auto;
+    @apply px-4 pt-4 pb-24 md:py-12 md:px-6 mx-auto;
     max-height: 100vh;
     overflow-y: auto;
   }
   
   .hashi-island {
-    @apply w-10 h-10 rounded-full flex items-center justify-center bg-secondary font-medium text-foreground transition-all duration-300;
+    @apply w-9 h-9 rounded-full flex items-center justify-center bg-secondary font-medium text-foreground transition-all duration-300;
     touch-action: manipulation;
   }
   
@@ -119,21 +119,21 @@
   
   /* Make difficulty cards smaller and fit better on mobile */
   :root [class*="difficulty-card"] {
-    @apply py-3 max-w-xs mx-auto;
+    @apply py-2 max-w-xs mx-auto;
   }
   
   /* Add portrait/landscape orientation utility classes */
   .board-portrait {
-    @apply aspect-[3/4] md:aspect-square;
+    @apply aspect-[4/5] md:aspect-square;
   }
   
   .board-landscape {
-    @apply aspect-square md:aspect-[4/3];
+    @apply aspect-square md:aspect-[5/4];
   }
   
   /* Scrollable container */
   .scrollable-container {
-    @apply overflow-y-auto overscroll-contain max-h-[80vh];
+    @apply overflow-y-auto overscroll-contain max-h-[80vh] pb-24;
   }
 }
 

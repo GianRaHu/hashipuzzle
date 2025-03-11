@@ -15,6 +15,9 @@ const Index: React.FC = () => {
           <DifficultySelector />
         </div>
       </div>
+      
+      {/* Added bottom padding/spacer */}
+      <div className="h-12"></div>
     </div>
   );
 };

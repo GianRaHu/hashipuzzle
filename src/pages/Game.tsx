@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
@@ -117,13 +116,9 @@ const Game: React.FC = () => {
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
       
-      toast({
-        title: "Puzzle solved!",
-        description: `You completed the ${difficulty} puzzle in ${updatedPuzzle.endTime! - updatedPuzzle.startTime!}`,
-        duration: 5000,
-      });
+      // Removed toast notification since we now only have the modal
     }
-  }, [currentMoveIndex, difficulty, gameCompleted, gameStarted, moveHistory, toast]);
+  }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory]);
   
   const resetPuzzle = () => {
     if (validDifficulty) {
@@ -289,6 +284,7 @@ const Game: React.FC = () => {
           <GameCompletedModal 
             time={puzzle.endTime! - puzzle.startTime!}
             resetPuzzle={resetPuzzle}
+            seed={puzzle.seed}
           />
         )}
       </main>
