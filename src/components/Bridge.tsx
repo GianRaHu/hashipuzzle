@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Bridge as BridgeType, Island } from '../utils/gameLogic';
 
@@ -38,9 +39,10 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedWidth = width - (cellSize * nodeRadius / gridSize);
     const adjustedPos = xPos + (cellSize * nodeRadius / (2 * gridSize));
     
-    const firstBridgeOffset = isSingleBridge ? 0 : 1; // Reduced from 2px to 1px
-    const secondBridgeOffset = 1; // Reduced from 2px to 1px
+    const firstBridgeOffset = isSingleBridge ? 0 : 2; // No offset for single, 2px up for double
+    const secondBridgeOffset = 2; // 2px down for second bridge
     
+    // For single bridge, center it
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
@@ -50,6 +52,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       transform: 'translateY(-50%)'
     };
     
+    // For double bridge, space them slightly
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
@@ -88,8 +91,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedHeight = height - (cellSize * nodeRadius / gridSize);
     const adjustedPos = yPos + (cellSize * nodeRadius / (2 * gridSize));
     
-    const firstBridgeOffset = isSingleBridge ? 0 : 1; // Reduced from 2px to 1px
-    const secondBridgeOffset = 1; // Reduced from 2px to 1px
+    const firstBridgeOffset = isSingleBridge ? 0 : 2; // No offset for single, 2px left for double
+    const secondBridgeOffset = 2; // 2px right for second bridge
     
     // For single bridge, center it; for double bridge, offset left
     const firstBridgeStyle: React.CSSProperties = {

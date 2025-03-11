@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -22,34 +23,36 @@ const Island: React.FC<IslandProps> = ({
   const touchTimerRef = useRef<number | null>(null);
   const moveDetectedRef = useRef<boolean>(false);
   
+  // Calculate the size and position
   const cellSize = 100 / gridSize;
   const xPos = island.col * cellSize + cellSize / 2;
   const yPos = island.row * cellSize + cellSize / 2;
   
+  // Connection completeness (for visual feedback)
   const connectionsNeeded = island.value;
   const actualConnections = island.connectedTo.length;
   
   // Determine visual state
-  let ringClass = '';
+  let stateClass = '';
   let bgColorClass = 'bg-secondary';
   
   if (isSelected || isDragging) {
-    ringClass = 'ring-1 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
-  } else if (actualConnections === 0) {
-    // White ring for no connections
-    ringClass = 'ring-1 ring-white/70';
+    stateClass = 'ring-1 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
   } else if (actualConnections === connectionsNeeded) {
-    // Green ring for complete
-    ringClass = 'ring-1 ring-green-500 text-green-600 font-bold';
+    // Connections match exactly - show green ring
+    stateClass = 'ring-1 ring-green-500 text-green-600 font-bold';
     bgColorClass = 'bg-green-100 dark:bg-green-900/20';
   } else if (actualConnections > connectionsNeeded) {
-    // Yellow ring for too many connections
-    ringClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
+    // Too many connections - show yellow warning
+    stateClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
     bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/20';
-  } else {
-    // Red ring for incomplete connections
-    ringClass = 'ring-1 ring-red-500 text-red-600';
-    bgColorClass = 'bg-red-50 dark:bg-red-900/20';
+  } else if (actualConnections === 0) {
+    // No connections yet - show neutral ring
+    stateClass = 'ring-1 ring-secondary/70';
+  } else if (actualConnections < connectionsNeeded) {
+    // Some connections but not complete
+    stateClass = 'ring-1 ring-primary/50';
+    bgColorClass = 'bg-secondary/70';
   }
 
   // Handle touch start
@@ -134,14 +137,16 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${ringClass}`}
+      className={`w-10 h-10 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        fontSize: '1rem',
+        minWidth: '2.5rem',
+        minHeight: '2.5rem',
+        fontSize: '1.1rem',
         fontWeight: 600
       }}
       onTouchStart={handleTouchStart}

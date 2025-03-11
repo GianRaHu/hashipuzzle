@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Moon, Sun, Laptop, Trash, User, LogIn } from 'lucide-react';
+import { Moon, Sun, Laptop, Trash, User, BellRing, Volume2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -13,7 +23,6 @@ import { Separator } from "@/components/ui/separator";
 const Settings = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
-  const [user, setUser] = useState(null);
   const [gameHistory, setGameHistory] = useState<{seed: number, difficulty: string, date: string}[]>([]);
   const [settings, setSettings] = useState({
     soundEnabled: true,
@@ -21,19 +30,7 @@ const Settings = () => {
     hapticFeedback: true,
     autoSave: true
   });
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
+  
   useEffect(() => {
     // Load game history from localStorage
     const history = localStorage.getItem('hashi_game_history');
@@ -68,14 +65,6 @@ const Settings = () => {
     });
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully."
-    });
-  };
-
   return (
     <div className="content-container max-w-4xl animate-fade-in page-transition scrollable-container">
       <h1 className="text-3xl font-medium mb-6">Settings</h1>
@@ -87,43 +76,16 @@ const Settings = () => {
           <TabsTrigger value="history">Game History</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="account" className="mt-4 space-y-4">
+        <TabsContent value="account" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
+              <CardTitle>Account Settings</CardTitle>
               <CardDescription>
-                {user ? "Manage your account" : "Sign in or create an account"}
+                Manage your account preferences
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              {user ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Signed in as: {user.email}
-                  </p>
-                  <Button onClick={handleSignOut} variant="outline">
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Button 
-                    onClick={() => window.location.href = '/auth'}
-                    className="w-full"
-                  >
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign In / Sign Up
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              {/* Move settings to a separate card */}
-              <div className="space-y-4">
-                
+            <CardContent className="space-y-6">
+              <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="sound">Sound Effects</Label>
@@ -190,8 +152,7 @@ const Settings = () => {
           </Card>
         </TabsContent>
         
-        
-          <TabsContent value="theme" className="mt-4">
+        <TabsContent value="theme" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle>Theme Settings</CardTitle>
