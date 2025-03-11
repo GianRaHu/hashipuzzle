@@ -1,5 +1,5 @@
-
 import { Puzzle } from './gameLogic';
+import { format } from 'date-fns';
 
 // Define the GameStats type
 export interface GameStats {
@@ -98,11 +98,21 @@ export const formatTime = (time: number): string => {
   return `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
 };
 
-// Check if the daily challenge is completed
-export const isDailyCompleted = (): boolean => {
-  const today = new Date().toISOString().split('T')[0];
-  const lastCompleted = localStorage.getItem('daily_completed_date');
-  return lastCompleted === today;
+// Format a date to a readable string
+export const formatDate = (date: Date): string => {
+  return format(date, 'MMMM do, yyyy');
+};
+
+// Check if the daily challenge for a specific date is completed
+export const isDailyCompleted = (date?: Date): boolean => {
+  // If no date is provided, use today's date
+  const targetDate = date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+  const completedDates = localStorage.getItem('daily_completed_dates');
+  
+  if (!completedDates) return false;
+  
+  const datesArray = JSON.parse(completedDates);
+  return datesArray.includes(targetDate);
 };
 
 // Set the daily challenge as completed
