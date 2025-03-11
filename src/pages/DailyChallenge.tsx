@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Puzzle } from '../utils/gameLogic';
@@ -111,14 +111,9 @@ const DailyChallenge: React.FC = () => {
       updateStats(updatedPuzzle);
       
       // Only update daily completion for today's challenge
-      if (format(selectedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+      if (format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')) {
         setDailyCompleted();
       }
-      
-      toast({
-        title: "Daily Challenge Completed!",
-        description: `You completed the challenge in ${formatTime(updatedPuzzle.endTime! - updatedPuzzle.startTime!)}`,
-      });
     }
   };
   
@@ -161,20 +156,8 @@ const DailyChallenge: React.FC = () => {
   if (showPuzzleList) {
     return (
       <div className="content-container max-w-4xl px-4 py-12 md:py-16 mx-auto mt-16 animate-fade-in page-transition scrollable-container">
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/')}
-            className="rounded-full"
-            aria-label="Back to home"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          
+        <div className="flex justify-center items-center mb-6">
           <h1 className="text-xl font-semibold">Daily Challenge</h1>
-          
-          <div className="w-10">{/* Spacer */}</div>
         </div>
         
         <DailyPuzzleList
@@ -189,18 +172,9 @@ const DailyChallenge: React.FC = () => {
   if (loading) {
     return (
       <div className="container max-w-4xl px-4 py-12 md:py-16 mx-auto mt-16 animate-fade-in page-transition">
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleBackToPuzzleList}
-            className="rounded-full"
-            aria-label="Back to puzzle list"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          
+        <div className="flex justify-center items-center mb-6">
           <div className="flex flex-col items-center">
+            <h1 className="text-xl font-semibold mb-2">Daily Challenge</h1>
             <div className="flex items-center space-x-2">
               <Button 
                 variant="outline" 
@@ -212,8 +186,6 @@ const DailyChallenge: React.FC = () => {
               </Button>
             </div>
           </div>
-          
-          <div className="w-10">{/* Spacer */}</div>
         </div>
         
         <div className="flex flex-col items-center justify-center min-h-[400px]">
@@ -241,23 +213,19 @@ const DailyChallenge: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <Button 
           variant="ghost" 
-          size="icon" 
           onClick={handleBackToPuzzleList}
           className="rounded-full"
           aria-label="Back to puzzle list"
         >
-          <ArrowLeft className="h-5 w-5" />
+          Daily Challenge
         </Button>
         
-        <div className="flex flex-col items-center">
-          <h2 className="text-lg font-medium mb-1">Daily Challenge</h2>
-          <div className="flex items-center text-sm text-foreground/70 space-x-2">
-            <span>{format(selectedDate, 'MMMM d, yyyy')}</span>
-            <span className="text-primary">•</span>
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>{formatTime(timer)}</span>
-            </div>
+        <div className="flex items-center text-sm text-foreground/70 space-x-2">
+          <span>{format(selectedDate, 'MMMM d, yyyy')}</span>
+          <span className="text-primary">•</span>
+          <div className="flex items-center">
+            <Clock className="h-3 w-3 mr-1" />
+            <span>{formatTime(timer)}</span>
           </div>
         </div>
         
@@ -270,7 +238,7 @@ const DailyChallenge: React.FC = () => {
             className="rounded-full h-8 w-8"
             aria-label="Undo"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only">Undo</span>
           </Button>
           
           <Button 
@@ -280,7 +248,7 @@ const DailyChallenge: React.FC = () => {
             className="rounded-full h-8 w-8"
             aria-label="Restart puzzle"
           >
-            <ArrowLeft className="h-4 w-4 opacity-0" /> {/* Placeholder for layout */}
+            <span className="sr-only">Restart</span>
           </Button>
         </div>
       </div>

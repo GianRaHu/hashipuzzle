@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
@@ -116,7 +117,7 @@ const Game: React.FC = () => {
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
       
-      // Removed toast notification since we now only have the modal
+      // No toast notification since we only have the modal now
     }
   }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory]);
   

@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, CheckCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isDailyCompleted, formatTime } from '@/utils/storage';
 import { format, subDays } from 'date-fns';
 
@@ -12,7 +13,6 @@ interface DailyPuzzleListProps {
 }
 
 const DailyPuzzleList: React.FC<DailyPuzzleListProps> = ({ onSelectDate, selectedDate }) => {
-  const navigate = useNavigate();
   const today = new Date();
   
   // Generate the list of dates (today and past 6 days)
@@ -20,51 +20,104 @@ const DailyPuzzleList: React.FC<DailyPuzzleListProps> = ({ onSelectDate, selecte
     subDays(today, i)
   );
   
-  // Format a date for display
-  const formatDate = (date: Date): string => {
-    return format(date, 'EEEE, MMMM do');
-  };
-  
   return (
     <div className="max-w-md mx-auto">
-      <p className="text-sm text-muted-foreground mb-6 text-center">
-        Choose a daily challenge from today or the past week
-      </p>
-      
-      <div className="space-y-3">
-        {dates.map((date) => {
-          const isToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-          const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-          const isCompleted = isDailyCompleted(date);
+      <Tabs defaultValue="daily" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="daily">This Week</TabsTrigger>
+          <TabsTrigger value="recent">Previous Challenges</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="daily" className="space-y-4">
+          <p className="text-sm text-muted-foreground mb-2 text-center">
+            Play today's challenge or catch up on this week's puzzles
+          </p>
           
-          return (
-            <Button
-              key={format(date, 'yyyy-MM-dd')}
-              variant={isSelected ? "default" : "outline"}
-              className="w-full justify-between group relative overflow-hidden"
-              onClick={() => onSelectDate(date)}
-            >
-              <span className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span>{isToday ? "Today" : formatDate(date)}</span>
-              </span>
-              
-              <div className="flex items-center space-x-2">
-                {isCompleted && (
-                  <span className="flex items-center text-green-500 text-xs">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Completed
-                  </span>
-                )}
-              </div>
-              
-              {isSelected && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
-              )}
-            </Button>
-          );
-        })}
+          <Card className="p-4">
+            {dates.slice(0, 3).map((date) => (
+              <ChallengeRow
+                key={format(date, 'yyyy-MM-dd')}
+                date={date}
+                isToday={format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')}
+                isSelected={format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')}
+                isCompleted={isDailyCompleted(date)}
+                onSelect={() => onSelectDate(date)}
+              />
+            ))}
+          </Card>
+          
+          <Card className="p-4">
+            {dates.slice(3, 7).map((date) => (
+              <ChallengeRow
+                key={format(date, 'yyyy-MM-dd')}
+                date={date}
+                isToday={format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')}
+                isSelected={format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')}
+                isCompleted={isDailyCompleted(date)}
+                onSelect={() => onSelectDate(date)}
+              />
+            ))}
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="recent">
+          <p className="text-sm text-muted-foreground mb-6 text-center">
+            Coming soon: Browse and play challenges from previous weeks
+          </p>
+          
+          <div className="flex justify-center">
+            <div className="bg-muted/50 rounded-lg p-8 text-center">
+              <Trophy className="h-10 w-10 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-muted-foreground">
+                Previous challenges will be available soon!
+              </p>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+interface ChallengeRowProps {
+  date: Date;
+  isToday: boolean;
+  isSelected: boolean;
+  isCompleted: boolean;
+  onSelect: () => void;
+}
+
+const ChallengeRow: React.FC<ChallengeRowProps> = ({ 
+  date, 
+  isToday, 
+  isSelected, 
+  isCompleted, 
+  onSelect 
+}) => {
+  return (
+    <div 
+      className={`flex justify-between items-center p-3 mb-2 last:mb-0 rounded-md transition-colors cursor-pointer
+        ${isSelected ? 'bg-primary/10' : 'hover:bg-muted/50'}`}
+      onClick={onSelect}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center 
+          ${isToday ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground/70'}`}
+        >
+          {format(date, 'dd')}
+        </div>
+        
+        <div className="flex flex-col">
+          <span className="font-medium">{isToday ? "Today" : format(date, 'EEEE')}</span>
+          <span className="text-xs text-muted-foreground">{format(date, 'MMMM d, yyyy')}</span>
+        </div>
       </div>
+      
+      {isCompleted ? (
+        <CheckCircle className="h-5 w-5 text-green-500" />
+      ) : (
+        <Calendar className="h-5 w-5 text-muted-foreground/50" />
+      )}
     </div>
   );
 };

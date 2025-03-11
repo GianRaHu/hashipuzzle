@@ -1,3 +1,4 @@
+
 // Types for our game
 export type Island = {
   id: string;
@@ -99,12 +100,17 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
     
     newPuzzle.bridges.push(newBridge);
     
-    // Update island connections
+    // Update island connections - add one connection for each island
     const updatedIslands = newPuzzle.islands.map(island => {
-      if (island.id === island1.id || island.id === island2.id) {
+      if (island.id === island1.id) {
         return {
           ...island,
-          connectedTo: [...island.connectedTo, island.id === island1.id ? island2.id : island1.id]
+          connectedTo: [...island.connectedTo, island2.id]
+        };
+      } else if (island.id === island2.id) {
+        return {
+          ...island,
+          connectedTo: [...island.connectedTo, island1.id]
         };
       }
       return island;
@@ -121,12 +127,17 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
         count: 2
       };
       
-      // Update island connections
+      // Update island connections - add another connection for each island
       const updatedIslands = newPuzzle.islands.map(island => {
-        if (island.id === island1.id || island.id === island2.id) {
+        if (island.id === island1.id) {
           return {
             ...island,
-            connectedTo: [...island.connectedTo, island.id === island1.id ? island2.id : island1.id]
+            connectedTo: [...island.connectedTo, island2.id]
+          };
+        } else if (island.id === island2.id) {
+          return {
+            ...island,
+            connectedTo: [...island.connectedTo, island1.id]
           };
         }
         return island;
@@ -137,14 +148,17 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
       // Remove bridge completely
       newPuzzle.bridges = newPuzzle.bridges.filter((_, index) => index !== existingBridgeIndex);
       
-      // Update island connections
+      // Update island connections - remove ALL connections between these islands
       const updatedIslands = newPuzzle.islands.map(island => {
-        if (island.id === island1.id || island.id === island2.id) {
+        if (island.id === island1.id) {
           return {
             ...island,
-            connectedTo: island.connectedTo.filter(id => 
-              id !== (island.id === island1.id ? island2.id : island1.id)
-            )
+            connectedTo: island.connectedTo.filter(id => id !== island2.id)
+          };
+        } else if (island.id === island2.id) {
+          return {
+            ...island,
+            connectedTo: island.connectedTo.filter(id => id !== island1.id)
           };
         }
         return island;
@@ -169,15 +183,20 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
 export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
   // A puzzle is solved when all islands have exactly the correct number of connections
   return puzzle.islands.every(island => {
-    const connections = puzzle.bridges.reduce((count, bridge) => {
-      if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
-        return count + bridge.count;
-      }
-      return count;
-    }, 0);
-    
+    // Calculate the current number of bridges connected to this island
+    const connections = countIslandConnections(island, puzzle.bridges);
     return connections === island.value;
   });
+};
+
+// Count the actual number of bridges connected to an island
+export const countIslandConnections = (island: Island, bridges: Bridge[]): number => {
+  return bridges.reduce((count, bridge) => {
+    if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
+      return count + bridge.count;
+    }
+    return count;
+  }, 0);
 };
 
 // Helper to get an island by id
