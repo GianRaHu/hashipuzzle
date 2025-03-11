@@ -85,6 +85,8 @@
 @layer utilities {
   .content-container {
     @apply px-4 pt-4 pb-20 md:py-12 md:px-6 mx-auto;
+    max-height: 100vh;
+    overflow-y: auto;
   }
   
   .hashi-island {
@@ -93,7 +95,7 @@
   }
   
   .hashi-island-selected {
-    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+    @apply ring-1 ring-primary ring-offset-1 ring-offset-background;
   }
   
   .hashi-bridge {
@@ -113,6 +115,25 @@
   .touch-callout-none {
     -webkit-touch-callout: none;
     touch-callout: none;
+  }
+  
+  /* Make difficulty cards smaller and fit better on mobile */
+  :root [class*="difficulty-card"] {
+    @apply py-3 max-w-xs mx-auto;
+  }
+  
+  /* Add portrait/landscape orientation utility classes */
+  .board-portrait {
+    @apply aspect-[3/4] md:aspect-square;
+  }
+  
+  .board-landscape {
+    @apply aspect-square md:aspect-[4/3];
+  }
+  
+  /* Scrollable container */
+  .scrollable-container {
+    @apply overflow-y-auto overscroll-contain max-h-[80vh];
   }
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
@@ -106,6 +107,7 @@ const Game: React.FC = () => {
     
     setPuzzle(updatedPuzzle);
     
+    // Only add to history if it's a new move (not from undo/redo)
     const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
     setMoveHistory(newHistory);
     setCurrentMoveIndex(newHistory.length - 1);
@@ -147,6 +149,8 @@ const Game: React.FC = () => {
             setGameCompleted(false);
             setMoveHistory([newPuzzle]);
             setCurrentMoveIndex(0);
+            setGameStarted(false);
+            setTimer(0);
             setLoading(false);
             console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
           }, 500);
@@ -276,7 +280,7 @@ const Game: React.FC = () => {
         gameStarted={gameStarted}
       />
       
-      <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center">
+      <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
         <h1 className="text-lg font-medium capitalize mb-4">{difficulty} Puzzle</h1>
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />

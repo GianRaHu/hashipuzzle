@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -36,21 +37,21 @@ const Island: React.FC<IslandProps> = ({
   let bgColorClass = 'bg-secondary';
   
   if (isSelected || isDragging) {
-    stateClass = 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/20 text-primary font-bold';
+    stateClass = 'ring-1 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
   } else if (actualConnections === connectionsNeeded) {
     // Connections match exactly - show green ring
-    stateClass = 'ring-2 ring-green-500 text-green-600 font-bold';
+    stateClass = 'ring-1 ring-green-500 text-green-600 font-bold';
     bgColorClass = 'bg-green-100 dark:bg-green-900/20';
   } else if (actualConnections > connectionsNeeded) {
     // Too many connections - show yellow warning
-    stateClass = 'ring-2 ring-yellow-500 text-yellow-600 font-bold';
+    stateClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
     bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/20';
   } else if (actualConnections === 0) {
     // No connections yet - show neutral ring
-    stateClass = 'ring-2 ring-secondary/70';
+    stateClass = 'ring-1 ring-secondary/70';
   } else if (actualConnections < connectionsNeeded) {
     // Some connections but not complete
-    stateClass = 'ring-2 ring-primary/50';
+    stateClass = 'ring-1 ring-primary/50';
     bgColorClass = 'bg-secondary/70';
   }
 
@@ -143,9 +144,9 @@ const Island: React.FC<IslandProps> = ({
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        minWidth: '2.75rem',
-        minHeight: '2.75rem',
-        fontSize: '1.2rem',
+        minWidth: '2.5rem',
+        minHeight: '2.5rem',
+        fontSize: '1.1rem',
         fontWeight: 600
       }}
       onTouchStart={handleTouchStart}

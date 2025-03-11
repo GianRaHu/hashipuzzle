@@ -11,6 +11,7 @@ import {
 import Island from './Island';
 import Bridge from './Bridge';
 import GridBackground from './GridBackground';
+import { useMediaQuery } from '@/hooks/use-mobile';
 
 interface BoardProps {
   puzzle: Puzzle;
@@ -22,7 +23,9 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [dragStartIsland, setDragStartIsland] = useState<IslandType | null>(null);
   const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
+  const [dragOverIsland, setDragOverIsland] = useState<IslandType | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   
   // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
@@ -69,9 +72,12 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
 
   // Handle drag end on island
   const handleDragEnd = (endIsland: IslandType) => {
-    if (dragStartIsland && dragStartIsland.id !== endIsland.id) {
-      if (canConnect(dragStartIsland, endIsland, puzzle.islands, puzzle.bridges)) {
-        const updatedPuzzle = toggleBridge(dragStartIsland, endIsland, puzzle);
+    // If we have a drag over island during drag end, use that island
+    const targetIsland = dragOverIsland || endIsland;
+    
+    if (dragStartIsland && dragStartIsland.id !== targetIsland.id) {
+      if (canConnect(dragStartIsland, targetIsland, puzzle.islands, puzzle.bridges)) {
+        const updatedPuzzle = toggleBridge(dragStartIsland, targetIsland, puzzle);
         onUpdate(updatedPuzzle);
       }
     }
@@ -80,11 +86,12 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     setDragStartIsland(null);
     setIsPointerDown(false);
     setDragPosition(null);
+    setDragOverIsland(null);
   };
   
-  // Handle board mouse move (for drawing drag line)
+  // Handle board mouse/touch move (for drawing drag line)
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isPointerDown || !dragStartIsland) return;
+    if (!isPointerDown || !dragStartIsland || !boardRef.current) return;
     
     let clientX: number, clientY: number;
     
@@ -98,15 +105,48 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
     
     setDragPosition({ x: clientX, y: clientY });
+    
+    // Check if we're hovering over an island
+    const boardRect = boardRef.current.getBoundingClientRect();
+    const relativeX = clientX - boardRect.left;
+    const relativeY = clientY - boardRect.top;
+    
+    // Find if we're over any island (excluding the start island)
+    const draggedOverIsland = puzzle.islands.find(island => {
+      if (island.id === dragStartIsland.id) return false;
+      
+      const cellSize = 100 / puzzle.size;
+      const islandX = (island.col * cellSize + cellSize / 2) * boardRect.width / 100;
+      const islandY = (island.row * cellSize + cellSize / 2) * boardRect.height / 100;
+      
+      // Check if pointer is within island radius (using 30px as approximate radius)
+      const dx = relativeX - islandX;
+      const dy = relativeY - islandY;
+      const distanceSquared = dx * dx + dy * dy;
+      
+      return distanceSquared <= 900; // 30px radius squared
+    });
+    
+    setDragOverIsland(draggedOverIsland || null);
+    
     e.preventDefault();
   };
   
   // Handle pointer up anywhere in the document (to end drag)
   useEffect(() => {
     const handlePointerUp = () => {
+      if (dragStartIsland && dragOverIsland) {
+        // Complete the connection if drag ends over another island
+        if (canConnect(dragStartIsland, dragOverIsland, puzzle.islands, puzzle.bridges)) {
+          const updatedPuzzle = toggleBridge(dragStartIsland, dragOverIsland, puzzle);
+          onUpdate(updatedPuzzle);
+        }
+      }
+      
       setIsPointerDown(false);
       setDragPosition(null);
       setDragStartIsland(null);
+      setDragOverIsland(null);
     };
     
     document.addEventListener('mouseup', handlePointerUp);
@@ -116,7 +156,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       document.removeEventListener('mouseup', handlePointerUp);
       document.removeEventListener('touchend', handlePointerUp);
     };
-  }, []);
+  }, [dragOverIsland, dragStartIsland, onUpdate, puzzle]);
   
   // Check if puzzle is solved
   useEffect(() => {
@@ -148,10 +188,13 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     };
   }, [dragStartIsland, isPointerDown]);
 
+  // Determine if board should be in portrait or landscape orientation
+  const boardOrientationClass = isDesktop ? 'board-landscape' : 'board-portrait';
+
   return (
     <div 
       ref={boardRef}
-      className="relative w-full aspect-square max-w-lg mx-auto border border-border/30 rounded-lg overflow-hidden"
+      className={`relative w-full max-w-lg mx-auto border border-border/30 rounded-lg overflow-hidden ${boardOrientationClass}`}
       aria-label="Hashi puzzle board"
       style={{ 
         touchAction: "none",
@@ -189,7 +232,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         <Island 
           key={island.id}
           island={island}
-          isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id}
+          isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id || dragOverIsland?.id === island.id}
           onClick={() => handleIslandClick(island)}
           onDragStart={(e) => handleDragStart(island, e)}
           onDragEnd={() => handleDragEnd(island)}

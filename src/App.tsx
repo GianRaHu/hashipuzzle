@@ -10,6 +10,7 @@ import Game from "./pages/Game";
 import DailyChallenge from "./pages/DailyChallenge";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/daily" element={<DailyChallenge />} />
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/support" element={<Support />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
