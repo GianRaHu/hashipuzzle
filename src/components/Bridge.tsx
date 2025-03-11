@@ -13,36 +13,33 @@ interface BridgeProps {
 const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true }) => {
   const cellSize = 100 / gridSize;
   
-  // Common bridge styles
   const bridgeStyle: React.CSSProperties = {
     position: 'absolute',
-    backgroundColor: 'hsl(var(--gameAccent))',
+    backgroundColor: 'hsl(var(--gameAccent)/0.8)',
     transition: 'all 0.3s ease',
-    zIndex: 5 // Lower than islands (10) to allow island clicks
+    zIndex: 5
   };
   
   const isHorizontal = bridge.orientation === 'horizontal';
   const isSingleBridge = bridge.count === 1;
   
-  // Node radius offset (in percentage of cell)
-  const nodeRadius = 1.125; // Reduced radius for smaller islands
+  // Reduced node radius for smaller islands
+  const nodeRadius = 1;
   
   if (isHorizontal) {
-    // Horizontal bridge
     const minCol = Math.min(startIsland.col, endIsland.col);
     const maxCol = Math.max(startIsland.col, endIsland.col);
     const width = (maxCol - minCol) * cellSize;
     const xPos = minCol * cellSize + cellSize / 2;
     const yPos = startIsland.row * cellSize + cellSize / 2;
     
-    // Add node radius offset to both ends
     const adjustedWidth = width - (cellSize * nodeRadius / gridSize);
     const adjustedPos = xPos + (cellSize * nodeRadius / (2 * gridSize));
     
-    const firstBridgeOffset = isSingleBridge ? 0 : 1; // Reduced offset for double bridge
-    const secondBridgeOffset = 1; // Reduced offset for second bridge
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
-    // For single bridge, center it
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
@@ -52,7 +49,6 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       transform: 'translateY(-50%)'
     };
     
-    // For double bridge, space them slightly
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
@@ -80,21 +76,19 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       </>
     );
   } else {
-    // Vertical bridge
     const minRow = Math.min(startIsland.row, endIsland.row);
     const maxRow = Math.max(startIsland.row, endIsland.row);
     const height = (maxRow - minRow) * cellSize;
     const xPos = startIsland.col * cellSize + cellSize / 2;
     const yPos = minRow * cellSize + cellSize / 2;
     
-    // Add node radius offset to both ends
     const adjustedHeight = height - (cellSize * nodeRadius / gridSize);
     const adjustedPos = yPos + (cellSize * nodeRadius / (2 * gridSize));
     
-    const firstBridgeOffset = isSingleBridge ? 0 : 1; // Reduced offset for double bridge
-    const secondBridgeOffset = 1; // Reduced offset for second bridge
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
-    // For single bridge, center it; for double bridge, offset left
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${xPos - firstBridgeOffset}%`,
@@ -104,7 +98,6 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       transform: 'translateX(-50%)'
     };
     
-    // For double bridge, offset right
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${xPos + secondBridgeOffset}%`,

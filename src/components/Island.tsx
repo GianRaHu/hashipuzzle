@@ -32,27 +32,27 @@ const Island: React.FC<IslandProps> = ({
   const connectionsNeeded = island.value;
   const actualConnections = island.connectedTo.length;
   
-  // Determine visual state
+  // Determine visual state with fixed sizes and consistent transparency
   let stateClass = '';
-  let bgColorClass = 'bg-secondary';
+  let bgColorClass = 'bg-secondary/90'; // Consistent transparency
   
   if (isSelected || isDragging) {
     stateClass = 'ring-1 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
   } else if (actualConnections === connectionsNeeded) {
     // Connections match exactly - show green ring
     stateClass = 'ring-1 ring-green-500 text-green-600 font-bold';
-    bgColorClass = 'bg-green-100 dark:bg-green-900/20';
+    bgColorClass = 'bg-green-100/90 dark:bg-green-900/20';
   } else if (actualConnections > connectionsNeeded) {
     // Too many connections - show yellow warning
     stateClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
-    bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/20';
+    bgColorClass = 'bg-yellow-100/90 dark:bg-yellow-900/20';
   } else if (actualConnections === 0) {
     // No connections yet - show white ring
     stateClass = 'ring-1 ring-white dark:ring-slate-300';
   } else if (actualConnections < connectionsNeeded) {
     // Some connections but not complete - show red ring
     stateClass = 'ring-1 ring-red-500 text-red-600';
-    bgColorClass = 'bg-red-50 dark:bg-red-900/10';
+    bgColorClass = 'bg-red-50/90 dark:bg-red-900/20';
   }
 
   // Handle touch start
@@ -137,16 +137,16 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-9 h-9 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
+      className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        minWidth: '2.25rem',
-        minHeight: '2.25rem',
-        fontSize: '1.1rem',
+        minWidth: '2rem',
+        minHeight: '2rem',
+        fontSize: '1rem',
         fontWeight: 600
       }}
       onTouchStart={handleTouchStart}

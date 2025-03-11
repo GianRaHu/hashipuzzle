@@ -100,7 +100,7 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
     newPuzzle.bridges.push(newBridge);
     
     // Update island connections
-    const updatedIslands = newPuzzle.islands.map(island => {
+    newPuzzle.islands = newPuzzle.islands.map(island => {
       if (island.id === island1.id || island.id === island2.id) {
         return {
           ...island,
@@ -109,8 +109,6 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
       }
       return island;
     });
-    
-    newPuzzle.islands = updatedIslands;
   } else {
     const bridge = newPuzzle.bridges[existingBridgeIndex];
     
@@ -121,8 +119,8 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
         count: 2
       };
       
-      // Update island connections
-      const updatedIslands = newPuzzle.islands.map(island => {
+      // Add another connection
+      newPuzzle.islands = newPuzzle.islands.map(island => {
         if (island.id === island1.id || island.id === island2.id) {
           return {
             ...island,
@@ -131,14 +129,12 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
         }
         return island;
       });
-      
-      newPuzzle.islands = updatedIslands;
     } else {
       // Remove bridge completely
       newPuzzle.bridges = newPuzzle.bridges.filter((_, index) => index !== existingBridgeIndex);
       
-      // Update island connections
-      const updatedIslands = newPuzzle.islands.map(island => {
+      // Remove all connections between these islands
+      newPuzzle.islands = newPuzzle.islands.map(island => {
         if (island.id === island1.id || island.id === island2.id) {
           return {
             ...island,
@@ -149,8 +145,6 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
         }
         return island;
       });
-      
-      newPuzzle.islands = updatedIslands;
     }
   }
   
