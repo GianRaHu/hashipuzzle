@@ -11,6 +11,7 @@ import DailyChallenge from "./pages/DailyChallenge";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
+import Custom from "./pages/Custom";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/custom" element={<Custom />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
