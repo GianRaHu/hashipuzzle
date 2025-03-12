@@ -1,333 +1,324 @@
-// Types for our game
-export type Island = {
+import { v4 as uuidv4 } from 'uuid';
+
+export interface Island {
   id: string;
   row: number;
   col: number;
   value: number;
-  connectedTo: string[];
-};
+}
 
-export type Bridge = {
+export interface Bridge {
   id: string;
   startIslandId: string;
   endIslandId: string;
-  count: 1 | 2;  // 1 or 2 bridges
+  count: number;
   orientation: 'horizontal' | 'vertical';
-};
+}
 
-export type Move = {
-  startIslandId: string;
-  endIslandId: string;
-  previousBridgeCount: number;
-  timestamp: number;
-};
-
-export type Puzzle = {
+export interface Puzzle {
   id: string;
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master';
   size: number;
   islands: Island[];
   bridges: Bridge[];
-  solved: boolean;
+  difficulty: string;
   startTime?: number;
   endTime?: number;
-  seed?: number;
-  moveHistory: Move[];
+  moveHistory: string[];
+  solution?: Bridge[]; // Store the unique solution
+}
+
+const DIFFICULTY_SETTINGS = {
+  easy: { size: 7, minIslands: 6, maxIslands: 8, maxValue: 4 },
+  medium: { size: 8, minIslands: 8, maxIslands: 10, maxValue: 6 },
+  hard: { size: 9, minIslands: 10, maxIslands: 12, maxValue: 8 },
+  expert: { size: 10, minIslands: 12, maxIslands: 15, maxValue: 8 },
+  master: { size: 12, minIslands: 15, maxIslands: 18, maxValue: 8 }
 };
 
-// Generate a unique ID
-export const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 9);
-};
+function findAllSolutions(puzzle: Puzzle): Bridge[][] {
+  const solutions: Bridge[][] = [];
+  const remainingBridges: Bridge[] = [];
+  const currentBridges: Bridge[] = [];
 
-// Check if two islands can be connected
-export const canConnect = (island1: Island, island2: Island, islands: Island[], bridges: Bridge[]): boolean => {
-  // Can't connect to self
-  if (island1.id === island2.id) {
-    return false;
-  }
-  
-  // Can only connect if they're in the same row or column
-  if (island1.row !== island2.row && island1.col !== island2.col) {
-    return false;
-  }
-  
-  // Check if already connected with 2 bridges (maximum)
-  const existingBridge = bridges.find(
-    b => (b.startIslandId === island1.id && b.endIslandId === island2.id) || 
-         (b.startIslandId === island2.id && b.endIslandId === island1.id)
-  );
-  
-  if (existingBridge && existingBridge.count === 2) {
-    return false;
-  }
-  
-  // Check if path is clear (no islands in between)
-  if (island1.row === island2.row) {
-    // Horizontal check
-    const minCol = Math.min(island1.col, island2.col);
-    const maxCol = Math.max(island1.col, island2.col);
-    
-    return !islands.some(island => 
-      island.row === island1.row && 
-      island.col > minCol && 
-      island.col < maxCol
-    );
-  } else {
-    // Vertical check
-    const minRow = Math.min(island1.row, island2.row);
-    const maxRow = Math.max(island1.row, island2.row);
-    
-    return !islands.some(island => 
-      island.col === island1.col && 
-      island.row > minRow && 
-      island.row < maxRow
-    );
-  }
-};
+  // Create all possible bridges
+  puzzle.islands.forEach((island1, i) => {
+    puzzle.islands.slice(i + 1).forEach((island2) => {
+      if (island1.row === island2.row || island1.col === island2.col) {
+        // Check if bridge would cross any islands
+        const wouldCross = puzzle.islands.some(island3 => {
+          if (island3.id === island1.id || island3.id === island2.id) return false;
+          
+          if (island1.row === island2.row) {
+            return island3.row === island1.row && 
+                   island3.col > Math.min(island1.col, island2.col) && 
+                   island3.col < Math.max(island1.col, island2.col);
+          } else {
+            return island3.col === island1.col && 
+                   island3.row > Math.min(island1.row, island2.row) && 
+                   island3.row < Math.max(island1.row, island2.row);
+          }
+        });
 
-// Helper to get an island by id
-export const getIslandById = (islands: Island[], id: string): Island | undefined => {
-  return islands.find(island => island.id === id);
-};
-
-// Helper to get bridge between two islands
-export const getBridgeBetweenIslands = (bridges: Bridge[], island1Id: string, island2Id: string): Bridge | undefined => {
-  return bridges.find(
-    b => (b.startIslandId === island1Id && b.endIslandId === island2Id) || 
-         (b.startIslandId === island2Id && b.endIslandId === island1Id)
-  );
-};
-
-// Check if the puzzle is solved
-export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
-  // Check if all islands have the correct number of connections
-  const islandsValid = puzzle.islands.every(island => {
-    const connections = puzzle.bridges.reduce((count, bridge) => {
-      if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
-        return count + bridge.count;
+        if (!wouldCross) {
+          remainingBridges.push({
+            id: `${island1.id}-${island2.id}`,
+            startIslandId: island1.id,
+            endIslandId: island2.id,
+            count: 0,
+            orientation: island1.row === island2.row ? 'horizontal' : 'vertical'
+          });
+        }
       }
-      return count;
-    }, 0);
-    return connections === island.value;
+    });
   });
 
-  if (!islandsValid) return false;
+  function isValidSolution(bridges: Bridge[]): boolean {
+    const islandConnections = new Map<string, number>();
+    
+    puzzle.islands.forEach(island => {
+      islandConnections.set(island.id, 0);
+    });
 
-  // Check if all islands are connected (no isolated islands)
-  const visited = new Set<string>();
-  const stack: string[] = [puzzle.islands[0].id];
+    bridges.forEach(bridge => {
+      const count = bridge.count;
+      islandConnections.set(
+        bridge.startIslandId, 
+        (islandConnections.get(bridge.startIslandId) || 0) + count
+      );
+      islandConnections.set(
+        bridge.endIslandId, 
+        (islandConnections.get(bridge.endIslandId) || 0) + count
+      );
+    });
 
-  while (stack.length > 0) {
-    const currentId = stack.pop()!;
-    if (!visited.has(currentId)) {
-      visited.add(currentId);
-      const connectedIds = puzzle.bridges
-        .filter(b => b.startIslandId === currentId || b.endIslandId === currentId)
-        .map(b => b.startIslandId === currentId ? b.endIslandId : b.startIslandId);
-      stack.push(...connectedIds);
+    return Array.from(islandConnections.entries()).every(
+      ([islandId, count]) => {
+        const island = puzzle.islands.find(i => i.id === islandId);
+        return island && count === island.value;
+      }
+    );
+  }
+
+  function findSolutions(currentIndex: number) {
+    if (currentIndex === remainingBridges.length) {
+      if (isValidSolution(currentBridges)) {
+        solutions.push([...currentBridges]);
+      }
+      return;
+    }
+
+    const bridge = remainingBridges[currentIndex];
+    const maxBridges = 2;
+
+    for (let count = 0; count <= maxBridges; count++) {
+      const newBridge = { ...bridge, count };
+      currentBridges.push(newBridge);
+      
+      const isValid = puzzle.islands.every(island => {
+        const connectedBridges = currentBridges.filter(
+          b => b.startIslandId === island.id || b.endIslandId === island.id
+        );
+        const currentConnections = connectedBridges.reduce((sum, b) => sum + b.count, 0);
+        const remainingPossibleConnections = (remainingBridges.length - currentIndex - 1) * 2;
+        return currentConnections <= island.value && 
+               (currentConnections + remainingPossibleConnections) >= island.value;
+      });
+
+      if (isValid) {
+        findSolutions(currentIndex + 1);
+      }
+      
+      currentBridges.pop();
     }
   }
 
-  return visited.size === puzzle.islands.length;
-};
+  findSolutions(0);
+  return solutions;
+}
 
-// Toggle a bridge between two islands
-export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): Puzzle => {
+function generateValidPuzzle(difficulty: string): Puzzle {
+  const config = DIFFICULTY_SETTINGS[difficulty as keyof typeof DIFFICULTY_SETTINGS];
+  if (!config) throw new Error('Invalid difficulty level');
+
+  let attempts = 0;
+  const maxAttempts = 100;
+
+  while (attempts < maxAttempts) {
+    const puzzle = generateBasicPuzzle(difficulty);
+    const solutions = findAllSolutions(puzzle);
+
+    if (solutions.length === 1) {
+      return {
+        ...puzzle,
+        solution: solutions[0]
+      };
+    }
+
+    attempts++;
+  }
+
+  throw new Error('Failed to generate a puzzle with a unique solution');
+}
+
+function generateBasicPuzzle(difficulty: string): Puzzle {
+  const config = DIFFICULTY_SETTINGS[difficulty as keyof typeof DIFFICULTY_SETTINGS];
+  if (!config) throw new Error('Invalid difficulty level');
+
+  const { size, minIslands, maxIslands, maxValue } = config;
+  const numIslands = Math.floor(Math.random() * (maxIslands - minIslands + 1)) + minIslands;
+
+  const islands: Island[] = [];
+  const occupiedSpots = new Set<string>();
+
+  // Place islands
+  while (islands.length < numIslands) {
+    const row = Math.floor(Math.random() * size);
+    const col = Math.floor(Math.random() * size);
+    const key = `${row},${col}`;
+
+    if (!occupiedSpots.has(key)) {
+      const value = Math.floor(Math.random() * (maxValue - 1)) + 1;
+      islands.push({
+        id: uuidv4(),
+        row,
+        col,
+        value
+      });
+      occupiedSpots.add(key);
+    }
+  }
+
+  return {
+    id: uuidv4(),
+    size,
+    islands,
+    bridges: [],
+    difficulty,
+    startTime: Date.now(),
+    moveHistory: []
+  };
+}
+
+export function generatePuzzle(difficulty: string): Puzzle {
+  try {
+    return generateValidPuzzle(difficulty);
+  } catch (error) {
+    console.error('Error generating puzzle:', error);
+    return generateBasicPuzzle(difficulty);
+  }
+}
+
+export function toggleBridge(island1: Island, island2: Island, puzzle: Puzzle): Puzzle {
   if (!canConnect(island1, island2, puzzle.islands, puzzle.bridges)) {
     return puzzle;
   }
-  
-  const newPuzzle = { ...puzzle };
-  
-  // Initialize moveHistory if it doesn't exist
-  if (!newPuzzle.moveHistory) {
-    newPuzzle.moveHistory = [];
-  }
-  
-  // Find existing bridge if any
-  const existingBridgeIndex = newPuzzle.bridges.findIndex(
-    b => (b.startIslandId === island1.id && b.endIslandId === island2.id) || 
-         (b.startIslandId === island2.id && b.endIslandId === island1.id)
+
+  const existingBridgeIndex = puzzle.bridges.findIndex(
+    bridge => (bridge.startIslandId === island1.id && bridge.endIslandId === island2.id) ||
+              (bridge.startIslandId === island2.id && bridge.endIslandId === island1.id)
   );
 
-  // Record the move before making changes
-  const prevBridgeCount = existingBridgeIndex === -1 ? 0 : newPuzzle.bridges[existingBridgeIndex].count;
-  const move: Move = {
-    startIslandId: island1.id,
-    endIslandId: island2.id,
-    previousBridgeCount: prevBridgeCount,
-    timestamp: Date.now()
-  };
+  const newBridges = [...puzzle.bridges];
   
-  // Add move to history
-  newPuzzle.moveHistory.push(move);
-  
-  if (existingBridgeIndex === -1) {
-    // Create new bridge
-    const newBridge: Bridge = {
-      id: generateId(),
+  if (existingBridgeIndex >= 0) {
+    const bridge = newBridges[existingBridgeIndex];
+    if (bridge.count === 2) {
+      newBridges.splice(existingBridgeIndex, 1);
+    } else {
+      newBridges[existingBridgeIndex] = {
+        ...bridge,
+        count: bridge.count + 1
+      };
+    }
+  } else {
+    newBridges.push({
+      id: uuidv4(),
       startIslandId: island1.id,
       endIslandId: island2.id,
       count: 1,
       orientation: island1.row === island2.row ? 'horizontal' : 'vertical'
-    };
-    
-    newPuzzle.bridges.push(newBridge);
-    
-    // Add connections
-    newPuzzle.islands = newPuzzle.islands.map(island => {
-      if (island.id === island1.id || island.id === island2.id) {
-        const otherIslandId = island.id === island1.id ? island2.id : island1.id;
-        return {
-          ...island,
-          connectedTo: [...island.connectedTo, otherIslandId]
-        };
-      }
-      return island;
-    });
-  } else if (newPuzzle.bridges[existingBridgeIndex].count === 1) {
-    // Upgrade to double bridge
-    newPuzzle.bridges[existingBridgeIndex].count = 2;
-    
-    // Add second connection
-    newPuzzle.islands = newPuzzle.islands.map(island => {
-      if (island.id === island1.id || island.id === island2.id) {
-        const otherIslandId = island.id === island1.id ? island2.id : island1.id;
-        return {
-          ...island,
-          connectedTo: [...island.connectedTo, otherIslandId]
-        };
-      }
-      return island;
-    });
-  } else {
-    // Remove bridge completely
-    newPuzzle.bridges = newPuzzle.bridges.filter((_, index) => index !== existingBridgeIndex);
-    
-    // Remove all connections between these islands
-    newPuzzle.islands = newPuzzle.islands.map(island => {
-      if (island.id === island1.id || island.id === island2.id) {
-        return {
-          ...island,
-          connectedTo: island.connectedTo.filter(id => 
-            id !== (island.id === island1.id ? island2.id : island1.id)
-          )
-        };
-      }
-      return island;
     });
   }
-  
-  // Update puzzle solved state
-  newPuzzle.solved = checkPuzzleSolved(newPuzzle);
-  if (newPuzzle.solved && !puzzle.solved) {
-    newPuzzle.endTime = Date.now();
-  }
-  
-  return newPuzzle;
-};
 
-// Undo the last move
-export const undoLastMove = (puzzle: Puzzle): Puzzle => {
-  if (!puzzle.moveHistory?.length) {
-    return puzzle;
+  return {
+    ...puzzle,
+    bridges: newBridges,
+    moveHistory: [...puzzle.moveHistory, `${island1.id}-${island2.id}`]
+  };
+}
+
+export function canConnect(island1: Island, island2: Island, islands: Island[], bridges: Bridge[]): boolean {
+  // Must be in same row or column
+  if (island1.row !== island2.row && island1.col !== island2.col) {
+    return false;
   }
 
-  const newPuzzle = { ...puzzle };
-  const lastMove = newPuzzle.moveHistory[newPuzzle.moveHistory.length - 1];
-  
-  // Find the islands involved
-  const startIsland = getIslandById(newPuzzle.islands, lastMove.startIslandId);
-  const endIsland = getIslandById(newPuzzle.islands, lastMove.endIslandId);
-
-  if (!startIsland || !endIsland) {
-    return puzzle;
-  }
-
-  // Find the current bridge
-  const bridgeIndex = newPuzzle.bridges.findIndex(
-    b => (b.startIslandId === lastMove.startIslandId && b.endIslandId === lastMove.endIslandId) ||
-         (b.startIslandId === lastMove.endIslandId && b.endIslandId === lastMove.startIslandId)
+  // Check for existing bridges reaching maximum
+  const existingBridge = bridges.find(
+    bridge => (bridge.startIslandId === island1.id && bridge.endIslandId === island2.id) ||
+              (bridge.startIslandId === island2.id && bridge.endIslandId === island1.id)
   );
+  if (existingBridge && existingBridge.count >= 2) {
+    return false;
+  }
 
-  if (bridgeIndex !== -1) {
-    if (lastMove.previousBridgeCount === 0) {
-      // Remove the bridge that was added
-      newPuzzle.bridges = newPuzzle.bridges.filter((_, index) => index !== bridgeIndex);
-      
-      // Remove all connections between these islands
-      newPuzzle.islands = newPuzzle.islands.map(island => {
-        if (island.id === startIsland.id || island.id === endIsland.id) {
-          return {
-            ...island,
-            connectedTo: island.connectedTo.filter(id => 
-              id !== (island.id === startIsland.id ? endIsland.id : startIsland.id)
-            )
-          };
-        }
-        return island;
-      });
+  // Check for islands between proposed connection
+  const isBlocked = islands.some(island => {
+    if (island.id === island1.id || island.id === island2.id) return false;
+
+    if (island1.row === island2.row) {
+      return island.row === island1.row &&
+             island.col > Math.min(island1.col, island2.col) &&
+             island.col < Math.max(island1.col, island2.col);
     } else {
-      // Restore to previous bridge count
-      newPuzzle.bridges[bridgeIndex].count = lastMove.previousBridgeCount;
-      
-      // Update connections based on previous count
-      newPuzzle.islands = newPuzzle.islands.map(island => {
-        if (island.id === startIsland.id || island.id === endIsland.id) {
-          const otherIslandId = island.id === startIsland.id ? endIsland.id : startIsland.id;
-          const currentConnections = island.connectedTo.filter(id => id !== otherIslandId);
-          const connectionsToAdd = Array(lastMove.previousBridgeCount).fill(otherIslandId);
-          return {
-            ...island,
-            connectedTo: [...currentConnections, ...connectionsToAdd]
-          };
-        }
-        return island;
-      });
+      return island.col === island1.col &&
+             island.row > Math.min(island1.row, island2.row) &&
+             island.row < Math.max(island1.row, island2.row);
     }
-  }
+  });
 
-  // Remove the last move from history
-  newPuzzle.moveHistory.pop();
-  
-  // Update puzzle solved state
-  newPuzzle.solved = checkPuzzleSolved(newPuzzle);
-  if (!newPuzzle.solved && puzzle.solved) {
-    newPuzzle.endTime = undefined;
-  }
+  return !isBlocked;
+}
 
-  return newPuzzle;
-};
-
-// Helper to check if a puzzle is completable
-export const isCompletable = (puzzle: Puzzle): boolean => {
-  // Check if total connections required matches total possible connections
-  const totalRequired = puzzle.islands.reduce((sum, island) => sum + island.value, 0);
-  if (totalRequired % 2 !== 0) return false;
-
-  // Check if each island can potentially have enough connections
-  for (const island of puzzle.islands) {
-    let possibleConnections = 0;
-    
-    // Count possible horizontal connections
-    const sameRow = puzzle.islands.filter(other => 
-      other.id !== island.id && 
-      other.row === island.row &&
-      canConnect(island, other, puzzle.islands, [])
+export function isSolved(puzzle: Puzzle): boolean {
+  // Check against stored solution if available
+  if (puzzle.solution) {
+    const currentBridges = new Set(
+      puzzle.bridges.map(bridge => `${bridge.startIslandId}-${bridge.endIslandId}-${bridge.count}`)
     );
-    possibleConnections += sameRow.length * 2;
 
-    // Count possible vertical connections
-    const sameCol = puzzle.islands.filter(other => 
-      other.id !== island.id && 
-      other.col === island.col &&
-      canConnect(island, other, puzzle.islands, [])
+    const solutionBridges = new Set(
+      puzzle.solution.map(bridge => `${bridge.startIslandId}-${bridge.endIslandId}-${bridge.count}`)
     );
-    possibleConnections += sameCol.length * 2;
 
-    if (possibleConnections < island.value) return false;
+    return (
+      currentBridges.size === solutionBridges.size &&
+      Array.from(currentBridges).every(bridge => solutionBridges.has(bridge))
+    );
   }
 
-  return true;
-};
+  // Fallback to basic validation
+  const islandConnections = new Map<string, number>();
+
+  puzzle.islands.forEach(island => {
+    islandConnections.set(island.id, 0);
+  });
+
+  puzzle.bridges.forEach(bridge => {
+    islandConnections.set(
+      bridge.startIslandId,
+      (islandConnections.get(bridge.startIslandId) || 0) + bridge.count
+    );
+    islandConnections.set(
+      bridge.endIslandId,
+      (islandConnections.get(bridge.endIslandId) || 0) + bridge.count
+    );
+  });
+
+  return Array.from(islandConnections.entries()).every(
+    ([islandId, count]) => {
+      const island = puzzle.islands.find(i => i.id === islandId);
+      return island && count === island.value;
+    }
+  );
+}
