@@ -18,30 +18,33 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [swipeStart, setSwipeStart] = useState<Point | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<Point | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
-  const swipeThreshold = 30; // Minimum distance for swipe detection
-  const swipeSpeedThreshold = 0.5; // Speed threshold in pixels per millisecond
+  
+  // High sensitivity thresholds
+  const swipeThreshold = 20;
+  const swipeSpeedThreshold = 0.3;
+  const angleTolerance = Math.PI / 6;
   const lastTouchTime = useRef<number>(0);
 
   const findIslandInDirection = (start: Island, direction: Point, islands: Island[]): Island | null => {
     const angle = Math.atan2(direction.y, direction.x);
-    const tolerance = Math.PI / 8; // 22.5 degrees tolerance
 
     return islands.find(island => {
       if (island.id === start.id) return false;
 
-      // Calculate angle between islands
       const dx = island.col - start.col;
       const dy = island.row - start.row;
       const islandAngle = Math.atan2(dy, dx);
       
-      // Check if angles match within tolerance
       const angleDiff = Math.abs(angle - islandAngle);
-      const isAligned = angleDiff < tolerance || Math.abs(angleDiff - Math.PI) < tolerance;
+      const isAligned = angleDiff < angleTolerance || Math.abs(angleDiff - Math.PI) < angleTolerance;
 
-      // Check if islands are in same row or column (Hashi rule)
       const isValidConnection = start.row === island.row || start.col === island.col;
 
-      return isAligned && isValidConnection && canConnect(start, island, puzzle.islands, puzzle.bridges);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const minDistance = 0.5;
+
+      return isAligned && isValidConnection && distance >= minDistance && 
+             canConnect(start, island, puzzle.islands, puzzle.bridges);
     }) || null;
   };
 
@@ -88,9 +91,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       swipeDirection.x * swipeDirection.x + 
       swipeDirection.y * swipeDirection.y
     );
+    
     const speed = distance / swipeDuration;
+    const minimumDistance = 30;
 
-    if (speed >= swipeSpeedThreshold) {
+    if (speed >= swipeSpeedThreshold && distance >= minimumDistance) {
       const targetIsland = findIslandInDirection(selectedIsland, swipeDirection, puzzle.islands);
       if (targetIsland) {
         triggerHaptic('medium');
@@ -150,7 +155,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       style={{
         width: cellSize * (gridSize + 2),
         height: cellSize * (gridSize + 2),
-        touchAction: 'none' // Prevents default touch behaviors
+        touchAction: 'none'
       }}
     >
       {/* Grid */}
@@ -223,7 +228,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
           );
         })}
 
-        {/* Swipe Direction Indicator (optional) */}
+        {/* Swipe Direction Indicator */}
         {selectedIsland && swipeDirection && (
           <div
             className="absolute bg-primary/30 rounded-full"
