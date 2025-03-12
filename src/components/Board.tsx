@@ -1,302 +1,124 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Puzzle, 
-  Island as IslandType, 
-  canConnect, 
-  toggleBridge, 
-  getIslandById,
-  checkPuzzleSolved
-} from '../utils/gameLogic';
-import Island from './Island';
-import Bridge from './Bridge';
-import GridBackground from './GridBackground';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import React, { useEffect, useCallback } from 'react';
+import { Puzzle, Island, toggleBridge, canConnect } from '@/utils/gameLogic';
+import { triggerHaptic } from '@/utils/haptics';
+import { cn } from '@/lib/utils';
 
 interface BoardProps {
   puzzle: Puzzle;
-  onUpdate: (updatedPuzzle: Puzzle) => void;
+  onUpdate: (puzzle: Puzzle) => void;
 }
 
 const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
-  const [selectedIsland, setSelectedIsland] = useState<IslandType | null>(null);
-  const [dragStartIsland, setDragStartIsland] = useState<IslandType | null>(null);
-  const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
-  const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
-  const [dragOverIsland, setDragOverIsland] = useState<IslandType | null>(null);
-  const boardRef = useRef<HTMLDivElement>(null);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
-  
-  // Island click handler (for both mobile and desktop)
-  const handleIslandClick = (island: IslandType) => {
+  const [selectedIsland, setSelectedIsland] = React.useState<Island | null>(null);
+
+  const handleIslandClick = useCallback((island: Island) => {
+    triggerHaptic('light');
+    
     if (selectedIsland) {
-      if (selectedIsland.id === island.id) {
-        // Deselect if clicking the same island
-        setSelectedIsland(null);
-      } else if (canConnect(selectedIsland, island, puzzle.islands, puzzle.bridges)) {
-        // Connect islands if possible
+      if (canConnect(selectedIsland, island, puzzle.islands, puzzle.bridges)) {
         const updatedPuzzle = toggleBridge(selectedIsland, island, puzzle);
         onUpdate(updatedPuzzle);
-        setSelectedIsland(null);
-      } else {
-        // Select the new island if can't connect
-        setSelectedIsland(island);
       }
+      setSelectedIsland(null);
     } else {
-      // No island selected yet, select this one
       setSelectedIsland(island);
     }
-  };
+  }, [selectedIsland, puzzle, onUpdate]);
 
-  // Handle drag start on island
-  const handleDragStart = (island: IslandType, event: React.MouseEvent | React.TouchEvent) => {
-    setDragStartIsland(island);
-    setIsPointerDown(true);
-    
-    // Get pointer position
-    let clientX: number, clientY: number;
-    
-    if ('touches' in event) {
-      clientX = event.touches[0].clientX;
-      clientY = event.touches[0].clientY;
-    } else {
-      clientX = event.clientX;
-      clientY = event.clientY;
-    }
-    
-    setDragPosition({ x: clientX, y: clientY });
-    
-    // Prevent default behavior
-    event.preventDefault();
-  };
-
-  // Handle drag end on island
-  const handleDragEnd = (endIsland: IslandType) => {
-    // If we have a drag over island during drag end, use that island
-    const targetIsland = dragOverIsland || endIsland;
-    
-    if (dragStartIsland && dragStartIsland.id !== targetIsland.id) {
-      if (canConnect(dragStartIsland, targetIsland, puzzle.islands, puzzle.bridges)) {
-        const updatedPuzzle = toggleBridge(dragStartIsland, targetIsland, puzzle);
-        onUpdate(updatedPuzzle);
-      }
-    }
-    
-    // Reset drag state
-    setDragStartIsland(null);
-    setIsPointerDown(false);
-    setDragPosition(null);
-    setDragOverIsland(null);
-  };
-  
-  // Handle board mouse/touch move (for drawing drag line)
-  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isPointerDown || !dragStartIsland || !boardRef.current) return;
-    
-    let clientX: number, clientY: number;
-    
-    if ('touches' in e) {
-      if (e.touches.length === 0) return;
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    
-    setDragPosition({ x: clientX, y: clientY });
-    
-    // Check if we're hovering over an island
-    const boardRect = boardRef.current.getBoundingClientRect();
-    const relativeX = clientX - boardRect.left;
-    const relativeY = clientY - boardRect.top;
-    
-    // Find if we're over any island (excluding the start island)
-    const draggedOverIsland = puzzle.islands.find(island => {
-      if (island.id === dragStartIsland.id) return false;
-      
-      const cellSize = 100 / puzzle.size;
-      const islandX = (island.col * cellSize + cellSize / 2) * boardRect.width / 100;
-      const islandY = (island.row * cellSize + cellSize / 2) * boardRect.height / 100;
-      
-      // Check if pointer is within island radius (using 30px as approximate radius)
-      const dx = relativeX - islandX;
-      const dy = relativeY - islandY;
-      const distanceSquared = dx * dx + dy * dy;
-      
-      return distanceSquared <= 900; // 30px radius squared
-    });
-    
-    setDragOverIsland(draggedOverIsland || null);
-    
-    e.preventDefault();
-  };
-  
-  // Handle pointer up anywhere in the document (to end drag)
   useEffect(() => {
-    const handlePointerUp = () => {
-      if (dragStartIsland && dragOverIsland) {
-        // Complete the connection if drag ends over another island
-        if (canConnect(dragStartIsland, dragOverIsland, puzzle.islands, puzzle.bridges)) {
-          const updatedPuzzle = toggleBridge(dragStartIsland, dragOverIsland, puzzle);
-          onUpdate(updatedPuzzle);
-        }
-      }
-      
-      setIsPointerDown(false);
-      setDragPosition(null);
-      setDragStartIsland(null);
-      setDragOverIsland(null);
-    };
-    
-    document.addEventListener('mouseup', handlePointerUp);
-    document.addEventListener('touchend', handlePointerUp);
-    
-    return () => {
-      document.removeEventListener('mouseup', handlePointerUp);
-      document.removeEventListener('touchend', handlePointerUp);
-    };
-  }, [dragOverIsland, dragStartIsland, onUpdate, puzzle]);
-  
-  // Check if puzzle is solved
-  useEffect(() => {
-    if (checkPuzzleSolved(puzzle) && !puzzle.solved) {
-      onUpdate({
-        ...puzzle,
-        solved: true,
-        endTime: Date.now()
-      });
-    }
-  }, [puzzle, onUpdate]);
-
-  // Disable browser's touch actions
-  useEffect(() => {
-    if (!boardRef.current) return;
-    
-    const board = boardRef.current;
-    const preventTouch = (e: TouchEvent) => {
-      // Only prevent default for drag gestures
-      if (dragStartIsland || isPointerDown) {
-        e.preventDefault();
+    const handleTouchStart = async (event: TouchEvent) => {
+      try {
+        await triggerHaptic('light');
+      } catch (error) {
+        console.warn('Haptics not available:', error);
       }
     };
-    
-    board.addEventListener('touchmove', preventTouch, { passive: false });
-    
-    return () => {
-      board.removeEventListener('touchmove', preventTouch);
-    };
-  }, [dragStartIsland, isPointerDown]);
 
-  // Determine if board should be in portrait or landscape orientation
-  const boardOrientationClass = isDesktop ? 'board-landscape' : 'board-portrait';
+    const board = document.querySelector('.board');
+    if (board) {
+      board.addEventListener('touchstart', handleTouchStart);
+      return () => {
+        board.removeEventListener('touchstart', handleTouchStart);
+      };
+    }
+  }, []);
+
+  // Calculate grid size
+  const gridSize = puzzle.size;
+  const cellSize = Math.min(window.innerWidth, 600) / (gridSize + 2);
 
   return (
     <div 
-      ref={boardRef}
-      className={`relative w-full max-w-lg mx-auto border border-border/30 rounded-lg overflow-hidden ${boardOrientationClass}`}
-      aria-label="Hashi puzzle board"
-      style={{ 
-        touchAction: "none",
-        WebkitUserSelect: "none",
-        userSelect: "none"
+      className="board relative bg-background shadow-lg rounded-lg p-4"
+      style={{
+        width: cellSize * (gridSize + 2),
+        height: cellSize * (gridSize + 2)
       }}
-      onMouseMove={handlePointerMove}
-      onTouchMove={handlePointerMove}
     >
-      {/* Grid Background */}
-      <GridBackground gridSize={puzzle.size} islands={puzzle.islands} />
-      
-      {/* Bridges */}
-      {puzzle.bridges.map(bridge => {
-        const startIsland = getIslandById(puzzle.islands, bridge.startIslandId);
-        const endIsland = getIslandById(puzzle.islands, bridge.endIslandId);
-        
-        if (startIsland && endIsland) {
+      {/* Grid */}
+      <div 
+        className="grid absolute inset-4"
+        style={{
+          gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
+          gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`,
+          gap: '0px'
+        }}
+      >
+        {/* Islands */}
+        {puzzle.islands.map((island) => (
+          <div
+            key={island.id}
+            className={cn(
+              "island absolute flex items-center justify-center",
+              "rounded-full bg-primary text-primary-foreground",
+              "cursor-pointer transition-transform hover:scale-110",
+              selectedIsland?.id === island.id && "ring-2 ring-offset-2 ring-primary"
+            )}
+            style={{
+              width: cellSize * 0.8,
+              height: cellSize * 0.8,
+              left: `${island.col * cellSize + cellSize * 0.1}px`,
+              top: `${island.row * cellSize + cellSize * 0.1}px`,
+              fontSize: `${cellSize * 0.4}px`
+            }}
+            onClick={() => handleIslandClick(island)}
+          >
+            {island.value}
+          </div>
+        ))}
+
+        {/* Bridges */}
+        {puzzle.bridges.map((bridge) => {
+          const start = puzzle.islands.find(i => i.id === bridge.startIslandId)!;
+          const end = puzzle.islands.find(i => i.id === bridge.endIslandId)!;
+          
+          const isHorizontal = bridge.orientation === 'horizontal';
+          const length = isHorizontal 
+            ? Math.abs(end.col - start.col) * cellSize
+            : Math.abs(end.row - start.row) * cellSize;
+          
           return (
-            <Bridge 
+            <div
               key={bridge.id}
-              bridge={bridge}
-              startIsland={startIsland}
-              endIsland={endIsland}
-              gridSize={puzzle.size}
-              animate={false}
+              className={cn(
+                "bridge absolute bg-primary/80",
+                bridge.count === 2 && "before:content-[''] before:absolute before:inset-0 before:bg-primary/80",
+                isHorizontal 
+                  ? "before:-translate-y-[3px] h-[2px]"
+                  : "before:-translate-x-[3px] w-[2px]"
+              )}
+              style={{
+                left: `${Math.min(start.col, end.col) * cellSize + cellSize / 2}px`,
+                top: `${Math.min(start.row, end.row) * cellSize + cellSize / 2}px`,
+                width: isHorizontal ? length : '2px',
+                height: isHorizontal ? '2px' : length,
+              }}
             />
           );
-        }
-        return null;
-      })}
-      
-      {/* Islands */}
-      {puzzle.islands.map(island => (
-        <Island 
-          key={island.id}
-          island={island}
-          isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id || dragOverIsland?.id === island.id}
-          onClick={() => handleIslandClick(island)}
-          onDragStart={(e) => handleDragStart(island, e)}
-          onDragEnd={() => handleDragEnd(island)}
-          gridSize={puzzle.size}
-        />
-      ))}
-      
-      {/* Drag Line Visualization */}
-      {dragStartIsland && dragPosition && boardRef.current && (
-        <DragLine 
-          startIsland={dragStartIsland} 
-          dragPosition={dragPosition}
-          boardRef={boardRef}
-          gridSize={puzzle.size}
-        />
-      )}
+        })}
+      </div>
     </div>
   );
-};
-
-// Helper component to visualize drag
-interface DragLineProps {
-  startIsland: IslandType;
-  dragPosition: { x: number, y: number };
-  boardRef: React.RefObject<HTMLDivElement>;
-  gridSize: number;
-}
-
-const DragLine: React.FC<DragLineProps> = ({ startIsland, dragPosition, boardRef, gridSize }) => {
-  if (!boardRef.current) return null;
-  
-  const boardRect = boardRef.current.getBoundingClientRect();
-  const cellSize = 100 / gridSize;
-  
-  // Calculate start position (island center) in pixels
-  const startX = (startIsland.col * cellSize + cellSize / 2) * boardRect.width / 100;
-  const startY = (startIsland.row * cellSize + cellSize / 2) * boardRect.height / 100;
-  
-  // Calculate end position (cursor position relative to board)
-  const endX = dragPosition.x - boardRect.left;
-  const endY = dragPosition.y - boardRect.top;
-  
-  // Calculate the line's length and angle
-  const dx = endX - startX;
-  const dy = endY - startY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-  
-  // Style for the drag line
-  const lineStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: `${startX}px`,
-    top: `${startY}px`,
-    width: `${length}px`,
-    height: '2px',
-    backgroundColor: 'hsl(var(--primary))',
-    opacity: 0.7,
-    transformOrigin: '0 0',
-    transform: `rotate(${angle}deg)`,
-    pointerEvents: 'none',
-    zIndex: 4
-  };
-  
-  return <div style={lineStyle} />;
 };
 
 export default Board;
