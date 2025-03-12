@@ -19,9 +19,8 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [swipeDirection, setSwipeDirection] = useState<Point | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   
-  // High sensitivity thresholds
-  const swipeThreshold = 20;
-  const swipeSpeedThreshold = 0.3;
+  // Fixed sensitivity thresholds
+  const swipeThreshold = 20; // Fixed minimum distance to trigger in pixels
   const angleTolerance = Math.PI / 6;
   const lastTouchTime = useRef<number>(0);
 
@@ -40,25 +39,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
 
       const isValidConnection = start.row === island.row || start.col === island.col;
 
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const minDistance = 0.5;
-
-      return isAligned && isValidConnection && distance >= minDistance && 
+      return isAligned && isValidConnection && 
              canConnect(start, island, puzzle.islands, puzzle.bridges);
     }) || null;
   };
-
-  const handleBridgeTap = useCallback((bridge: Bridge) => {
-    triggerHaptic('light');
-    
-    const startIsland = puzzle.islands.find(i => i.id === bridge.startIslandId);
-    const endIsland = puzzle.islands.find(i => i.id === bridge.endIslandId);
-    
-    if (startIsland && endIsland) {
-      const updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
-      onUpdate(updatedPuzzle);
-    }
-  }, [puzzle, onUpdate]);
 
   const handleTouchStart = useCallback((event: TouchEvent | MouseEvent) => {
     const touch = 'touches' in event ? event.touches[0] : event;
@@ -85,6 +69,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     const dy = currentY - swipeStart.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
+    // Use fixed threshold regardless of node distance
     if (distance > swipeThreshold) {
       setSwipeDirection({ x: dx, y: dy });
     }
@@ -97,17 +82,12 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       return;
     }
 
-    const endTime = Date.now();
-    const swipeDuration = endTime - lastTouchTime.current;
-    const distance = Math.sqrt(
-      swipeDirection.x * swipeDirection.x + 
-      swipeDirection.y * swipeDirection.y
-    );
-    
-    const speed = distance / swipeDuration;
-    const minimumDistance = 20;
+    const dx = swipeDirection.x;
+    const dy = swipeDirection.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (speed >= swipeSpeedThreshold && distance >= minimumDistance) {
+    // Only check if we've moved past the minimum threshold
+    if (distance >= swipeThreshold) {
       const targetIsland = findIslandInDirection(selectedIsland, swipeDirection, puzzle.islands);
       if (targetIsland) {
         triggerHaptic('medium');
@@ -134,6 +114,18 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       setSelectedIsland(island);
     }
   }, [selectedIsland, puzzle, onUpdate]);
+
+  const handleBridgeTap = useCallback((bridge: Bridge) => {
+    triggerHaptic('light');
+    
+    const startIsland = puzzle.islands.find(i => i.id === bridge.startIslandId);
+    const endIsland = puzzle.islands.find(i => i.id === bridge.endIslandId);
+    
+    if (startIsland && endIsland) {
+      const updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
+      onUpdate(updatedPuzzle);
+    }
+  }, [puzzle, onUpdate]);
 
   useEffect(() => {
     const board = boardRef.current;
