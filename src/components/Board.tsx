@@ -27,6 +27,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate, onAddBridge }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
+  // Determine grid size - use width/height if available, otherwise use size for both
+  const gridWidth = puzzle.width || puzzle.size;
+  const gridHeight = puzzle.height || puzzle.size;
+  
   // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
     if (selectedIsland) {
@@ -190,6 +194,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate, onAddBridge }) => {
 
   // Determine if board should be in portrait or landscape orientation
   const boardOrientationClass = isDesktop ? 'board-landscape' : 'board-portrait';
+  
+  // Calculate aspect ratio style for the board
+  const boardAspectRatio = {
+    paddingBottom: `${(gridHeight / gridWidth) * 100}%`
+  };
 
   return (
     <div 
@@ -204,51 +213,56 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate, onAddBridge }) => {
       onMouseMove={handlePointerMove}
       onTouchMove={handlePointerMove}
     >
-      {/* Grid Background */}
-      <GridBackground gridSize={puzzle.size} islands={puzzle.islands} />
-      
-      {/* Bridges */}
-      {puzzle.bridges.map(bridge => {
-        const startIsland = getIslandById(puzzle.islands, bridge.startIslandId);
-        const endIsland = getIslandById(puzzle.islands, bridge.endIslandId);
+      <div className="relative" style={boardAspectRatio}>
+        {/* Grid Background */}
+        <GridBackground gridWidth={gridWidth} gridHeight={gridHeight} islands={puzzle.islands} />
         
-        if (startIsland && endIsland) {
-          return (
-            <Bridge 
-              key={bridge.id}
-              bridge={bridge}
-              startIsland={startIsland}
-              endIsland={endIsland}
-              gridSize={puzzle.size}
-              animate={false}
-            />
-          );
-        }
-        return null;
-      })}
-      
-      {/* Islands */}
-      {puzzle.islands.map(island => (
-        <Island 
-          key={island.id}
-          island={island}
-          isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id || dragOverIsland?.id === island.id}
-          onClick={() => handleIslandClick(island)}
-          onDragStart={(e) => handleDragStart(island, e)}
-          onDragEnd={() => handleDragEnd(island)}
-          gridSize={puzzle.size}
-        />
-      ))}
-      
-      {/* Drag Line Visualization */}
-      {dragStartIsland && dragPosition && boardRef.current && (
-        <DragLine 
-          startIsland={dragStartIsland} 
-          dragPosition={dragPosition}
-          boardRef={boardRef}
-          gridSize={puzzle.size}
-        />
-      )}
+        {/* Bridges */}
+        {puzzle.bridges.map(bridge => {
+          const startIsland = getIslandById(puzzle.islands, bridge.startIslandId);
+          const endIsland = getIslandById(puzzle.islands, bridge.endIslandId);
+          
+          if (startIsland && endIsland) {
+            return (
+              <Bridge 
+                key={bridge.id}
+                bridge={bridge}
+                startIsland={startIsland}
+                endIsland={endIsland}
+                gridWidth={gridWidth}
+                gridHeight={gridHeight}
+                animate={false}
+              />
+            );
+          }
+          return null;
+        })}
+        
+        {/* Islands */}
+        {puzzle.islands.map(island => (
+          <Island 
+            key={island.id}
+            island={island}
+            isSelected={selectedIsland?.id === island.id || dragStartIsland?.id === island.id || dragOverIsland?.id === island.id}
+            onClick={() => handleIslandClick(island)}
+            onDragStart={(e) => handleDragStart(island, e)}
+            onDragEnd={() => handleDragEnd(island)}
+            gridWidth={gridWidth}
+            gridHeight={gridHeight}
+          />
+        ))}
+        
+        {/* Drag Line Visualization */}
+        {dragStartIsland && dragPosition && boardRef.current && (
+          <DragLine 
+            startIsland={dragStartIsland} 
+            dragPosition={dragPosition}
+            boardRef={boardRef}
+            gridWidth={gridWidth}
+            gridHeight={gridHeight}
+          />
+        )}
+      </div>
     </div>
   );
 };
@@ -258,18 +272,28 @@ interface DragLineProps {
   startIsland: IslandType;
   dragPosition: { x: number, y: number };
   boardRef: React.RefObject<HTMLDivElement>;
-  gridSize: number;
+  gridWidth: number;
+  gridHeight: number;
 }
 
-const DragLine: React.FC<DragLineProps> = ({ startIsland, dragPosition, boardRef, gridSize }) => {
+const DragLine: React.FC<DragLineProps> = ({ 
+  startIsland, 
+  dragPosition, 
+  boardRef, 
+  gridWidth, 
+  gridHeight 
+}) => {
   if (!boardRef.current) return null;
   
   const boardRect = boardRef.current.getBoundingClientRect();
-  const cellSize = 100 / gridSize;
+  
+  // Calculate cell sizes based on grid dimensions
+  const cellWidth = 100 / gridWidth;
+  const cellHeight = 100 / gridHeight;
   
   // Calculate start position (island center) in pixels
-  const startX = (startIsland.col * cellSize + cellSize / 2) * boardRect.width / 100;
-  const startY = (startIsland.row * cellSize + cellSize / 2) * boardRect.height / 100;
+  const startX = (startIsland.col * cellWidth + cellWidth / 2) * boardRect.width / 100;
+  const startY = (startIsland.row * cellHeight + cellHeight / 2) * boardRect.height / 100;
   
   // Calculate end position (cursor position relative to board)
   const endX = dragPosition.x - boardRect.left;

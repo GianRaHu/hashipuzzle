@@ -8,7 +8,8 @@ interface IslandProps {
   onClick: () => void;
   onDragStart: (event: React.MouseEvent | React.TouchEvent) => void;
   onDragEnd: () => void;
-  gridSize: number;
+  gridWidth: number;
+  gridHeight: number;
 }
 
 const Island: React.FC<IslandProps> = ({ 
@@ -17,16 +18,19 @@ const Island: React.FC<IslandProps> = ({
   onClick, 
   onDragStart, 
   onDragEnd, 
-  gridSize 
+  gridWidth,
+  gridHeight
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const touchTimerRef = useRef<number | null>(null);
   const moveDetectedRef = useRef<boolean>(false);
   
-  // Calculate the size and position
-  const cellSize = 100 / gridSize;
-  const xPos = island.col * cellSize + cellSize / 2;
-  const yPos = island.row * cellSize + cellSize / 2;
+  // Calculate the size and position based on grid dimensions
+  const cellWidth = 100 / gridWidth;
+  const cellHeight = 100 / gridHeight;
+  
+  const xPos = island.col * cellWidth + cellWidth / 2;
+  const yPos = island.row * cellHeight + cellHeight / 2;
   
   // Connection completeness (for visual feedback)
   const connectionsNeeded = island.value;

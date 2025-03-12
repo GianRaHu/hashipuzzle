@@ -4,7 +4,7 @@ import { Puzzle } from '../utils/gameLogic';
 
 export interface GameStatsProps {
   puzzle?: Puzzle;
-  stats?: any; // Adding the stats prop that was missing
+  stats?: Record<string, string | number>; // Properly typed stats object
 }
 
 const GameStats: React.FC<GameStatsProps> = ({ puzzle, stats }) => {

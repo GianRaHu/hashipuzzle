@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Puzzle, Sliders } from 'lucide-react';
@@ -5,24 +6,33 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider as SliderComponent } from '@/components/ui/slider';
+import { Slider } from '@/components/ui/slider';
 import { generatePuzzle } from '@/utils/puzzleGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import GameHeader from '@/components/game/GameHeader';
 
 const GRID_SIZE_MIN = 5;
 const GRID_SIZE_MAX = 15;
 const DEFAULT_GRID_SIZE = 7;
 
+// Calculate width based on height using a 3:4 ratio
+const calculateWidth = (height: number): number => {
+  return Math.round(height * 0.75); // 3:4 ratio (width:height)
+};
+
 const Custom: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [gridSize, setGridSize] = useState<number>(DEFAULT_GRID_SIZE);
+  const [gridHeight, setGridHeight] = useState<number>(DEFAULT_GRID_SIZE);
   const [seed, setSeed] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  
+  // Calculate grid width based on height (3:4 ratio)
+  const gridWidth = calculateWidth(gridHeight);
 
   const handleSliderChange = (value: number[]) => {
-    setGridSize(value[0]);
+    setGridHeight(value[0]);
   };
 
   const handleSeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +41,7 @@ const Custom: React.FC = () => {
   };
 
   const generateRandomGame = () => {
-    navigate(`/game/custom?size=${gridSize}`);
+    navigate(`/game/custom?height=${gridHeight}&width=${gridWidth}`);
   };
 
   const generateSeedGame = () => {
@@ -48,14 +58,14 @@ const Custom: React.FC = () => {
     }
     
     seedNumber = Math.abs(seedNumber);
-    navigate(`/game/custom?size=${gridSize}&seed=${seedNumber}`);
+    navigate(`/game/custom?height=${gridHeight}&width=${gridWidth}&seed=${seedNumber}`);
   };
 
   return (
     <div className="content-container max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-6">Custom Game</h1>
+      <GameHeader title="Custom Game" backUrl="/" />
       
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -63,7 +73,7 @@ const Custom: React.FC = () => {
               Grid Size
             </CardTitle>
             <CardDescription>
-              Choose the {isMobile ? "height" : "width"} of your custom puzzle
+              Choose the {isMobile ? "height" : "height"} of your custom puzzle
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -73,16 +83,17 @@ const Custom: React.FC = () => {
                   <span>Small ({GRID_SIZE_MIN})</span>
                   <span>Large ({GRID_SIZE_MAX})</span>
                 </div>
-                <SliderComponent 
+                <Slider 
                   min={GRID_SIZE_MIN}
                   max={GRID_SIZE_MAX}
                   step={1}
-                  value={[gridSize]}
+                  value={[gridHeight]}
                   onValueChange={handleSliderChange}
                   className="py-4"
                 />
                 <div className="text-center">
-                  Current size: <span className="font-medium">{gridSize}×{gridSize}</span>
+                  Current size: <span className="font-medium">{gridHeight}×{gridWidth}</span>
+                  <div className="text-sm text-muted-foreground">({gridWidth}x{gridHeight} grid ratio: 3:4)</div>
                 </div>
               </div>
             </div>

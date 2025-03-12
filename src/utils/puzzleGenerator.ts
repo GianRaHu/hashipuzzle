@@ -1,4 +1,3 @@
-
 import { Island, Puzzle, Bridge, generateId } from './gameLogic';
 
 // Difficulty settings - defines parameters for each difficulty level
@@ -7,7 +6,8 @@ const difficultySettings = {
   medium: { size: 7, islandCount: 10, maxValue: 6 },
   hard: { size: 8, islandCount: 12, maxValue: 6 },
   expert: { size: 8, islandCount: 15, maxValue: 8 },
-  master: { size: 9, islandCount: 18, maxValue: 8 }
+  master: { size: 9, islandCount: 18, maxValue: 8 },
+  custom: { size: 7, islandCount: 10, maxValue: 6 } // Default for custom (can be overridden)
 };
 
 // Seeded random number generator for reproducible puzzles
@@ -148,11 +148,19 @@ const findConnectableIslands = (
 
 // Create a new puzzle using a step-by-step approach
 export const generatePuzzle = (
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master', 
-  seed?: number
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master' | 'custom', 
+  seed?: number,
+  width?: number,
+  height?: number
 ): Puzzle => {
   console.log(`Generating puzzle with difficulty: ${difficulty}`);
+  
+  // Use default settings for the difficulty
   const { size, islandCount, maxValue } = difficultySettings[difficulty];
+  
+  // For custom games, use the provided dimensions or fall back to defaults
+  const gridWidth = width || size;
+  const gridHeight = height || size;
   
   // Use provided seed or generate a random one
   const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
@@ -160,7 +168,7 @@ export const generatePuzzle = (
   const random = seededRandom(puzzleSeed);
   
   // Create empty grid for islands
-  const grid: (Island | null)[][] = Array(size).fill(null).map(() => Array(size).fill(null));
+  const grid: (Island | null)[][] = Array(gridHeight).fill(null).map(() => Array(gridWidth).fill(null));
   
   // Use a Map for bridge tracking (faster lookups)
   const bridgeMap = new Map<string, boolean>();
@@ -188,20 +196,21 @@ export const generatePuzzle = (
     bridgeConnections.length = 0;
     
     // Place first island in a somewhat central position
-    const centerOffset = Math.floor(size / 3);
-    const startRow = Math.floor(random() * centerOffset) + centerOffset;
-    const startCol = Math.floor(random() * centerOffset) + centerOffset;
+    const centerOffsetX = Math.floor(gridWidth / 3);
+    const centerOffsetY = Math.floor(gridHeight / 3);
+    const startRow = Math.floor(random() * centerOffsetY) + centerOffsetY;
+    const startCol = Math.floor(random() * centerOffsetX) + centerOffsetX;
     
     const firstIsland: Island = {
       id: generateId(),
-      row: startRow,
-      col: startCol,
+      row: startRow < gridHeight ? startRow : gridHeight - 1,
+      col: startCol < gridWidth ? startCol : gridWidth - 1,
       value: 0,
       connectedTo: []
     };
     
     islands.push(firstIsland);
-    grid[startRow][startCol] = firstIsland;
+    grid[firstIsland.row][firstIsland.col] = firstIsland;
     
     // Step 2: Add more islands and connect them
     while (islands.length < islandCount) {
@@ -213,10 +222,10 @@ export const generatePuzzle = (
       while (!placed && positionAttempts < maxPositionAttempts) {
         positionAttempts++;
         
-        const row = Math.floor(random() * size);
-        const col = Math.floor(random() * size);
+        const row = Math.floor(random() * gridHeight);
+        const col = Math.floor(random() * gridWidth);
         
-        if (isValidPosition(row, col, grid, size, bridgeMap)) {
+        if (isValidPosition(row, col, grid, gridHeight, bridgeMap)) {
           const newIsland: Island = {
             id: generateId(),
             row,
@@ -402,7 +411,9 @@ export const generatePuzzle = (
   return {
     id: generateId(),
     difficulty,
-    size,
+    size: gridHeight, // Keep size for backward compatibility
+    width: gridWidth,
+    height: gridHeight,
     islands,
     bridges: [], // Start with no bridges for gameplay
     solved: false,
