@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { generatePuzzle } from '@/utils/puzzleGenerator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import GameHeader from '@/components/game/GameHeader';
@@ -63,7 +62,10 @@ const Custom: React.FC = () => {
 
   return (
     <div className="content-container max-w-4xl mx-auto">
-      <GameHeader title="Custom Game" backUrl="/" />
+      <GameHeader 
+        backUrl="/"
+        title="Custom Game"
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Board from '../components/Board';
@@ -48,7 +49,7 @@ const Game = () => {
     if (gameHistory.length > 0) {
       const previousState = gameHistory[gameHistory.length - 1];
       setPuzzle(previousState);
-      setGameHistory(prevHistory => prevHistory.slice(0, -1)); // Remove last state
+      setGameHistory(prev => prev.slice(0, -1)); // Using a function to update state
     } else {
       toast({
         title: "No moves to undo",
@@ -113,15 +114,12 @@ const Game = () => {
       // Generate a custom puzzle
       let newPuzzle;
       if (customSeed !== undefined) {
-        newPuzzle = generatePuzzle('medium', customSeed);
+        newPuzzle = generatePuzzle('medium', customSeed, customWidth, customHeight);
       } else {
-        newPuzzle = generatePuzzle('medium');
+        newPuzzle = generatePuzzle('medium', undefined, customWidth, customHeight);
       }
       
-      // Override the size and properties
-      newPuzzle.size = customHeight;
-      newPuzzle.width = customWidth;
-      newPuzzle.height = customHeight;
+      // Set custom properties
       newPuzzle.difficulty = 'custom';
       
       setPuzzle(newPuzzle);
@@ -138,7 +136,7 @@ const Game = () => {
       // Redirect to home if difficulty is invalid
       navigate('/');
     }
-  }, [params.difficulty, location.search, gameHistory, navigate]);
+  }, [params.difficulty, location.search, navigate]);
 
   if (loading) {
     return <div className="content-container">Loading...</div>;
@@ -151,8 +149,8 @@ const Game = () => {
   return (
     <div className="content-container">
       <GameHeader 
-        title={`${puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)} Puzzle`}
         backUrl="/"
+        title={`${puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)} Puzzle`}
       />
       <div className="flex flex-col md:flex-row gap-4">
         <div className="md:w-2/3">
