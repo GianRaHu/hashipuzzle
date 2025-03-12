@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shuffle, Code } from 'lucide-react';
@@ -86,7 +85,8 @@ const Custom: React.FC = () => {
           
           // Generate puzzle (we'll use medium difficulty for now)
           const difficulty = 'medium';
-          const customPuzzle = generatePuzzle(difficulty, seed, gridSize);
+          // Fixed: Pass only two arguments to generatePuzzle
+          const customPuzzle = generatePuzzle(difficulty, seed);
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);

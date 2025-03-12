@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
@@ -140,10 +139,10 @@ const CustomGame: React.FC = () => {
         const sameConfig = {
           difficulty: puzzle.difficulty,
           seed: puzzle.seed,
-          size: puzzle.size
         };
         
-        const newPuzzle = generatePuzzle(sameConfig.difficulty, sameConfig.seed, sameConfig.size);
+        // Fixed: Pass only two arguments to generatePuzzle
+        const newPuzzle = generatePuzzle(sameConfig.difficulty, sameConfig.seed);
         
         clearInterval(loadingInterval);
         setLoadingProgress(100);
