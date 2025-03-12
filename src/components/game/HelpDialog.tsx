@@ -1,80 +1,85 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpCircle } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 
-const HelpDialog = () => {
+const HelpDialog: React.FC = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full">
-          <HelpCircle className="h-4 w-4 mr-2" />
-          Help
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full h-8 w-8"
+          aria-label="Help"
+        >
+          <HelpCircle className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>How to Play</DialogTitle>
+          <DialogTitle className="text-center">Hashi (Bridges) Game Help</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] mt-4 pr-4">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium">Game Rules</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Hashi (Bridges) is a logic puzzle with simple rules but challenging solutions.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium">Objective</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Connect all islands with bridges so that the number of bridges connected to each island matches its number.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium">Rules</h3>
-              <ul className="list-disc list-inside text-sm text-muted-foreground mt-1 space-y-2">
+
+        <Tabs defaultValue="rules" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="rules">Rules</TabsTrigger>
+            <TabsTrigger value="techniques">Techniques</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="rules" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <h3 className="font-medium">Basic Rules</h3>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Connect islands (circles) with bridges (lines).</li>
+                <li>The number on each island indicates exactly how many bridges must connect to it.</li>
                 <li>Bridges can only run horizontally or vertically.</li>
                 <li>Bridges cannot cross other bridges or islands.</li>
-                <li>At most two bridges can connect the same pair of islands.</li>
-                <li>All islands must be connected into a single group (directly or indirectly).</li>
-                <li>The number on each island indicates how many bridges should connect to it.</li>
+                <li>A maximum of two bridges can connect the same pair of islands.</li>
+                <li>All islands must be connected into a single network (no isolated islands).</li>
               </ul>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-medium">How to play</h3>
-              <ul className="list-disc list-inside text-sm text-muted-foreground mt-1 space-y-2">
-                <li><strong>Connect islands:</strong> Click on one island, then click on another island to connect them with a bridge.</li>
-                <li><strong>Add a second bridge:</strong> Repeat the same action to add a second bridge (if allowed).</li>
-                <li><strong>Remove bridges:</strong> Click the same pair of islands a third time to remove all bridges between them.</li>
-                <li><strong>Drag to connect:</strong> You can also click and drag from one island to another to create a bridge.</li>
+            <div className="space-y-2">
+              <h3 className="font-medium">How to Play</h3>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li><strong>Mobile:</strong> Tap an island then tap another to connect them, or drag from one island to another.</li>
+                <li><strong>Desktop:</strong> Click an island then click another to connect them.</li>
+                <li>Tap/click the same connection again to add a second bridge.</li>
+                <li>Tap/click a double bridge to remove it completely.</li>
+                <li>Green islands have the correct number of bridges.</li>
+                <li>Yellow islands have too many bridges.</li>
               </ul>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-medium">Visual Indicators</h3>
-              <ul className="list-disc list-inside text-sm text-muted-foreground mt-1 space-y-2">
-                <li><strong>Green:</strong> Island has exactly the right number of bridges.</li>
-                <li><strong>Yellow:</strong> Island has too many bridges.</li>
-                <li><strong>Red:</strong> Island has too few bridges.</li>
-                <li><strong>White/Default:</strong> Island has no bridges yet.</li>
+          </TabsContent>
+
+          <TabsContent value="techniques" className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <h3 className="font-medium">Beginner Techniques</h3>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li><strong>Islands with value 1:</strong> They can only have one bridge in one direction.</li>
+                <li><strong>Islands with maximum value:</strong> If an island can connect to N other islands and its value is 2N, place double bridges to all neighbors.</li>
+                <li><strong>Single connection:</strong> If an island can only connect to one neighbor, all its bridges must go there.</li>
               </ul>
             </div>
-            
-            <div>
-              <h3 className="text-sm font-medium">Tips</h3>
-              <ul className="list-disc list-inside text-sm text-muted-foreground mt-1 space-y-2">
-                <li>Start with islands that have high numbers or limited connection options.</li>
-                <li>Islands with a value of 1 can only connect in one direction.</li>
-                <li>Remember that all islands must be connected to complete the puzzle.</li>
+            <div className="space-y-2">
+              <h3 className="font-medium">Advanced Techniques</h3>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li><strong>Connectivity:</strong> Remember all islands must be connected. If a bridge would disconnect the puzzle, it's wrong.</li>
+                <li><strong>Forced paths:</strong> If removing a particular bridge would make it impossible to complete the puzzle, that bridge must be placed.</li>
+                <li><strong>Loop prevention:</strong> No loops can exist in the solution. If adding a bridge creates a loop, it's wrong.</li>
+                <li><strong>Counting bridges:</strong> Sometimes you can determine the exact number of bridges by analyzing how many bridges are still needed in a region.</li>
               </ul>
             </div>
-          </div>
-        </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

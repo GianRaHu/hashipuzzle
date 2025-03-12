@@ -1,174 +1,293 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import Board from '../components/Board';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Puzzle } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
-import GameControls from '../components/GameControls';
-import GameStats from '../components/GameStats';
-import HelpDialog from '../components/game/HelpDialog';
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useToast } from "@/components/ui/use-toast";
-import GameHeader from '@/components/game/GameHeader';
+import { savePuzzle, updateStats, getStats } from '../utils/storage';
+import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
 
-const Game = () => {
-  const params = useParams<{ difficulty: string }>();
+import Board from '../components/Board';
+import GameHeader from '../components/game/GameHeader';
+import GameCompletedModal from '../components/game/GameCompletedModal';
+
+const Game: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [puzzle, setPuzzle] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [gameHistory, setGameHistory] = useLocalStorage<any[]>('gameHistory', []);
   const { toast } = useToast();
-
-  const handleAddBridge = useCallback((startIslandId: string, endIslandId: string) => {
-    setPuzzle(prevPuzzle => {
-      if (!prevPuzzle) return prevPuzzle;
-
-      const updatedPuzzle = { ...prevPuzzle };
-      return updatedPuzzle;
-    });
-  }, [setPuzzle]);
-
-  const handleSolve = useCallback(() => {
-    if (!puzzle) return;
-
-    // Basic solve logic (can be expanded)
-    setPuzzle(prevPuzzle => {
-      if (!prevPuzzle) return prevPuzzle;
-
-      const solvedPuzzle = { ...prevPuzzle, solved: true, endTime: Date.now() };
-      return solvedPuzzle;
-    });
-
-    toast({
-      title: "Puzzle Solved!",
-      description: "Congratulations, you solved the puzzle!",
-    });
-  }, [puzzle, toast]);
+  const { difficulty } = useParams<{ difficulty: string }>();
+  const location = useLocation();
+  
+  const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [timer, setTimer] = useState<number>(0);
+  const [gameCompleted, setGameCompleted] = useState<boolean>(false);
+  const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
+  const [generateError, setGenerateError] = useState<boolean>(false);
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const stats = getStats();
+  
+  const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+  const validDifficulty = validDifficulties.includes(difficulty || '') 
+    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
+    : 'easy';
+  
+  useEffect(() => {
+    if (validDifficulty) {
+      setLoading(true);
+      setLoadingProgress(0);
+      setGenerateError(false);
+      
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      setTimeout(() => {
+        try {
+          console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
+          const newPuzzle = generatePuzzle(validDifficulty);
+          
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          setTimeout(() => {
+            setPuzzle(newPuzzle);
+            setMoveHistory([newPuzzle]);
+            setCurrentMoveIndex(0);
+            setGameCompleted(false);
+            setLoading(false);
+            console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
+          }, 500);
+        } catch (error) {
+          console.error("Error generating puzzle:", error);
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          setGenerateError(true);
+          
+          toast({
+            title: "Error generating puzzle",
+            description: "Please try again or select a different difficulty level.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          navigate('/');
+        }
+      }, 1000);
+      
+      return () => clearInterval(loadingInterval);
+    }
+  }, [validDifficulty, location.search, navigate, toast]);
+  
+  useEffect(() => {
+    if (!puzzle || gameCompleted || loading) return;
+    
+    if (!gameStarted) return;
+    
+    const interval = setInterval(() => {
+      setTimer(Date.now() - puzzle.startTime!);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [puzzle, gameCompleted, loading, gameStarted]);
+  
+  const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
+    if (!gameStarted) {
+      setGameStarted(true);
+      
+      updatedPuzzle = {
+        ...updatedPuzzle,
+        startTime: Date.now()
+      };
+    }
+    
+    setPuzzle(updatedPuzzle);
+    
+    // Only add to history if it's a new move (not from undo/redo)
+    const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
+    setMoveHistory(newHistory);
+    setCurrentMoveIndex(newHistory.length - 1);
+    
+    if (updatedPuzzle.solved && !gameCompleted) {
+      setGameCompleted(true);
+      savePuzzle(updatedPuzzle);
+      updateStats(updatedPuzzle);
+      
+      // Removed toast notification since we now only have the modal
+    }
+  }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory]);
+  
+  const resetPuzzle = () => {
+    if (validDifficulty) {
+      setLoading(true);
+      setLoadingProgress(0);
+      
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      setTimeout(() => {
+        try {
+          const newPuzzle = generatePuzzle(validDifficulty);
+          
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          setTimeout(() => {
+            setPuzzle(newPuzzle);
+            setGameCompleted(false);
+            setMoveHistory([newPuzzle]);
+            setCurrentMoveIndex(0);
+            setGameStarted(false);
+            setTimer(0);
+            setLoading(false);
+            console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
+          }, 500);
+        } catch (error) {
+          console.error("Error generating puzzle:", error);
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          setGenerateError(true);
+          
+          toast({
+            title: "Error generating puzzle",
+            description: "Please try again or select a different difficulty level.",
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
+      }, 1000);
+    }
+  };
+  
+  const restartPuzzle = () => {
+    setGameStarted(false);
+    setTimer(0);
+    
+    if (validDifficulty && puzzle?.seed) {
+      setLoading(true);
+      setLoadingProgress(0);
+      
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      setTimeout(() => {
+        try {
+          const newPuzzle = generatePuzzle(validDifficulty, puzzle.seed);
+          
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          setTimeout(() => {
+            setPuzzle(newPuzzle);
+            setGameCompleted(false);
+            setMoveHistory([newPuzzle]);
+            setCurrentMoveIndex(0);
+            setLoading(false);
+            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
+          }, 500);
+        } catch (error) {
+          console.error("Error restarting puzzle:", error);
+          clearInterval(loadingInterval);
+          setLoadingProgress(100);
+          
+          toast({
+            title: "Error restarting puzzle",
+            description: "Please try again.",
+            variant: "destructive",
+            duration: 5000,
+          });
+          
+          setLoading(false);
+        }
+      }, 1000);
+    }
+  };
 
   const handleUndo = useCallback(() => {
-    if (gameHistory.length > 0) {
-      const previousState = gameHistory[gameHistory.length - 1];
-      setPuzzle(previousState);
-      // Fix: Directly pass the new array instead of using a function
-      setGameHistory(gameHistory.slice(0, -1));
-    } else {
-      toast({
-        title: "No moves to undo",
-        description: "Start playing to enable undo",
-      });
+    if (currentMoveIndex > 0) {
+      const previousMove = moveHistory[currentMoveIndex - 1];
+      setPuzzle(previousMove);
+      setCurrentMoveIndex(currentMoveIndex - 1);
     }
-  }, [gameHistory, setGameHistory, toast]);
+  }, [currentMoveIndex, moveHistory]);
 
-  const handleReset = useCallback(() => {
-    if (!puzzle) return;
+  const handleRedo = useCallback(() => {
+    if (currentMoveIndex < moveHistory.length - 1) {
+      const nextMove = moveHistory[currentMoveIndex + 1];
+      setPuzzle(nextMove);
+      setCurrentMoveIndex(currentMoveIndex + 1);
+    }
+  }, [currentMoveIndex, moveHistory]);
 
-    // Reset the puzzle to its initial state
-    setPuzzle(prevPuzzle => {
-      if (!prevPuzzle) return prevPuzzle;
-
-      const initialPuzzle = { ...prevPuzzle, bridges: [], solved: false, startTime: Date.now(), endTime: undefined };
-      return initialPuzzle;
-    });
-
+  const showHelp = () => {
     toast({
-      title: "Puzzle Reset",
-      description: "The puzzle has been reset to its initial state.",
+      title: "How to Play",
+      description: "Connect islands with bridges. Each island must have exactly the number of bridges shown on it. Bridges can't cross each other.",
+      duration: 5000,
     });
-  }, [puzzle, toast]);
-
-  useEffect(() => {
-    // Get difficulty parameter from URL
-    const difficultyParam = params.difficulty;
-    
-    // Handle custom games
-    if (difficultyParam === 'custom') {
-      const searchParams = new URLSearchParams(location.search);
-      const heightParam = searchParams.get('height');
-      const widthParam = searchParams.get('width');
-      const seedParam = searchParams.get('seed');
-      
-      let customHeight = 7; // Default height
-      let customWidth = 5; // Default width (3:4 ratio)
-      
-      if (heightParam) {
-        const parsedHeight = parseInt(heightParam, 10);
-        if (!isNaN(parsedHeight) && parsedHeight >= 5 && parsedHeight <= 15) {
-          customHeight = parsedHeight;
-        }
-      }
-      
-      if (widthParam) {
-        const parsedWidth = parseInt(widthParam, 10);
-        if (!isNaN(parsedWidth) && parsedWidth >= 4 && parsedWidth <= 12) {
-          customWidth = parsedWidth;
-        }
-      }
-      
-      let customSeed = undefined;
-      if (seedParam) {
-        const parsedSeed = parseInt(seedParam, 10);
-        if (!isNaN(parsedSeed)) {
-          customSeed = parsedSeed;
-        }
-      }
-      
-      // Generate a custom puzzle
-      let newPuzzle;
-      if (customSeed !== undefined) {
-        newPuzzle = generatePuzzle('medium', customSeed, customWidth, customHeight);
-      } else {
-        newPuzzle = generatePuzzle('medium', undefined, customWidth, customHeight);
-      }
-      
-      // Set custom properties
-      newPuzzle.difficulty = 'custom';
-      
-      setPuzzle(newPuzzle);
-      setLoading(false);
-      return;
-    }
-    
-    // Load puzzle based on difficulty
-    if (difficultyParam === 'easy' || difficultyParam === 'medium' || difficultyParam === 'hard' || difficultyParam === 'expert' || difficultyParam === 'master') {
-      const newPuzzle = generatePuzzle(difficultyParam);
-      setPuzzle(newPuzzle);
-      setLoading(false);
-    } else {
-      // Redirect to home if difficulty is invalid
-      navigate('/');
-    }
-  }, [params.difficulty, location.search, navigate]);
+  };
+  
+  const bestTime = stats.bestTime[difficulty as string] || 0;
 
   if (loading) {
-    return <div className="content-container">Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in">
+        <h1 className="text-lg font-medium capitalize mb-8">{difficulty} Puzzle</h1>
+        <div className="w-full max-w-md space-y-4">
+          <Progress value={loadingProgress} className="h-2 w-full" />
+          <p className="text-center text-sm text-muted-foreground">
+            {generateError ? "Error generating puzzle..." : "Generating puzzle..."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!puzzle) {
-    return <div className="content-container">Error generating puzzle.</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading puzzle...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="content-container">
+    <div className="min-h-screen flex flex-col animate-fade-in page-transition">
       <GameHeader 
-        backUrl="/"
-        title={`${puzzle.difficulty.charAt(0).toUpperCase() + puzzle.difficulty.slice(1)} Puzzle`}
+        timer={timer}
+        bestTime={stats.bestTime[difficulty as string] || 0}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
+        restartPuzzle={restartPuzzle}
+        canUndo={currentMoveIndex > 0}
+        canRedo={currentMoveIndex < moveHistory.length - 1}
+        gameStarted={gameStarted}
       />
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="md:w-2/3">
-          <div className="relative">
-            <Board puzzle={puzzle} onAddBridge={handleAddBridge} />
-          </div>
-        </div>
-        <div className="md:w-1/3 flex flex-col gap-4">
-          <GameControls 
-            onSolve={handleSolve}
-            onUndo={handleUndo}
-            onReset={handleReset}
+      
+      <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
+        <h1 className="text-lg font-medium capitalize mb-4">{difficulty} Puzzle</h1>
+        
+        <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+        
+        {gameCompleted && (
+          <GameCompletedModal 
+            time={puzzle.endTime! - puzzle.startTime!}
+            resetPuzzle={resetPuzzle}
+            seed={puzzle.seed}
           />
-          <GameStats puzzle={puzzle} />
-          <HelpDialog />
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 };
