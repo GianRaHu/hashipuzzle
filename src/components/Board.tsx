@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { Puzzle, Island, toggleBridge, canConnect, getIslandById } from '@/utils/gameLogic';
+import { Puzzle, Island, Bridge, toggleBridge, canConnect } from '@/utils/gameLogic';
 import { triggerHaptic } from '@/utils/haptics';
 import { cn } from '@/lib/utils';
 
@@ -48,6 +48,18 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }) || null;
   };
 
+  const handleBridgeTap = useCallback((bridge: Bridge) => {
+    triggerHaptic('light');
+    
+    const startIsland = puzzle.islands.find(i => i.id === bridge.startIslandId);
+    const endIsland = puzzle.islands.find(i => i.id === bridge.endIslandId);
+    
+    if (startIsland && endIsland) {
+      const updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
+      onUpdate(updatedPuzzle);
+    }
+  }, [puzzle, onUpdate]);
+
   const handleTouchStart = useCallback((event: TouchEvent | MouseEvent) => {
     const touch = 'touches' in event ? event.touches[0] : event;
     const boardRect = boardRef.current?.getBoundingClientRect();
@@ -93,7 +105,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     );
     
     const speed = distance / swipeDuration;
-    const minimumDistance = 30;
+    const minimumDistance = 20;
 
     if (speed >= swipeSpeedThreshold && distance >= minimumDistance) {
       const targetIsland = findIslandInDirection(selectedIsland, swipeDirection, puzzle.islands);
@@ -144,7 +156,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
-  // Calculate grid size
   const gridSize = puzzle.size;
   const cellSize = Math.min(window.innerWidth, 600) / (gridSize + 2);
 
@@ -158,7 +169,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         touchAction: 'none'
       }}
     >
-      {/* Grid */}
       <div 
         className="grid absolute inset-4"
         style={{
@@ -167,7 +177,46 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
           gap: '0px'
         }}
       >
-        {/* Islands */}
+        {puzzle.bridges.map((bridge) => {
+          const start = puzzle.islands.find(i => i.id === bridge.startIslandId)!;
+          const end = puzzle.islands.find(i => i.id === bridge.endIslandId)!;
+          
+          const isHorizontal = bridge.orientation === 'horizontal';
+          const length = isHorizontal 
+            ? Math.abs(end.col - start.col) * cellSize
+            : Math.abs(end.row - start.row) * cellSize;
+          
+          return (
+            <div
+              key={bridge.id}
+              className={cn(
+                "bridge absolute bg-primary/80 cursor-pointer",
+                bridge.count === 2 && "before:content-[''] before:absolute before:inset-0 before:bg-primary/80",
+                isHorizontal 
+                  ? "before:-translate-y-[3px] h-[2px]"
+                  : "before:-translate-x-[3px] w-[2px]"
+              )}
+              style={{
+                left: `${Math.min(start.col, end.col) * cellSize + cellSize / 2}px`,
+                top: `${Math.min(start.row, end.row) * cellSize + cellSize / 2}px`,
+                width: isHorizontal ? length : '2px',
+                height: isHorizontal ? '2px' : length,
+                padding: '10px',
+                margin: '-10px',
+                zIndex: 10
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBridgeTap(bridge);
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                handleBridgeTap(bridge);
+              }}
+            />
+          );
+        })}
+
         {puzzle.islands.map((island) => (
           <div
             key={island.id}
@@ -182,7 +231,8 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
               height: cellSize * 0.8,
               left: `${island.col * cellSize + cellSize * 0.1}px`,
               top: `${island.row * cellSize + cellSize * 0.1}px`,
-              fontSize: `${cellSize * 0.4}px`
+              fontSize: `${cellSize * 0.4}px`,
+              zIndex: 20
             }}
             onMouseDown={(e) => {
               e.stopPropagation();
@@ -197,38 +247,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
           </div>
         ))}
 
-        {/* Bridges */}
-        {puzzle.bridges.map((bridge) => {
-          const start = puzzle.islands.find(i => i.id === bridge.startIslandId)!;
-          const end = puzzle.islands.find(i => i.id === bridge.endIslandId)!;
-          
-          const isHorizontal = bridge.orientation === 'horizontal';
-          const length = isHorizontal 
-            ? Math.abs(end.col - start.col) * cellSize
-            : Math.abs(end.row - start.row) * cellSize;
-          
-          return (
-            <div
-              key={bridge.id}
-              className={cn(
-                "bridge absolute bg-primary/80",
-                bridge.count === 2 && "before:content-[''] before:absolute before:inset-0 before:bg-primary/80",
-                isHorizontal 
-                  ? "before:-translate-y-[3px] h-[2px]"
-                  : "before:-translate-x-[3px] w-[2px]"
-              )}
-              style={{
-                left: `${Math.min(start.col, end.col) * cellSize + cellSize / 2}px`,
-                top: `${Math.min(start.row, end.row) * cellSize + cellSize / 2}px`,
-                width: isHorizontal ? length : '2px',
-                height: isHorizontal ? '2px' : length,
-                pointerEvents: 'none'
-              }}
-            />
-          );
-        })}
-
-        {/* Swipe Direction Indicator */}
         {selectedIsland && swipeDirection && (
           <div
             className="absolute bg-primary/30 rounded-full"
@@ -239,7 +257,8 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
               top: `${selectedIsland.row * cellSize + cellSize / 2 - 4}px`,
               transform: `translate(${swipeDirection.x}px, ${swipeDirection.y}px)`,
               transition: 'transform 0.1s ease-out',
-              pointerEvents: 'none'
+              pointerEvents: 'none',
+              zIndex: 30
             }}
           />
         )}
