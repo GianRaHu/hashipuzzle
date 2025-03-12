@@ -8,6 +8,8 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Game from "./pages/Game";
 import DailyChallenge from "./pages/DailyChallenge";
+import Custom from "./pages/Custom";
+import CustomGame from "./pages/CustomGame";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
@@ -19,7 +21,8 @@ const queryClient = new QueryClient();
 // Navbar wrapper component that conditionally renders the navbar
 const NavbarWrapper = () => {
   const location = useLocation();
-  const isGamePage = location.pathname.includes('/game/');
+  const isGamePage = location.pathname.includes('/game/') || 
+                     location.pathname.includes('/custom/play');
   
   if (isGamePage) {
     return null;
@@ -41,6 +44,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/game/:difficulty" element={<Game />} />
                 <Route path="/daily" element={<DailyChallenge />} />
+                <Route path="/custom" element={<Custom />} />
+                <Route path="/custom/play" element={<CustomGame />} />
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/support" element={<Support />} />
