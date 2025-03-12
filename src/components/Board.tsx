@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback } from 'react';
-import { Puzzle, Island, toggleBridge, canConnect } from '@/utils/gameLogic';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
+import { Puzzle, Island, toggleBridge, canConnect, getIslandById } from '@/utils/gameLogic';
 import { triggerHaptic } from '@/utils/haptics';
 import { cn } from '@/lib/utils';
 
@@ -8,8 +8,101 @@ interface BoardProps {
   onUpdate: (puzzle: Puzzle) => void;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
 const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
-  const [selectedIsland, setSelectedIsland] = React.useState<Island | null>(null);
+  const [selectedIsland, setSelectedIsland] = useState<Island | null>(null);
+  const [swipeStart, setSwipeStart] = useState<Point | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<Point | null>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const swipeThreshold = 30; // Minimum distance for swipe detection
+  const swipeSpeedThreshold = 0.5; // Speed threshold in pixels per millisecond
+  const lastTouchTime = useRef<number>(0);
+
+  const findIslandInDirection = (start: Island, direction: Point, islands: Island[]): Island | null => {
+    const angle = Math.atan2(direction.y, direction.x);
+    const tolerance = Math.PI / 8; // 22.5 degrees tolerance
+
+    return islands.find(island => {
+      if (island.id === start.id) return false;
+
+      // Calculate angle between islands
+      const dx = island.col - start.col;
+      const dy = island.row - start.row;
+      const islandAngle = Math.atan2(dy, dx);
+      
+      // Check if angles match within tolerance
+      const angleDiff = Math.abs(angle - islandAngle);
+      const isAligned = angleDiff < tolerance || Math.abs(angleDiff - Math.PI) < tolerance;
+
+      // Check if islands are in same row or column (Hashi rule)
+      const isValidConnection = start.row === island.row || start.col === island.col;
+
+      return isAligned && isValidConnection && canConnect(start, island, puzzle.islands, puzzle.bridges);
+    }) || null;
+  };
+
+  const handleTouchStart = useCallback((event: TouchEvent | MouseEvent) => {
+    const touch = 'touches' in event ? event.touches[0] : event;
+    const boardRect = boardRef.current?.getBoundingClientRect();
+    if (!boardRect) return;
+
+    const x = touch.clientX - boardRect.left;
+    const y = touch.clientY - boardRect.top;
+    setSwipeStart({ x, y });
+    lastTouchTime.current = Date.now();
+  }, []);
+
+  const handleTouchMove = useCallback((event: TouchEvent | MouseEvent) => {
+    if (!swipeStart || !selectedIsland) return;
+    
+    const touch = 'touches' in event ? event.touches[0] : event;
+    const boardRect = boardRef.current?.getBoundingClientRect();
+    if (!boardRect) return;
+
+    const currentX = touch.clientX - boardRect.left;
+    const currentY = touch.clientY - boardRect.top;
+    
+    const dx = currentX - swipeStart.x;
+    const dy = currentY - swipeStart.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > swipeThreshold) {
+      setSwipeDirection({ x: dx, y: dy });
+    }
+  }, [swipeStart, selectedIsland]);
+
+  const handleTouchEnd = useCallback((event: TouchEvent | MouseEvent) => {
+    if (!swipeStart || !selectedIsland || !swipeDirection) {
+      setSwipeStart(null);
+      setSwipeDirection(null);
+      return;
+    }
+
+    const endTime = Date.now();
+    const swipeDuration = endTime - lastTouchTime.current;
+    const distance = Math.sqrt(
+      swipeDirection.x * swipeDirection.x + 
+      swipeDirection.y * swipeDirection.y
+    );
+    const speed = distance / swipeDuration;
+
+    if (speed >= swipeSpeedThreshold) {
+      const targetIsland = findIslandInDirection(selectedIsland, swipeDirection, puzzle.islands);
+      if (targetIsland) {
+        triggerHaptic('medium');
+        const updatedPuzzle = toggleBridge(selectedIsland, targetIsland, puzzle);
+        onUpdate(updatedPuzzle);
+      }
+    }
+
+    setSwipeStart(null);
+    setSwipeDirection(null);
+    setSelectedIsland(null);
+  }, [swipeStart, selectedIsland, swipeDirection, puzzle, onUpdate]);
 
   const handleIslandClick = useCallback((island: Island) => {
     triggerHaptic('light');
@@ -26,22 +119,25 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   }, [selectedIsland, puzzle, onUpdate]);
 
   useEffect(() => {
-    const handleTouchStart = async (event: TouchEvent) => {
-      try {
-        await triggerHaptic('light');
-      } catch (error) {
-        console.warn('Haptics not available:', error);
-      }
-    };
-
-    const board = document.querySelector('.board');
+    const board = boardRef.current;
     if (board) {
       board.addEventListener('touchstart', handleTouchStart);
+      board.addEventListener('touchmove', handleTouchMove);
+      board.addEventListener('touchend', handleTouchEnd);
+      board.addEventListener('mousedown', handleTouchStart);
+      board.addEventListener('mousemove', handleTouchMove);
+      board.addEventListener('mouseup', handleTouchEnd);
+
       return () => {
         board.removeEventListener('touchstart', handleTouchStart);
+        board.removeEventListener('touchmove', handleTouchMove);
+        board.removeEventListener('touchend', handleTouchEnd);
+        board.removeEventListener('mousedown', handleTouchStart);
+        board.removeEventListener('mousemove', handleTouchMove);
+        board.removeEventListener('mouseup', handleTouchEnd);
       };
     }
-  }, []);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   // Calculate grid size
   const gridSize = puzzle.size;
@@ -49,10 +145,12 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
 
   return (
     <div 
+      ref={boardRef}
       className="board relative bg-background shadow-lg rounded-lg p-4"
       style={{
         width: cellSize * (gridSize + 2),
-        height: cellSize * (gridSize + 2)
+        height: cellSize * (gridSize + 2),
+        touchAction: 'none' // Prevents default touch behaviors
       }}
     >
       {/* Grid */}
@@ -81,7 +179,14 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
               top: `${island.row * cellSize + cellSize * 0.1}px`,
               fontSize: `${cellSize * 0.4}px`
             }}
-            onClick={() => handleIslandClick(island)}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              handleIslandClick(island);
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              handleIslandClick(island);
+            }}
           >
             {island.value}
           </div>
@@ -112,10 +217,27 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
                 top: `${Math.min(start.row, end.row) * cellSize + cellSize / 2}px`,
                 width: isHorizontal ? length : '2px',
                 height: isHorizontal ? '2px' : length,
+                pointerEvents: 'none'
               }}
             />
           );
         })}
+
+        {/* Swipe Direction Indicator (optional) */}
+        {selectedIsland && swipeDirection && (
+          <div
+            className="absolute bg-primary/30 rounded-full"
+            style={{
+              width: '8px',
+              height: '8px',
+              left: `${selectedIsland.col * cellSize + cellSize / 2 - 4}px`,
+              top: `${selectedIsland.row * cellSize + cellSize / 2 - 4}px`,
+              transform: `translate(${swipeDirection.x}px, ${swipeDirection.y}px)`,
+              transition: 'transform 0.1s ease-out',
+              pointerEvents: 'none'
+            }}
+          />
+        )}
       </div>
     </div>
   );
