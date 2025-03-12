@@ -17,14 +17,14 @@ export type Bridge = {
 
 export type Puzzle = {
   id: string;
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master';
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master' | 'custom';
   size: number;
   islands: Island[];
   bridges: Bridge[];
   solved: boolean;
   startTime?: number;
   endTime?: number;
-  seed?: number;  // Added seed for reproducible puzzles
+  seed?: number;
 };
 
 // Generate a unique ID
