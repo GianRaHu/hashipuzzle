@@ -1,7 +1,18 @@
 import { Puzzle } from './gameLogic';
 import { format } from 'date-fns';
 
-// Define the GameStats type with the new metrics
+// Interface for saved game state
+interface SavedGameState {
+  puzzle: Puzzle;
+  lastPlayed: string; // ISO date string
+}
+
+// Interface for game states by difficulty
+interface GameStates {
+  [key: string]: SavedGameState; // key is difficulty level
+}
+
+// Interface for game stats
 export interface GameStats {
   gamesPlayed: number;
   averageThinkingTime: {
@@ -38,45 +49,34 @@ export interface GameStats {
   };
 }
 
-// Game history type
-export interface GameHistoryEntry {
-  seed: number;
-  difficulty: string;
-  date: string;
-}
+// Save current game state
+export const saveCurrentGame = (puzzle: Puzzle) => {
+  if (!puzzle.difficulty) return;
 
-// Save puzzle to local storage
-export const savePuzzle = (puzzle: Puzzle): void => {
-  localStorage.setItem(`puzzle_${puzzle.id}`, JSON.stringify(puzzle));
+  const gameStates: GameStates = JSON.parse(localStorage.getItem('hashi_current_games') || '{}');
   
-  // Save to game history if it has a seed
-  if (puzzle.seed) {
-    const historyEntry: GameHistoryEntry = {
-      seed: puzzle.seed,
-      difficulty: puzzle.difficulty,
-      date: new Date().toLocaleString()
-    };
-    
-    const history = localStorage.getItem('hashi_game_history');
-    const gameHistory: GameHistoryEntry[] = history ? JSON.parse(history) : [];
-    
-    // Add to history and limit to last 50 games
-    gameHistory.unshift(historyEntry);
-    if (gameHistory.length > 50) {
-      gameHistory.pop();
-    }
-    
-    localStorage.setItem('hashi_game_history', JSON.stringify(gameHistory));
-  }
+  gameStates[puzzle.difficulty] = {
+    puzzle,
+    lastPlayed: new Date().toISOString()
+  };
+
+  localStorage.setItem('hashi_current_games', JSON.stringify(gameStates));
 };
 
-// Get saved puzzle from local storage
-export const getSavedPuzzle = (id: string): Puzzle | null => {
-  const savedPuzzle = localStorage.getItem(`puzzle_${id}`);
-  return savedPuzzle ? JSON.parse(savedPuzzle) : null;
+// Get current game state for a difficulty
+export const getCurrentGame = (difficulty: string): Puzzle | null => {
+  const gameStates: GameStates = JSON.parse(localStorage.getItem('hashi_current_games') || '{}');
+  return gameStates[difficulty]?.puzzle || null;
 };
 
-// Get game statistics from local storage
+// Clear current game state for a difficulty
+export const clearCurrentGame = (difficulty: string) => {
+  const gameStates: GameStates = JSON.parse(localStorage.getItem('hashi_current_games') || '{}');
+  delete gameStates[difficulty];
+  localStorage.setItem('hashi_current_games', JSON.stringify(gameStates));
+};
+
+// Get game statistics
 export const getStats = (): GameStats => {
   const stats = localStorage.getItem('hashi_stats');
   return stats ? JSON.parse(stats) : {
@@ -94,7 +94,6 @@ export const updateStats = (puzzle: Puzzle) => {
   stats.gamesPlayed += 1;
   
   if (puzzle.difficulty) {
-    // Calculate thinking time per move
     const totalTime = puzzle.endTime && puzzle.startTime 
       ? puzzle.endTime - puzzle.startTime 
       : 0;
@@ -117,7 +116,7 @@ export const updateStats = (puzzle: Puzzle) => {
     stats.averageTime[puzzle.difficulty] = 
       (prevAverageTime * prevGamesPlayed + totalTime) / stats.gamesPlayed;
 
-    // Update best time if this solve is faster or if there's no previous best time
+    // Update best time
     if (totalTime > 0 && (!stats.bestTime[puzzle.difficulty] || totalTime < stats.bestTime[puzzle.difficulty]!)) {
       stats.bestTime[puzzle.difficulty] = totalTime;
     }
@@ -126,7 +125,7 @@ export const updateStats = (puzzle: Puzzle) => {
   localStorage.setItem('hashi_stats', JSON.stringify(stats));
 };
 
-// Format time in a readable way
+// Format time for display
 export const formatTime = (time: number): string => {
   const seconds = Math.floor((time / 1000) % 60);
   const minutes = Math.floor((time / (1000 * 60)) % 60);
@@ -134,13 +133,7 @@ export const formatTime = (time: number): string => {
   return `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
 };
 
-// Format a date to a readable string
+// Format date for display
 export const formatDate = (date: Date): string => {
   return format(date, 'MMMM do, yyyy');
-};
-
-// Get game history
-export const getGameHistory = (): GameHistoryEntry[] => {
-  const history = localStorage.getItem('hashi_game_history');
-  return history ? JSON.parse(history) : [];
 };
