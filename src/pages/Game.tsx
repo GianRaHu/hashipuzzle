@@ -49,7 +49,8 @@ const Game = () => {
     if (gameHistory.length > 0) {
       const previousState = gameHistory[gameHistory.length - 1];
       setPuzzle(previousState);
-      setGameHistory(prev => prev.slice(0, -1)); // Using a function to update state
+      // Fix: Directly pass the new array instead of using a function
+      setGameHistory(gameHistory.slice(0, -1));
     } else {
       toast({
         title: "No moves to undo",
