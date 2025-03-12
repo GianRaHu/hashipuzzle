@@ -1,11 +1,33 @@
 import { Puzzle } from './gameLogic';
 import { format } from 'date-fns';
 
-// Define the GameStats type
+// Define the GameStats type with the new metrics
 export interface GameStats {
   gamesPlayed: number;
-  gamesWon: number;
-  dailyStreak: number;
+  averageThinkingTime: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    expert?: number;
+    master?: number;
+    [key: string]: number | undefined;
+  };
+  movesPerGame: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    expert?: number;
+    master?: number;
+    [key: string]: number | undefined;
+  };
+  averageTime: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    expert?: number;
+    master?: number;
+    [key: string]: number | undefined;
+  };
   bestTime: {
     easy?: number;
     medium?: number;
@@ -57,17 +79,12 @@ export const getSavedPuzzle = (id: string): Puzzle | null => {
 // Get game statistics from local storage
 export const getStats = (): GameStats => {
   const stats = localStorage.getItem('hashi_stats');
-  return stats ? JSON.parse(stats) : { 
-    gamesPlayed: 0, 
-    gamesWon: 0, 
-    dailyStreak: 0,
-    bestTime: {
-      easy: 0,
-      medium: 0,
-      hard: 0,
-      expert: 0,
-      master: 0
-    }
+  return stats ? JSON.parse(stats) : {
+    gamesPlayed: 0,
+    averageThinkingTime: {},
+    movesPerGame: {},
+    averageTime: {},
+    bestTime: {}
   };
 };
 
@@ -76,14 +93,33 @@ export const updateStats = (puzzle: Puzzle) => {
   const stats = getStats();
   stats.gamesPlayed += 1;
   
-  // If puzzle is solved, increment wins and update best time
-  if (puzzle.solved && puzzle.endTime && puzzle.startTime) {
-    stats.gamesWon = (stats.gamesWon || 0) + 1;
-    const solveTime = puzzle.endTime - puzzle.startTime;
-    
+  if (puzzle.difficulty) {
+    // Calculate thinking time per move
+    const totalTime = puzzle.endTime && puzzle.startTime 
+      ? puzzle.endTime - puzzle.startTime 
+      : 0;
+    const movesCount = puzzle.moveHistory.length;
+    const thinkingTimePerMove = movesCount > 0 ? totalTime / movesCount : 0;
+
+    // Update average thinking time
+    const prevThinkingTime = stats.averageThinkingTime[puzzle.difficulty] || 0;
+    const prevGamesPlayed = stats.gamesPlayed > 1 ? stats.gamesPlayed - 1 : 1;
+    stats.averageThinkingTime[puzzle.difficulty] = 
+      (prevThinkingTime * prevGamesPlayed + thinkingTimePerMove) / stats.gamesPlayed;
+
+    // Update moves per game
+    const prevMovesPerGame = stats.movesPerGame[puzzle.difficulty] || 0;
+    stats.movesPerGame[puzzle.difficulty] = 
+      (prevMovesPerGame * prevGamesPlayed + movesCount) / stats.gamesPlayed;
+
+    // Update average completion time
+    const prevAverageTime = stats.averageTime[puzzle.difficulty] || 0;
+    stats.averageTime[puzzle.difficulty] = 
+      (prevAverageTime * prevGamesPlayed + totalTime) / stats.gamesPlayed;
+
     // Update best time if this solve is faster or if there's no previous best time
-    if (puzzle.difficulty && (!stats.bestTime[puzzle.difficulty] || solveTime < stats.bestTime[puzzle.difficulty]!)) {
-      stats.bestTime[puzzle.difficulty] = solveTime;
+    if (totalTime > 0 && (!stats.bestTime[puzzle.difficulty] || totalTime < stats.bestTime[puzzle.difficulty]!)) {
+      stats.bestTime[puzzle.difficulty] = totalTime;
     }
   }
   
@@ -101,42 +137,6 @@ export const formatTime = (time: number): string => {
 // Format a date to a readable string
 export const formatDate = (date: Date): string => {
   return format(date, 'MMMM do, yyyy');
-};
-
-// Check if the daily challenge for a specific date is completed
-export const isDailyCompleted = (date?: Date): boolean => {
-  // If no date is provided, use today's date
-  const targetDate = date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-  const completedDates = localStorage.getItem('daily_completed_dates');
-  
-  if (!completedDates) return false;
-  
-  const datesArray = JSON.parse(completedDates);
-  return datesArray.includes(targetDate);
-};
-
-// Set the daily challenge as completed
-export const setDailyCompleted = (): void => {
-  const today = new Date().toISOString().split('T')[0];
-  localStorage.setItem('daily_completed_date', today);
-  
-  // Update streak
-  const stats = getStats();
-  const lastStreakDate = localStorage.getItem('last_streak_date');
-  const todayDate = new Date();
-  const yesterday = new Date(todayDate);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  if (lastStreakDate === yesterday.toISOString().split('T')[0]) {
-    // Continuing streak
-    stats.dailyStreak += 1;
-  } else if (lastStreakDate !== todayDate.toISOString().split('T')[0]) {
-    // Broken streak, start new
-    stats.dailyStreak = 1;
-  }
-  
-  localStorage.setItem('last_streak_date', todayDate.toISOString().split('T')[0]);
-  localStorage.setItem('hashi_stats', JSON.stringify(stats));
 };
 
 // Get game history
