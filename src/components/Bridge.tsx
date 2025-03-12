@@ -23,8 +23,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   const isHorizontal = bridge.orientation === 'horizontal';
   const isSingleBridge = bridge.count === 1;
   
-  // Calculate island size based on grid size (smaller for larger grids)
-  const islandRadius = Math.max(1.2, 3 - (gridSize * 0.1));
+  // Reduced node radius for smaller islands
+  const nodeRadius = 1;
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
@@ -33,13 +33,12 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = minCol * cellSize + cellSize / 2;
     const yPos = startIsland.row * cellSize + cellSize / 2;
     
-    // Adjusted width to stop at the island rings
-    const adjustedWidth = width - (cellSize * islandRadius / gridSize);
-    const adjustedPos = xPos + (cellSize * islandRadius / (2 * gridSize));
+    const adjustedWidth = width - (cellSize * nodeRadius / gridSize);
+    const adjustedPos = xPos + (cellSize * nodeRadius / (2 * gridSize));
     
-    // Reduced spacing between bridges (0.3 instead of 0.5)
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.3;
-    const secondBridgeOffset = 0.3;
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -83,13 +82,12 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = startIsland.col * cellSize + cellSize / 2;
     const yPos = minRow * cellSize + cellSize / 2;
     
-    // Adjusted height to stop at the island rings
-    const adjustedHeight = height - (cellSize * islandRadius / gridSize);
-    const adjustedPos = yPos + (cellSize * islandRadius / (2 * gridSize));
+    const adjustedHeight = height - (cellSize * nodeRadius / gridSize);
+    const adjustedPos = yPos + (cellSize * nodeRadius / (2 * gridSize));
     
-    // Reduced spacing between bridges (0.3 instead of 0.5)
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.3;
-    const secondBridgeOffset = 0.3;
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
