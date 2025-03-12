@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, CornerUpLeft, CornerUpRight, RotateCcw, Clock } from 'lucide-react';
+import { Home, CornerUpLeft, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/storage';
 import HelpDialog from './HelpDialog';
@@ -10,10 +10,8 @@ interface GameHeaderProps {
   timer: number;
   bestTime: number;
   handleUndo: () => void;
-  handleRedo: () => void;
   restartPuzzle: () => void;
   canUndo: boolean;
-  canRedo: boolean;
   gameStarted: boolean;
 }
 
@@ -21,10 +19,8 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   timer,
   bestTime,
   handleUndo,
-  handleRedo,
   restartPuzzle,
   canUndo,
-  canRedo,
   gameStarted
 }) => {
   const navigate = useNavigate();
@@ -50,11 +46,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
               Best: {formatTime(bestTime)}
             </span>
           )}
-          {!gameStarted && timer === 0 && (
-            <span className="text-xs text-muted-foreground italic ml-1">
-              (tap to start)
-            </span>
-          )}
         </div>
         
         <div className="flex gap-1">
@@ -67,17 +58,6 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             aria-label="Undo"
           >
             <CornerUpLeft className="h-4 w-4" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className="rounded-full h-8 w-8"
-            aria-label="Redo"
-          >
-            <CornerUpRight className="h-4 w-4" />
           </Button>
           
           <Button 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
 interface DifficultySelectorProps {
-  onSelect?: (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => void;
+  onSelect?: (difficulty: 'easy' | 'medium' | 'hard' | 'expert') => void;
 }
 
 const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => {
@@ -15,10 +15,9 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => 
     { id: 'medium', label: 'Medium', description: 'A bit more challenging' },
     { id: 'hard', label: 'Hard', description: 'For experienced players' },
     { id: 'expert', label: 'Expert', description: 'Truly challenging puzzles' },
-    { id: 'master', label: 'Master', description: 'The ultimate challenge' },
   ] as const;
 
-  const handleSelect = (difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master') => {
+  const handleSelect = (difficulty: 'easy' | 'medium' | 'hard' | 'expert') => {
     console.log(`Selected difficulty: ${difficulty}`);
     if (onSelect) {
       onSelect(difficulty);

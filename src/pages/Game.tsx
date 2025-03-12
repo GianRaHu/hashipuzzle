@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
@@ -25,12 +26,54 @@ const Game: React.FC = () => {
   const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
   const [generateError, setGenerateError] = useState<boolean>(false);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [showTapToStart, setShowTapToStart] = useState<boolean>(false);
+  const inactivityTimerRef = useRef<number | null>(null);
   const stats = getStats();
   
-  const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+  const validDifficulties = ['easy', 'medium', 'hard', 'expert'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
-    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
+    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' 
     : 'easy';
+  
+  // Setup inactivity timer to show "tap to start" overlay
+  useEffect(() => {
+    if (puzzle && !gameStarted && !showTapToStart) {
+      if (inactivityTimerRef.current) {
+        window.clearTimeout(inactivityTimerRef.current);
+      }
+      
+      inactivityTimerRef.current = window.setTimeout(() => {
+        setShowTapToStart(true);
+      }, 5000);
+      
+      return () => {
+        if (inactivityTimerRef.current) {
+          window.clearTimeout(inactivityTimerRef.current);
+        }
+      };
+    }
+  }, [puzzle, gameStarted, showTapToStart]);
+  
+  // Handle tap anywhere to dismiss the overlay
+  const handleTapToDismiss = useCallback(() => {
+    if (showTapToStart) {
+      setShowTapToStart(false);
+      setGameStarted(true);
+    }
+  }, [showTapToStart]);
+  
+  useEffect(() => {
+    // Add event listener for the entire document to capture taps/clicks
+    if (showTapToStart) {
+      document.addEventListener('click', handleTapToDismiss);
+      document.addEventListener('touchstart', handleTapToDismiss);
+      
+      return () => {
+        document.removeEventListener('click', handleTapToDismiss);
+        document.removeEventListener('touchstart', handleTapToDismiss);
+      };
+    }
+  }, [showTapToStart, handleTapToDismiss]);
   
   useEffect(() => {
     if (validDifficulty) {
@@ -59,6 +102,8 @@ const Game: React.FC = () => {
             setCurrentMoveIndex(0);
             setGameCompleted(false);
             setLoading(false);
+            setGameStarted(false);
+            setShowTapToStart(false);
             console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
           }, 500);
         } catch (error) {
@@ -97,6 +142,7 @@ const Game: React.FC = () => {
   const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
     if (!gameStarted) {
       setGameStarted(true);
+      setShowTapToStart(false);
       
       updatedPuzzle = {
         ...updatedPuzzle,
@@ -106,8 +152,9 @@ const Game: React.FC = () => {
     
     setPuzzle(updatedPuzzle);
     
-    // Only add to history if it's a new move (not from undo/redo)
-    const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
+    // Add to history
+    const newHistory = moveHistory.slice(0, currentMoveIndex + 1);
+    newHistory.push(updatedPuzzle);
     setMoveHistory(newHistory);
     setCurrentMoveIndex(newHistory.length - 1);
     
@@ -115,8 +162,6 @@ const Game: React.FC = () => {
       setGameCompleted(true);
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
-      
-      // Removed toast notification since we now only have the modal
     }
   }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory]);
   
@@ -145,6 +190,7 @@ const Game: React.FC = () => {
             setMoveHistory([newPuzzle]);
             setCurrentMoveIndex(0);
             setGameStarted(false);
+            setShowTapToStart(false);
             setTimer(0);
             setLoading(false);
             console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
@@ -168,6 +214,7 @@ const Game: React.FC = () => {
   
   const restartPuzzle = () => {
     setGameStarted(false);
+    setShowTapToStart(false);
     setTimer(0);
     
     if (validDifficulty && puzzle?.seed) {
@@ -216,29 +263,12 @@ const Game: React.FC = () => {
 
   const handleUndo = useCallback(() => {
     if (currentMoveIndex > 0) {
-      const previousMove = moveHistory[currentMoveIndex - 1];
+      const previousIndex = currentMoveIndex - 1;
+      const previousMove = moveHistory[previousIndex];
       setPuzzle(previousMove);
-      setCurrentMoveIndex(currentMoveIndex - 1);
+      setCurrentMoveIndex(previousIndex);
     }
   }, [currentMoveIndex, moveHistory]);
-
-  const handleRedo = useCallback(() => {
-    if (currentMoveIndex < moveHistory.length - 1) {
-      const nextMove = moveHistory[currentMoveIndex + 1];
-      setPuzzle(nextMove);
-      setCurrentMoveIndex(currentMoveIndex + 1);
-    }
-  }, [currentMoveIndex, moveHistory]);
-
-  const showHelp = () => {
-    toast({
-      title: "How to Play",
-      description: "Connect islands with bridges. Each island must have exactly the number of bridges shown on it. Bridges can't cross each other.",
-      duration: 5000,
-    });
-  };
-  
-  const bestTime = stats.bestTime[difficulty as string] || 0;
 
   if (loading) {
     return (
@@ -268,10 +298,8 @@ const Game: React.FC = () => {
         timer={timer}
         bestTime={stats.bestTime[difficulty as string] || 0}
         handleUndo={handleUndo}
-        handleRedo={handleRedo}
         restartPuzzle={restartPuzzle}
         canUndo={currentMoveIndex > 0}
-        canRedo={currentMoveIndex < moveHistory.length - 1}
         gameStarted={gameStarted}
       />
       
@@ -286,6 +314,17 @@ const Game: React.FC = () => {
             resetPuzzle={resetPuzzle}
             seed={puzzle.seed}
           />
+        )}
+        
+        {showTapToStart && (
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in"
+            onClick={handleTapToDismiss}
+          >
+            <div className="bg-background p-6 rounded-lg shadow-lg text-center">
+              <p className="text-xl font-medium">Tap to Start</p>
+            </div>
+          </div>
         )}
       </main>
     </div>
