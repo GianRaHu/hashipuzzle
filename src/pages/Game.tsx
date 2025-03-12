@@ -1,29 +1,25 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Puzzle } from '../utils/gameLogic';
-import { generatePuzzle } from '../utils/puzzleGenerator';
-import { savePuzzle, updateStats, getStats } from '../utils/storage';
-import { useToast } from '@/hooks/use-toast';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
-
-import Board from '../components/Board';
-import GameHeader from '../components/game/GameHeader';
-import GameCompletedModal from '../components/game/GameCompletedModal';
+import { generatePuzzle } from '@/utils/puzzleGenerator';
+import { Puzzle, undoLastMove } from '@/utils/gameLogic';
+import { getStats, savePuzzle, updateStats } from '@/utils/storage';
+import Board from '@/components/Board';
+import GameHeader from '@/components/game/GameHeader';
+import GameCompletedModal from '@/components/game/GameCompletedModal';
+import { useToast } from '@/hooks/use-toast';
 
 const Game: React.FC = () => {
+  const { difficulty } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { difficulty } = useParams<{ difficulty: string }>();
-  const location = useLocation();
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [timer, setTimer] = useState<number>(0);
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
-  const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
   const [generateError, setGenerateError] = useState<boolean>(false);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [showTapToStart, setShowTapToStart] = useState<boolean>(false);
@@ -75,6 +71,7 @@ const Game: React.FC = () => {
     }
   }, [showTapToStart, handleTapToDismiss]);
   
+  // Generate new puzzle when difficulty changes
   useEffect(() => {
     if (validDifficulty) {
       setLoading(true);
@@ -92,14 +89,13 @@ const Game: React.FC = () => {
         try {
           console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
           const newPuzzle = generatePuzzle(validDifficulty);
+          newPuzzle.moveHistory = []; // Initialize empty move history
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
           
           setTimeout(() => {
             setPuzzle(newPuzzle);
-            setMoveHistory([newPuzzle]);
-            setCurrentMoveIndex(0);
             setGameCompleted(false);
             setLoading(false);
             setGameStarted(false);
@@ -127,10 +123,9 @@ const Game: React.FC = () => {
     }
   }, [validDifficulty, location.search, navigate, toast]);
   
+  // Update timer
   useEffect(() => {
-    if (!puzzle || gameCompleted || loading) return;
-    
-    if (!gameStarted) return;
+    if (!puzzle || gameCompleted || loading || !gameStarted) return;
     
     const interval = setInterval(() => {
       setTimer(Date.now() - puzzle.startTime!);
@@ -139,6 +134,7 @@ const Game: React.FC = () => {
     return () => clearInterval(interval);
   }, [puzzle, gameCompleted, loading, gameStarted]);
   
+  // Handle puzzle updates
   const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
     if (!gameStarted) {
       setGameStarted(true);
@@ -152,19 +148,14 @@ const Game: React.FC = () => {
     
     setPuzzle(updatedPuzzle);
     
-    // Add to history
-    const newHistory = moveHistory.slice(0, currentMoveIndex + 1);
-    newHistory.push(updatedPuzzle);
-    setMoveHistory(newHistory);
-    setCurrentMoveIndex(newHistory.length - 1);
-    
     if (updatedPuzzle.solved && !gameCompleted) {
       setGameCompleted(true);
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
     }
-  }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory]);
+  }, [gameCompleted, gameStarted]);
   
+  // Reset puzzle
   const resetPuzzle = () => {
     if (validDifficulty) {
       setLoading(true);
@@ -180,6 +171,7 @@ const Game: React.FC = () => {
       setTimeout(() => {
         try {
           const newPuzzle = generatePuzzle(validDifficulty);
+          newPuzzle.moveHistory = [];
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -187,8 +179,6 @@ const Game: React.FC = () => {
           setTimeout(() => {
             setPuzzle(newPuzzle);
             setGameCompleted(false);
-            setMoveHistory([newPuzzle]);
-            setCurrentMoveIndex(0);
             setGameStarted(false);
             setShowTapToStart(false);
             setTimer(0);
@@ -212,6 +202,7 @@ const Game: React.FC = () => {
     }
   };
   
+  // Restart current puzzle
   const restartPuzzle = () => {
     setGameStarted(false);
     setShowTapToStart(false);
@@ -231,6 +222,7 @@ const Game: React.FC = () => {
       setTimeout(() => {
         try {
           const newPuzzle = generatePuzzle(validDifficulty, puzzle.seed);
+          newPuzzle.moveHistory = [];
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -238,8 +230,6 @@ const Game: React.FC = () => {
           setTimeout(() => {
             setPuzzle(newPuzzle);
             setGameCompleted(false);
-            setMoveHistory([newPuzzle]);
-            setCurrentMoveIndex(0);
             setLoading(false);
             console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
           }, 500);
@@ -261,14 +251,13 @@ const Game: React.FC = () => {
     }
   };
 
+  // Handle undo
   const handleUndo = useCallback(() => {
-    if (currentMoveIndex > 0) {
-      const previousIndex = currentMoveIndex - 1;
-      const previousMove = moveHistory[previousIndex];
-      setPuzzle(previousMove);
-      setCurrentMoveIndex(previousIndex);
+    if (puzzle && puzzle.moveHistory?.length > 0) {
+      const updatedPuzzle = undoLastMove(puzzle);
+      setPuzzle(updatedPuzzle);
     }
-  }, [currentMoveIndex, moveHistory]);
+  }, [puzzle]);
 
   if (loading) {
     return (
@@ -299,7 +288,7 @@ const Game: React.FC = () => {
         bestTime={stats.bestTime[difficulty as string] || 0}
         handleUndo={handleUndo}
         restartPuzzle={restartPuzzle}
-        canUndo={currentMoveIndex > 0}
+        canUndo={puzzle.moveHistory?.length > 0}
         gameStarted={gameStarted}
       />
       
@@ -314,17 +303,6 @@ const Game: React.FC = () => {
             resetPuzzle={resetPuzzle}
             seed={puzzle.seed}
           />
-        )}
-        
-        {showTapToStart && (
-          <div 
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in"
-            onClick={handleTapToDismiss}
-          >
-            <div className="bg-background p-6 rounded-lg shadow-lg text-center">
-              <p className="text-xl font-medium">Tap to Start</p>
-            </div>
-          </div>
         )}
       </main>
     </div>
