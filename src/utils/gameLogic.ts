@@ -42,6 +42,11 @@ export const generateId = (): string => {
 
 // Check if two islands can be connected
 export const canConnect = (island1: Island, island2: Island, islands: Island[], bridges: Bridge[]): boolean => {
+  // Can't connect to self
+  if (island1.id === island2.id) {
+    return false;
+  }
+  
   // Can only connect if they're in the same row or column
   if (island1.row !== island2.row && island1.col !== island2.col) {
     return false;
@@ -96,7 +101,8 @@ export const getBridgeBetweenIslands = (bridges: Bridge[], island1Id: string, is
 
 // Check if the puzzle is solved
 export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
-  return puzzle.islands.every(island => {
+  // Check if all islands have the correct number of connections
+  const islandsValid = puzzle.islands.every(island => {
     const connections = puzzle.bridges.reduce((count, bridge) => {
       if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
         return count + bridge.count;
@@ -105,6 +111,25 @@ export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
     }, 0);
     return connections === island.value;
   });
+
+  if (!islandsValid) return false;
+
+  // Check if all islands are connected (no isolated islands)
+  const visited = new Set<string>();
+  const stack: string[] = [puzzle.islands[0].id];
+
+  while (stack.length > 0) {
+    const currentId = stack.pop()!;
+    if (!visited.has(currentId)) {
+      visited.add(currentId);
+      const connectedIds = puzzle.bridges
+        .filter(b => b.startIslandId === currentId || b.endIslandId === currentId)
+        .map(b => b.startIslandId === currentId ? b.endIslandId : b.startIslandId);
+      stack.push(...connectedIds);
+    }
+  }
+
+  return visited.size === puzzle.islands.length;
 };
 
 // Toggle a bridge between two islands
@@ -180,7 +205,7 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
     // Remove bridge completely
     newPuzzle.bridges = newPuzzle.bridges.filter((_, index) => index !== existingBridgeIndex);
     
-    // Remove all connections
+    // Remove all connections between these islands
     newPuzzle.islands = newPuzzle.islands.map(island => {
       if (island.id === island1.id || island.id === island2.id) {
         return {
@@ -226,15 +251,12 @@ export const undoLastMove = (puzzle: Puzzle): Puzzle => {
          (b.startIslandId === lastMove.endIslandId && b.endIslandId === lastMove.startIslandId)
   );
 
-  // Current bridge count (0 if no bridge exists)
-  const currentBridgeCount = bridgeIndex === -1 ? 0 : newPuzzle.bridges[bridgeIndex].count;
-
   if (bridgeIndex !== -1) {
     if (lastMove.previousBridgeCount === 0) {
       // Remove the bridge that was added
       newPuzzle.bridges = newPuzzle.bridges.filter((_, index) => index !== bridgeIndex);
       
-      // Remove all connections
+      // Remove all connections between these islands
       newPuzzle.islands = newPuzzle.islands.map(island => {
         if (island.id === startIsland.id || island.id === endIsland.id) {
           return {
@@ -247,11 +269,8 @@ export const undoLastMove = (puzzle: Puzzle): Puzzle => {
         return island;
       });
     } else {
-      // Restore to previous count
-      newPuzzle.bridges[bridgeIndex] = {
-        ...newPuzzle.bridges[bridgeIndex],
-        count: lastMove.previousBridgeCount
-      };
+      // Restore to previous bridge count
+      newPuzzle.bridges[bridgeIndex].count = lastMove.previousBridgeCount;
       
       // Update connections based on previous count
       newPuzzle.islands = newPuzzle.islands.map(island => {
@@ -270,7 +289,7 @@ export const undoLastMove = (puzzle: Puzzle): Puzzle => {
   }
 
   // Remove the last move from history
-  newPuzzle.moveHistory = newPuzzle.moveHistory.slice(0, -1);
+  newPuzzle.moveHistory.pop();
   
   // Update puzzle solved state
   newPuzzle.solved = checkPuzzleSolved(newPuzzle);
@@ -279,4 +298,36 @@ export const undoLastMove = (puzzle: Puzzle): Puzzle => {
   }
 
   return newPuzzle;
+};
+
+// Helper to check if a puzzle is completable
+export const isCompletable = (puzzle: Puzzle): boolean => {
+  // Check if total connections required matches total possible connections
+  const totalRequired = puzzle.islands.reduce((sum, island) => sum + island.value, 0);
+  if (totalRequired % 2 !== 0) return false;
+
+  // Check if each island can potentially have enough connections
+  for (const island of puzzle.islands) {
+    let possibleConnections = 0;
+    
+    // Count possible horizontal connections
+    const sameRow = puzzle.islands.filter(other => 
+      other.id !== island.id && 
+      other.row === island.row &&
+      canConnect(island, other, puzzle.islands, [])
+    );
+    possibleConnections += sameRow.length * 2;
+
+    // Count possible vertical connections
+    const sameCol = puzzle.islands.filter(other => 
+      other.id !== island.id && 
+      other.col === island.col &&
+      canConnect(island, other, puzzle.islands, [])
+    );
+    possibleConnections += sameCol.length * 2;
+
+    if (possibleConnections < island.value) return false;
+  }
+
+  return true;
 };
