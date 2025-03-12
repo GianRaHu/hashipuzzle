@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
@@ -15,10 +14,11 @@ import { useMediaQuery } from '@/hooks/use-mobile';
 
 interface BoardProps {
   puzzle: Puzzle;
-  onUpdate: (updatedPuzzle: Puzzle) => void;
+  onUpdate?: (updatedPuzzle: Puzzle) => void;
+  onAddBridge?: (startIslandId: string, endIslandId: string) => void;
 }
 
-const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
+const Board: React.FC<BoardProps> = ({ puzzle, onUpdate, onAddBridge }) => {
   const [selectedIsland, setSelectedIsland] = useState<IslandType | null>(null);
   const [dragStartIsland, setDragStartIsland] = useState<IslandType | null>(null);
   const [isPointerDown, setIsPointerDown] = useState<boolean>(false);
@@ -36,7 +36,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       } else if (canConnect(selectedIsland, island, puzzle.islands, puzzle.bridges)) {
         // Connect islands if possible
         const updatedPuzzle = toggleBridge(selectedIsland, island, puzzle);
-        onUpdate(updatedPuzzle);
+        onUpdate?.(updatedPuzzle);
         setSelectedIsland(null);
       } else {
         // Select the new island if can't connect
@@ -78,7 +78,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     if (dragStartIsland && dragStartIsland.id !== targetIsland.id) {
       if (canConnect(dragStartIsland, targetIsland, puzzle.islands, puzzle.bridges)) {
         const updatedPuzzle = toggleBridge(dragStartIsland, targetIsland, puzzle);
-        onUpdate(updatedPuzzle);
+        onUpdate?.(updatedPuzzle);
       }
     }
     
@@ -139,7 +139,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         // Complete the connection if drag ends over another island
         if (canConnect(dragStartIsland, dragOverIsland, puzzle.islands, puzzle.bridges)) {
           const updatedPuzzle = toggleBridge(dragStartIsland, dragOverIsland, puzzle);
-          onUpdate(updatedPuzzle);
+          onUpdate?.(updatedPuzzle);
         }
       }
       
@@ -161,7 +161,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   // Check if puzzle is solved
   useEffect(() => {
     if (checkPuzzleSolved(puzzle) && !puzzle.solved) {
-      onUpdate({
+      onUpdate?.({
         ...puzzle,
         solved: true,
         endTime: Date.now()

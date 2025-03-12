@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, Slider } from 'lucide-react';
+import { Puzzle, Sliders } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider as SliderComponent } from '@/components/ui/slider';
 import { generatePuzzle } from '@/utils/puzzleGenerator';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const GRID_SIZE_MIN = 5;
@@ -17,7 +16,7 @@ const DEFAULT_GRID_SIZE = 7;
 
 const Custom: React.FC = () => {
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [gridSize, setGridSize] = useState<number>(DEFAULT_GRID_SIZE);
   const [seed, setSeed] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +59,7 @@ const Custom: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Slider className="h-5 w-5" />
+              <Sliders className="h-5 w-5" />
               Grid Size
             </CardTitle>
             <CardDescription>
