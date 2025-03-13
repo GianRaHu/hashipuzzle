@@ -55,7 +55,7 @@ const Island: React.FC<IslandProps> = ({
   }
 
   // Handle touch start
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = () => {
     // Start a timer to differentiate between tap and drag
     moveDetectedRef.current = false;
     
@@ -86,7 +86,7 @@ const Island: React.FC<IslandProps> = ({
   };
 
   // Handle touch end
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     // If a drag was in progress, end it
     if (isDragging) {
       setIsDragging(false);
@@ -113,7 +113,7 @@ const Island: React.FC<IslandProps> = ({
     onDragStart(e);
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
+  const handleMouseUp = () => {
     // If was dragging, end drag
     if (isDragging) {
       setIsDragging(false);
