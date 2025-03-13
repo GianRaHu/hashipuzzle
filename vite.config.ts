@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { resolve } from 'path';
 
-const timestamp = '2025-03-13 11:05:41';
+const timestamp = new Date().toISOString();
 const author = 'GianRaHu';
 
 export default defineConfig({
@@ -48,28 +48,13 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
-    host: true,
-    strictPort: true,
-    watch: {
-      usePolling: true
-    }
+    port: 3000
   },
   preview: {
-    port: 3000,
-    host: true
+    port: 3000
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          game: ['./src/game']
-        }
-      }
-    }
+    sourcemap: true
   }
 });
