@@ -6,6 +6,10 @@ import Game from './pages/Game';
 import CustomGame from './pages/CustomGame';
 import Settings from './pages/Settings';
 import Stats from './pages/Stats';
+import React from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { platformManager } from './utils/platform';
+import { registerServiceWorker } from './utils/registerSW';
 
 const router = createBrowserRouter([
   {
@@ -46,4 +50,20 @@ function App() {
   return <RouterProvider router={router} />;
 }
 
+// Register service worker
+registerServiceWorker({
+  onSuccess: () => console.log('SW registration successful'),
+  onUpdate: () => console.log('New content is available; please refresh'),
+  onError: (error) => console.error('SW registration failed:', error)
+});
+
+export function App() {
+  return (
+    <ErrorBoundary>
+      <div className="app">
+        {/* Your app content */}
+      </div>
+    </ErrorBoundary>
+  );
+}
 export default App;
