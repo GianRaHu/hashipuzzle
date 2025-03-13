@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { GameBoard } from './components/GameBoard';
+import { BuildInfo } from './components/BuildInfo';
 import './App.css';
 
-interface AppProps {
-  children?: React.ReactNode;
-}
-
-const App: React.FC<AppProps> = ({ children }) => {
+const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -16,7 +14,7 @@ const App: React.FC<AppProps> = ({ children }) => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Simulate loading
+    // Simulate initial loading
     setTimeout(() => setIsLoading(false), 1000);
 
     return () => {
@@ -41,14 +39,13 @@ const App: React.FC<AppProps> = ({ children }) => {
         </div>
       )}
       <header className="app-header">
-        <div className="app-meta">
-          <span>Version: 1.0.0</span>
-          <span>Last Updated: {new Date().toLocaleDateString()}</span>
-        </div>
+        <BuildInfo buildTime="2025-03-13 14:42:51" author="GianRaHu" />
       </header>
-      <main className="app-content">{children}</main>
+      <main className="app-content">
+        <GameBoard />
+      </main>
       <footer className="app-footer">
-        <p>© {new Date().getFullYear()} The Hashi Puzzle. All rights reserved.</p>
+        <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
       </footer>
     </div>
   );
