@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -17,7 +18,7 @@ const DifficultyContinueCard: React.FC<DifficultyContinueCardProps> = ({
   description,
 }) => {
   const savedGame = getCurrentGame(difficulty);
-  const lastPlayed = savedGame ? new Date(savedGame.lastPlayed) : null;
+  const lastPlayed = savedGame?.lastPlayed ? new Date(savedGame.lastPlayed) : null;
 
   return (
     <Card className="relative overflow-hidden">
@@ -34,7 +35,7 @@ const DifficultyContinueCard: React.FC<DifficultyContinueCardProps> = ({
               </Link>
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Last played {formatTimeAgo(lastPlayed!)}
+              {lastPlayed && `Last played ${formatTimeAgo(lastPlayed)}`}
             </p>
           </>
         ) : (

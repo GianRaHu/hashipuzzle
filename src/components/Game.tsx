@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { GameControls } from './GameControls';
+import Board from './Board';
 import { Puzzle } from '@/utils/gameLogic';
 
 interface GameProps {
@@ -8,7 +9,6 @@ interface GameProps {
   onPuzzleUpdate: (updatedPuzzle: Puzzle) => void;
 }
 
-// In your Game component:
 const Game: React.FC<GameProps> = ({ puzzle, onPuzzleUpdate }) => {
   const handlePuzzleUpdate = (updatedPuzzle: Puzzle) => {
     onPuzzleUpdate(updatedPuzzle);
@@ -20,7 +20,9 @@ const Game: React.FC<GameProps> = ({ puzzle, onPuzzleUpdate }) => {
         puzzle={puzzle} 
         onPuzzleUpdate={handlePuzzleUpdate}
       />
-      {/* Rest of your game board implementation */}
+      <div className="mt-4">
+        <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+      </div>
     </div>
   );
 };

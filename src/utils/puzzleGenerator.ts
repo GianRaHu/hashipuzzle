@@ -1,4 +1,3 @@
-
 import { Island, Puzzle, Bridge, generateId } from './gameLogic';
 
 // Difficulty settings - defines parameters for each difficulty level
@@ -407,7 +406,8 @@ export const generatePuzzle = (
     bridges: [], // Start with no bridges for gameplay
     solved: false,
     startTime: Date.now(),
-    seed: puzzleSeed
+    seed: puzzleSeed,
+    moveHistory: [] // Add missing required property
   };
 };
 

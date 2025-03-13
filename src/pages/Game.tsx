@@ -1,14 +1,14 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { generatePuzzle, Puzzle, isSolved } from '@/utils/gameLogic';
-import Board from '@/components/Board';
 import { saveCurrentGame, getCurrentGame, clearCurrentGame, updateStats } from '@/utils/storage';
 import GameCompletedModal from '@/components/game/GameCompletedModal';
 import GameHeader from '@/components/game/GameHeader';
+import Game from '@/components/Game';
 
-const Game: React.FC = () => {
+const GamePage: React.FC = () => {
   const { difficulty = 'easy' } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
@@ -37,7 +37,7 @@ const Game: React.FC = () => {
         setGameStarted(true);
         // Calculate elapsed time
         const elapsed = savedPuzzle.lastPlayedTime ? 
-          (Date.now() - savedPuzzle.lastPlayed || 0) + savedPuzzle.lastPlayedTime : 
+          (savedPuzzle.lastPlayed ? Date.now() - savedPuzzle.lastPlayed : 0) + savedPuzzle.lastPlayedTime : 
           Date.now() - savedPuzzle.startTime;
         setTimer(elapsed);
       }
@@ -48,8 +48,17 @@ const Game: React.FC = () => {
     }
   }, [difficulty, shouldCreateNew]);
   
-  // ... keep existing code (timer update effect)
-
+  // Update timer
+  useEffect(() => {
+    if (!puzzle || gameCompleted || !gameStarted) return;
+    
+    const interval = setInterval(() => {
+      setTimer(prevTimer => prevTimer + 1000);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [puzzle, gameCompleted, gameStarted]);
+  
   const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
     if (!gameStarted) {
       setGameStarted(true);
@@ -110,8 +119,6 @@ const Game: React.FC = () => {
     setTimer(0);
     setPuzzle(newPuzzle);
   }, [difficulty]);
-
-  // ... keep existing code (component return)
   
   return (
     <div className="content-container flex flex-col items-center justify-center max-w-4xl animate-fade-in page-transition">
@@ -127,7 +134,7 @@ const Game: React.FC = () => {
       <div className="my-8 flex-1 flex items-center justify-center w-full">
         {puzzle ? (
           <div className="w-full max-w-md mx-auto">
-            <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+            {puzzle && <Game puzzle={puzzle} onPuzzleUpdate={handlePuzzleUpdate} />}
           </div>
         ) : (
           <div className="text-center p-8">
@@ -140,11 +147,11 @@ const Game: React.FC = () => {
         <GameCompletedModal 
           time={timer} 
           resetPuzzle={newPuzzle}
-          seed={puzzle.id}
+          seed={typeof puzzle.seed === 'number' ? puzzle.seed : 0}
         />
       )}
     </div>
   );
 };
 
-export default Game;
+export default GamePage;

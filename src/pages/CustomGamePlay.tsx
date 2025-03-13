@@ -6,7 +6,7 @@ import { ChevronLeft } from 'lucide-react';
 import { Puzzle, undoLastMove } from '@/utils/gameLogic';
 import { generateCustomPuzzle } from '@/utils/customPuzzleGenerator';
 import Board from '@/components/Board';
-import { saveCurrentGame, updateStats, formatTime } from '@/utils/storage';
+import { updateStats, formatTime } from '@/utils/storage';
 import { motion } from 'framer-motion';
 import GameCompletedModal from '@/components/game/GameCompletedModal';
 import GameHeader from '@/components/game/GameHeader';
@@ -19,7 +19,8 @@ const CustomGamePlay: React.FC = () => {
   
   // Get query parameters
   const searchParams = new URLSearchParams(location.search);
-  const seed = parseInt(searchParams.get('seed') || '0', 10);
+  const seedParam = searchParams.get('seed');
+  const seed = seedParam ? parseInt(seedParam, 10) : Math.floor(Math.random() * 1000000);
   const size = parseInt(searchParams.get('size') || '7', 10);
   const islands = parseInt(searchParams.get('islands') || '10', 10);
   
@@ -176,7 +177,7 @@ const CustomGamePlay: React.FC = () => {
         <GameCompletedModal 
           time={timer} 
           resetPuzzle={restartPuzzle}
-          seed={puzzle.seed}
+          seed={typeof puzzle.seed === 'number' ? puzzle.seed : 0}
         />
       )}
     </div>
