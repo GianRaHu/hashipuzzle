@@ -11,7 +11,6 @@ interface GameHeaderProps {
   handleUndo: () => void;
   restartPuzzle: () => void;
   canUndo: boolean;
-  gameStarted: boolean;
 }
 
 const GameHeader: React.FC<GameHeaderProps> = ({
@@ -19,8 +18,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   bestTime,
   handleUndo,
   restartPuzzle,
-  canUndo,
-  gameStarted
+  canUndo
 }) => {
   const navigate = useNavigate();
 
