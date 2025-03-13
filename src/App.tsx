@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Index from './pages/Index';
 import Game from './pages/Game';
