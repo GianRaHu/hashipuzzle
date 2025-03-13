@@ -2,24 +2,25 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.gianrahu.hashipuzzle',
-  appName: 'Hashi Puzzle',
+  appName: 'The Hashi Puzzle',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
-  },
-  android: {
-    buildOptions: {
-      keystorePath: 'release.keystore',
-      keystoreAlias: 'release'
-    }
+    androidScheme: 'https',
+    cleartext: true,
+    allowNavigation: ['*']
   },
   plugins: {
-    Keyboard: {
-      resize: 'body',
-      style: 'dark',
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#ffffff',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: true,
+      androidSpinnerStyle: 'large',
+      spinnerColor: '#3880ff'
     },
     StatusBar: {
-      style: 'dark'
+      style: 'dark',
+      backgroundColor: '#ffffff'
     }
   }
 };
