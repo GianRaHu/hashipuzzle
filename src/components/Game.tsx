@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { GameControls } from './GameControls';
 import { Puzzle } from '@/utils/gameLogic';
