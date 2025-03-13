@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -30,7 +29,7 @@ const Island: React.FC<IslandProps> = ({
   
   // Connection completeness (for visual feedback)
   const connectionsNeeded = island.value;
-  const actualConnections = island.connectedTo.length;
+  const actualConnections = island.connectedTo?.length || 0;
   
   // Determine visual state with fixed sizes and consistent transparency
   let stateClass = '';

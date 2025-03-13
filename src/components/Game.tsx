@@ -1,12 +1,17 @@
+
+import React from 'react';
 import { GameControls } from './GameControls';
+import { Puzzle } from '@/utils/gameLogic';
+
+interface GameProps {
+  puzzle: Puzzle;
+  onPuzzleUpdate: (updatedPuzzle: Puzzle) => void;
+}
 
 // In your Game component:
-const Game = () => {
-  // ... existing game state management ...
-
+const Game: React.FC<GameProps> = ({ puzzle, onPuzzleUpdate }) => {
   const handlePuzzleUpdate = (updatedPuzzle: Puzzle) => {
-    setPuzzle(updatedPuzzle);
-    // Add any other state updates needed
+    onPuzzleUpdate(updatedPuzzle);
   };
 
   return (
@@ -19,3 +24,5 @@ const Game = () => {
     </div>
   );
 };
+
+export default Game;

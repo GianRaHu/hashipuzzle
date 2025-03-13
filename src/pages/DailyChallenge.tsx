@@ -1,16 +1,16 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Puzzle, undoLastMove } from '../utils/gameLogic';
+import { Puzzle } from '../utils/gameLogic';
 import { generateDailyChallenge } from '../utils/puzzleGenerator';
-import { savePuzzle, updateStats, formatTime, isDailyCompleted, setDailyCompleted } from '../utils/storage';
+import { updateStats, formatTime, setDailyCompleted } from '../utils/storage';
 import Board from '../components/Board';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import DailyPuzzleList from '../components/game/DailyPuzzleList';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
-import GameHeader from '../components/game/GameHeader';
 
 const DailyChallenge: React.FC = () => {
   const navigate = useNavigate();
@@ -27,8 +27,6 @@ const DailyChallenge: React.FC = () => {
   
   // Calculate date range for calendar
   const today = new Date();
-  const pastDaysLimit = 7;
-  const minSelectableDate = subDays(today, pastDaysLimit);
   
   // Generate the daily challenge when user selects a date
   const loadDailyChallenge = (date: Date) => {
@@ -58,7 +56,7 @@ const DailyChallenge: React.FC = () => {
         setTimer(0);
         setLoading(false);
         setGameCompleted(false);
-        console.log(`Generated daily puzzle with seed: ${dailyPuzzle.seed}`);
+        console.log(`Generated daily puzzle`);
       }, 500);
     }, 1000);
   };
@@ -94,7 +92,6 @@ const DailyChallenge: React.FC = () => {
     
     if (updatedPuzzle.solved && !gameCompleted) {
       setGameCompleted(true);
-      savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
       
       // Only update daily completion for today's challenge
@@ -107,14 +104,6 @@ const DailyChallenge: React.FC = () => {
       }
     }
   }, [gameStarted, gameCompleted, selectedDate, today, toast]);
-  
-  // Handle undo
-  const handleUndo = useCallback(() => {
-    if (!puzzle) return;
-    
-    const updatedPuzzle = undoLastMove(puzzle);
-    handlePuzzleUpdate(updatedPuzzle);
-  }, [puzzle, handlePuzzleUpdate]);
   
   // Load the current date's challenge on mount
   useEffect(() => {
@@ -181,7 +170,15 @@ const DailyChallenge: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleUndo}
+                  onClick={() => {
+                    if (puzzle?.moveHistory?.length) {
+                      const updatedPuzzle = {...puzzle};
+                      if (updatedPuzzle.moveHistory.length > 0) {
+                        updatedPuzzle.moveHistory.pop();
+                        handlePuzzleUpdate(updatedPuzzle);
+                      }
+                    }
+                  }}
                   disabled={!puzzle?.moveHistory?.length}
                   className="h-8"
                 >
@@ -208,7 +205,7 @@ const DailyChallenge: React.FC = () => {
             setShowPuzzleList(true);
             setGameCompleted(false);
           }}
-          seed={puzzle.seed}
+          seed={puzzle.id}
         />
       )}
     </div>

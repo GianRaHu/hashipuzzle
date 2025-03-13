@@ -5,45 +5,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, Hash, Grid2X2, Play } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { GridIcon } from 'lucide-react';
 
 const CustomGame: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   
-  // State for custom game configuration
   const [seed, setSeed] = useState<string>('');
   const [gridSize, setGridSize] = useState<number>(7);
   const [islandCount, setIslandCount] = useState<number>(10);
   
-  // Handle random seed generation
-  const generateRandomSeed = () => {
-    const randomSeed = Math.floor(Math.random() * 1000000);
-    setSeed(randomSeed.toString());
+  const handleSeedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSeed(event.target.value);
   };
   
-  // Handle form submission
-  const handleStartGame = () => {
-    if (!seed) {
-      generateRandomSeed();
-      return;
-    }
+  const handleGridSizeChange = (value: number[]) => {
+    setGridSize(value[0]);
+  };
+  
+  const handleIslandCountChange = (value: number[]) => {
+    setIslandCount(value[0]);
+  };
+  
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     
-    const seedNumber = parseInt(seed, 10);
+    // Generate a random seed if none provided
+    const finalSeed = seed.trim() || Math.floor(Math.random() * 1000000).toString();
     
-    if (isNaN(seedNumber)) {
-      toast({
-        title: "Invalid Seed",
-        description: "Please enter a valid number for the seed.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Navigate to game with custom parameters
-    navigate(`/custom-play?seed=${seedNumber}&size=${gridSize}&islands=${islandCount}`);
+    // Navigate to game page with parameters
+    navigate(`/custom-play?seed=${finalSeed}&size=${gridSize}&islands=${islandCount}`);
   };
   
   return (
@@ -56,95 +54,84 @@ const CustomGame: React.FC = () => {
             className="p-0 h-9 w-9"
             aria-label="Back to home"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
           </Button>
           
           <h1 className="text-2xl font-bold text-center">Custom Game</h1>
           
-          <div className="w-9 h-9"></div> {/* Empty div for alignment */}
+          <div className="w-9 h-9"></div>
         </div>
         
         <Card>
           <CardHeader>
-            <CardTitle>Create Custom Puzzle</CardTitle>
+            <CardTitle className="flex items-center">
+              <GridIcon className="mr-2 h-5 w-5" />
+              Create Custom Game
+            </CardTitle>
             <CardDescription>
-              Enter a seed code or configure your own puzzle settings
+              Configure your own puzzle or enter a seed code.
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="space-y-6">
-            {/* Seed Input */}
-            <div className="space-y-2">
-              <Label htmlFor="seed" className="flex items-center gap-2">
-                <Hash className="h-4 w-4" />
-                Seed Code
-              </Label>
-              <div className="flex space-x-2">
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="seed">Seed Code (Optional)</Label>
                 <Input
                   id="seed"
-                  placeholder="Enter a seed number"
+                  placeholder="Enter seed code or leave blank for random"
                   value={seed}
-                  onChange={(e) => setSeed(e.target.value)}
-                  className="flex-1"
+                  onChange={handleSeedChange}
                 />
-                <Button 
-                  variant="outline" 
-                  onClick={generateRandomSeed}
-                >
-                  Random
-                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Use the same seed code to get the same puzzle again.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                The same seed will always generate the same puzzle
-              </p>
-            </div>
-            
-            {/* Grid Size Slider */}
-            <div className="space-y-2">
-              <Label htmlFor="grid-size" className="flex items-center gap-2">
-                <Grid2X2 className="h-4 w-4" />
-                Grid Size: {gridSize}x{gridSize}
-              </Label>
-              <Slider
-                id="grid-size"
-                value={[gridSize]}
-                min={5}
-                max={12}
-                step={1}
-                onValueChange={(value) => setGridSize(value[0])}
-              />
-              <p className="text-xs text-muted-foreground">
-                Larger grids create more complex puzzles
-              </p>
-            </div>
-            
-            {/* Island Count Slider */}
-            <div className="space-y-2">
-              <Label htmlFor="island-count">
-                Islands: {islandCount}
-              </Label>
-              <Slider
-                id="island-count"
-                value={[islandCount]}
-                min={5}
-                max={Math.max(20, Math.floor(gridSize * 2))}
-                step={1}
-                onValueChange={(value) => setIslandCount(value[0])}
-              />
-              <p className="text-xs text-muted-foreground">
-                More islands increase difficulty
-              </p>
-            </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label>Grid Size: {gridSize}×{gridSize}</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {gridSize < 7 ? 'Small' : gridSize < 9 ? 'Medium' : 'Large'}
+                  </span>
+                </div>
+                <Slider
+                  value={[gridSize]}
+                  min={5}
+                  max={12}
+                  step={1}
+                  onValueChange={handleGridSizeChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label>Number of Islands: {islandCount}</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {islandCount < 8 ? 'Few' : islandCount < 15 ? 'Medium' : 'Many'}
+                  </span>
+                </div>
+                <Slider
+                  value={[islandCount]}
+                  min={5}
+                  max={Math.max(20, gridSize * 2)}
+                  step={1}
+                  onValueChange={handleIslandCountChange}
+                />
+              </div>
+              
+              <Button type="submit" className="w-full">
+                Generate Puzzle
+              </Button>
+            </form>
           </CardContent>
           
-          <CardFooter>
-            <Button 
-              onClick={handleStartGame} 
-              className="w-full"
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Start Custom Game
-            </Button>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="w-full text-center text-sm text-muted-foreground">
+              Custom puzzles will not affect your statistics.
+            </div>
           </CardFooter>
         </Card>
       </div>

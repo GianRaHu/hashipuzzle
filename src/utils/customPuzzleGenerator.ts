@@ -1,5 +1,8 @@
+import { Island, Puzzle, Bridge } from './gameLogic';
+import { v4 as uuidv4 } from 'uuid';
 
-import { Island, Puzzle, Bridge, generateId } from './gameLogic';
+// Helper function to generate IDs
+export const generateId = () => uuidv4();
 
 // Generate a puzzle with custom parameters
 export const generateCustomPuzzle = (
@@ -48,8 +51,7 @@ export const generateCustomPuzzle = (
     id: generateId(),
     row: startRow,
     col: startCol,
-    value: 0,
-    connectedTo: []
+    value: 0
   };
   
   islands.push(firstIsland);
@@ -164,7 +166,7 @@ export const generateCustomPuzzle = (
       let connectedTo = null;
       
       for (const existingIsland of islands) {
-        if (isPathClear(existingIsland, { row, col, id: '', value: 0, connectedTo: [] })) {
+        if (isPathClear(existingIsland, { row, col, id: '', value: 0 })) {
           connectedTo = existingIsland;
           break;
         }
@@ -176,8 +178,7 @@ export const generateCustomPuzzle = (
           id: generateId(),
           row,
           col,
-          value: 0,
-          connectedTo: []
+          value: 0
         };
         
         // Determine bridge count (1 or 2)
@@ -252,7 +253,7 @@ export const generateCustomPuzzle = (
     size: safeGridSize,
     islands,
     bridges: [], // Start with no bridges for gameplay
-    solved: false,
+    moveHistory: [],
     startTime: Date.now(),
     seed: safeSeed
   };

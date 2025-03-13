@@ -1,5 +1,6 @@
-import React, { useEffect, useCallback, useRef, useState, memo } from 'react';
-import { Puzzle, Island, Bridge, toggleBridge, canConnect } from '@/utils/gameLogic';
+
+import { useEffect, useCallback, useRef, useState, memo } from 'react';
+import { Puzzle, Island, toggleBridge, canConnect } from '@/utils/gameLogic';
 import { triggerHaptic } from '@/utils/haptics';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,7 +50,7 @@ const Board = memo<BoardProps>(({ puzzle, onUpdate }) => {
     }) || null;
   }, [puzzle.islands, puzzle.bridges]);
 
-  const handleTouchStart = useCallback((event: TouchEvent | MouseEvent) => {
+  const handleTouchStart = useCallback((event: MouseEvent | TouchEvent) => {
     if (touchTimeout.current) {
       window.clearTimeout(touchTimeout.current);
       touchTimeout.current = null;
@@ -66,7 +67,7 @@ const Board = memo<BoardProps>(({ puzzle, onUpdate }) => {
     setPotentialTarget(null);
   }, []);
 
-  const handleTouchMove = useCallback((event: TouchEvent | MouseEvent) => {
+  const handleTouchMove = useCallback((event: MouseEvent | TouchEvent) => {
     if (!swipeStart || !selectedIsland) return;
     
     const touch = 'touches' in event ? event.touches[0] : event;

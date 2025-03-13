@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { undoLastMove, Puzzle } from '@/utils/gameLogic';
+import { Puzzle } from '@/utils/gameLogic';
 import { UndoIcon } from 'lucide-react';
 
 interface GameControlsProps {
@@ -13,8 +14,11 @@ export const GameControls: React.FC<GameControlsProps> = ({
   onPuzzleUpdate 
 }) => {
   const handleUndo = () => {
-    const updatedPuzzle = undoLastMove(puzzle);
-    onPuzzleUpdate(updatedPuzzle);
+    if (puzzle.moveHistory.length > 0) {
+      const updatedPuzzle = {...puzzle};
+      updatedPuzzle.moveHistory.pop();
+      onPuzzleUpdate(updatedPuzzle);
+    }
   };
 
   return (
