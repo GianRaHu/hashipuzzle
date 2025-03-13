@@ -1,7 +1,8 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useRef, useState, memo } from 'react';
 import { Puzzle, Island, Bridge, toggleBridge, canConnect } from '@/utils/gameLogic';
 import { triggerHaptic } from '@/utils/haptics';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BoardProps {
   puzzle: Puzzle;
@@ -13,25 +14,23 @@ interface Point {
   y: number;
 }
 
-const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
+const Board = memo<BoardProps>(({ puzzle, onUpdate }) => {
   const [selectedIsland, setSelectedIsland] = useState<Island | null>(null);
   const [swipeStart, setSwipeStart] = useState<Point | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<Point | null>(null);
   const [potentialTarget, setPotentialTarget] = useState<Island | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   
-  // Reduced swipe threshold
-  const swipeThreshold = 15; // Even shorter minimum distance to trigger
-  const angleTolerance = Math.PI / 4; // Increased angle tolerance
+  const swipeThreshold = 10; // Reduced threshold for more responsive feel
+  const angleTolerance = Math.PI / 3; // Increased angle tolerance
   const lastTouchTime = useRef<number>(0);
+  const touchTimeout = useRef<number | null>(null);
 
-  const findIslandInDirection = (start: Island, direction: Point, islands: Island[]): Island | null => {
+  const findIslandInDirection = useCallback((start: Island, direction: Point): Island | null => {
     const angle = Math.atan2(direction.y, direction.x);
-
-    // Normalize angle to 0-2π range
     const normalizedAngle = angle < 0 ? angle + 2 * Math.PI : angle;
 
-    return islands.find(island => {
+    return puzzle.islands.find(island => {
       if (island.id === start.id) return false;
 
       const dx = island.col - start.col;
@@ -39,7 +38,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       const islandAngle = Math.atan2(dy, dx);
       const normalizedIslandAngle = islandAngle < 0 ? islandAngle + 2 * Math.PI : islandAngle;
       
-      // Calculate absolute angle difference, handling wrap-around
       let angleDiff = Math.abs(normalizedAngle - normalizedIslandAngle);
       angleDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
 
@@ -49,9 +47,14 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       return isAligned && isValidConnection && 
              canConnect(start, island, puzzle.islands, puzzle.bridges);
     }) || null;
-  };
+  }, [puzzle.islands, puzzle.bridges]);
 
   const handleTouchStart = useCallback((event: TouchEvent | MouseEvent) => {
+    if (touchTimeout.current) {
+      window.clearTimeout(touchTimeout.current);
+      touchTimeout.current = null;
+    }
+
     const touch = 'touches' in event ? event.touches[0] : event;
     const boardRect = boardRef.current?.getBoundingClientRect();
     if (!boardRect) return;
@@ -77,39 +80,31 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     const dy = currentY - swipeStart.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Early trigger for direction detection
     if (distance > swipeThreshold) {
       const direction = {
-        x: dx / distance, // Normalized direction vector
+        x: dx / distance,
         y: dy / distance
       };
       
       setSwipeDirection({ x: dx, y: dy });
-
-      // Find potential target based on direction, not distance
-      const target = findIslandInDirection(selectedIsland, direction, puzzle.islands);
+      const target = findIslandInDirection(selectedIsland, direction);
       setPotentialTarget(target);
     }
-  }, [swipeStart, selectedIsland, puzzle.islands]);
+  }, [swipeStart, selectedIsland, findIslandInDirection]);
 
-  const handleTouchEnd = useCallback((event: TouchEvent | MouseEvent) => {
-    if (!swipeStart || !selectedIsland || !swipeDirection) {
+  const handleTouchEnd = useCallback(() => {
+    if (!swipeStart || !selectedIsland || !swipeDirection || !potentialTarget) {
       setSwipeStart(null);
       setSwipeDirection(null);
       setPotentialTarget(null);
       return;
     }
 
-    const dx = swipeDirection.x;
-    const dy = swipeDirection.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    triggerHaptic('medium');
+    const updatedPuzzle = toggleBridge(selectedIsland, potentialTarget, puzzle);
+    onUpdate(updatedPuzzle);
 
-    if (distance >= swipeThreshold && potentialTarget) {
-      triggerHaptic('medium');
-      const updatedPuzzle = toggleBridge(selectedIsland, potentialTarget, puzzle);
-      onUpdate(updatedPuzzle);
-    }
-
+    // Reset all touch states
     setSwipeStart(null);
     setSwipeDirection(null);
     setPotentialTarget(null);
@@ -130,23 +125,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   }, [selectedIsland, puzzle, onUpdate]);
 
-  const handleBridgeTap = useCallback((bridge: Bridge) => {
-    triggerHaptic('light');
-    
-    const startIsland = puzzle.islands.find(i => i.id === bridge.startIslandId);
-    const endIsland = puzzle.islands.find(i => i.id === bridge.endIslandId);
-    
-    if (startIsland && endIsland) {
-      const updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
-      onUpdate(updatedPuzzle);
-    }
-  }, [puzzle, onUpdate]);
-
   useEffect(() => {
     const board = boardRef.current;
     if (board) {
-      board.addEventListener('touchstart', handleTouchStart);
-      board.addEventListener('touchmove', handleTouchMove);
+      board.addEventListener('touchstart', handleTouchStart, { passive: true });
+      board.addEventListener('touchmove', handleTouchMove, { passive: true });
       board.addEventListener('touchend', handleTouchEnd);
       board.addEventListener('mousedown', handleTouchStart);
       board.addEventListener('mousemove', handleTouchMove);
@@ -167,7 +150,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const cellSize = Math.min(window.innerWidth, 600) / (gridSize + 2);
 
   return (
-    <div 
+    <motion.div 
       ref={boardRef}
       className="board relative bg-background shadow-lg rounded-lg p-4"
       style={{
@@ -175,6 +158,9 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         height: cellSize * (gridSize + 2),
         touchAction: 'none'
       }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
     >
       <div 
         className="grid absolute inset-4"
@@ -184,48 +170,44 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
           gap: '0px'
         }}
       >
-        {puzzle.bridges.map((bridge) => {
-          const start = puzzle.islands.find(i => i.id === bridge.startIslandId)!;
-          const end = puzzle.islands.find(i => i.id === bridge.endIslandId)!;
-          
-          const isHorizontal = bridge.orientation === 'horizontal';
-          const length = isHorizontal 
-            ? Math.abs(end.col - start.col) * cellSize
-            : Math.abs(end.row - start.row) * cellSize;
-          
-          return (
-            <div
-              key={bridge.id}
-              className={cn(
-                "bridge absolute bg-primary/80 cursor-pointer",
-                bridge.count === 2 && "before:content-[''] before:absolute before:inset-0 before:bg-primary/80",
-                isHorizontal 
-                  ? "before:-translate-y-[3px] h-[2px]"
-                  : "before:-translate-x-[3px] w-[2px]"
-              )}
-              style={{
-                left: `${Math.min(start.col, end.col) * cellSize + cellSize / 2}px`,
-                top: `${Math.min(start.row, end.row) * cellSize + cellSize / 2}px`,
-                width: isHorizontal ? length : '2px',
-                height: isHorizontal ? '2px' : length,
-                padding: '10px',
-                margin: '-10px',
-                zIndex: 10
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleBridgeTap(bridge);
-              }}
-              onTouchStart={(e) => {
-                e.stopPropagation();
-                handleBridgeTap(bridge);
-              }}
-            />
-          );
-        })}
+        <AnimatePresence>
+          {puzzle.bridges.map((bridge) => {
+            const start = puzzle.islands.find(i => i.id === bridge.startIslandId)!;
+            const end = puzzle.islands.find(i => i.id === bridge.endIslandId)!;
+            
+            const isHorizontal = bridge.orientation === 'horizontal';
+            const length = isHorizontal 
+              ? Math.abs(end.col - start.col) * cellSize
+              : Math.abs(end.row - start.row) * cellSize;
+            
+            return (
+              <motion.div
+                key={bridge.id}
+                className={cn(
+                  "bridge absolute bg-primary/80",
+                  bridge.count === 2 && "before:content-[''] before:absolute before:inset-0 before:bg-primary/80",
+                  isHorizontal 
+                    ? "before:-translate-y-[3px] h-[2px]"
+                    : "before:-translate-x-[3px] w-[2px]"
+                )}
+                style={{
+                  left: `${Math.min(start.col, end.col) * cellSize + cellSize / 2}px`,
+                  top: `${Math.min(start.row, end.row) * cellSize + cellSize / 2}px`,
+                  width: isHorizontal ? length : '2px',
+                  height: isHorizontal ? '2px' : length,
+                  zIndex: 10
+                }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.2 }}
+              />
+            );
+          })}
+        </AnimatePresence>
 
         {puzzle.islands.map((island) => (
-          <div
+          <motion.div
             key={island.id}
             className={cn(
               "island absolute flex items-center justify-center",
@@ -241,22 +223,24 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
               fontSize: `${cellSize * 0.4}px`,
               zIndex: 20
             }}
-            onMouseDown={(e) => {
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onTouchStart={(e) => {
               e.stopPropagation();
               handleIslandClick(island);
             }}
-            onTouchStart={(e) => {
+            onClick={(e) => {
               e.stopPropagation();
               handleIslandClick(island);
             }}
           >
             {island.value}
-          </div>
+          </motion.div>
         ))}
 
         {selectedIsland && swipeDirection && (
           <>
-            <div
+            <motion.div
               className="absolute bg-primary/30 rounded-full"
               style={{
                 width: '8px',
@@ -264,13 +248,15 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
                 left: `${selectedIsland.col * cellSize + cellSize / 2 - 4}px`,
                 top: `${selectedIsland.row * cellSize + cellSize / 2 - 4}px`,
                 transform: `translate(${swipeDirection.x}px, ${swipeDirection.y}px)`,
-                transition: 'transform 0.1s ease-out',
                 pointerEvents: 'none',
                 zIndex: 30
               }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.1 }}
             />
             {potentialTarget && (
-              <div
+              <motion.div
                 className="absolute bg-primary/20 rounded-full"
                 style={{
                   width: cellSize * 0.9,
@@ -280,13 +266,18 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
                   pointerEvents: 'none',
                   zIndex: 25
                 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
               />
             )}
           </>
         )}
       </div>
-    </div>
+    </motion.div>
   );
-};
+});
+
+Board.displayName = 'Board';
 
 export default Board;
