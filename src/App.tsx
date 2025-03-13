@@ -1,69 +1,49 @@
+import React, { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { initializeLovable, LOVABLE_CONFIG } from './utils/lovable';
 import Index from './pages/Index';
 import Game from './pages/Game';
-import Stats from './pages/Stats';
-import Settings from './pages/Settings';
-import Support from './pages/Support';
-import NotFound from './pages/NotFound';
-import DailyChallenge from './pages/DailyChallenge';
 import CustomGame from './pages/CustomGame';
-import CustomGamePlay from './pages/CustomGamePlay';
-import Navbar from './components/Navbar';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/toaster';
+import Settings from './pages/Settings';
+import Stats from './pages/Stats';
 
-// Define all application routes
 const router = createBrowserRouter([
   {
     path: '/',
     element: <Index />,
   },
   {
-    path: '/play/:difficulty',
+    path: '/play',
     element: <Game />,
-  },
-  {
-    path: '/stats',
-    element: <Stats />,
-  },
-  {
-    path: '/settings',
-    element: <Settings />,
-  },
-  {
-    path: '/support',
-    element: <Support />,
-  },
-  {
-    path: '/daily',
-    element: <DailyChallenge />,
   },
   {
     path: '/custom',
     element: <CustomGame />,
   },
   {
-    path: '/custom-play',
-    element: <CustomGamePlay />,
+    path: '/settings',
+    element: <Settings />,
   },
   {
-    path: '*',
-    element: <NotFound />,
-  },
+    path: '/stats',
+    element: <Stats />,
+  }
 ]);
 
 function App() {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="min-h-screen bg-background text-foreground">
-        <Navbar />
-        <main className="pt-0 md:pt-14 pb-16 md:pb-0 min-h-screen">
-          <RouterProvider router={router} />
-        </main>
-        <Toaster />
-      </div>
-    </ThemeProvider>
-  );
+  useEffect(() => {
+    // Initialize Lovable when the app starts
+    initializeLovable();
+    
+    // Log configuration for verification
+    console.log('Lovable Configuration:', {
+      username: LOVABLE_CONFIG.username,
+      timestamp: LOVABLE_CONFIG.timestamp,
+      projectId: LOVABLE_CONFIG.projectId
+    });
+  }, []);
+
+  return <RouterProvider router={router} />;
 }
 
 export default App;
