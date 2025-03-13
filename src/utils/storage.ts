@@ -1,139 +1,230 @@
 import { Puzzle } from './gameLogic';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 
-// Interface for saved game state
-interface SavedGameState {
-  puzzle: Puzzle;
-  lastPlayed: string; // ISO date string
-}
-
-// Interface for game states by difficulty
-interface GameStates {
-  [key: string]: SavedGameState; // key is difficulty level
-}
-
-// Interface for game stats
+// Type for game statistics
 export interface GameStats {
   gamesPlayed: number;
-  averageThinkingTime: {
+  gamesWon: number;
+  dailyStreak: number;
+  lastPlayed: string;
+  bestTime: {
     easy?: number;
     medium?: number;
     hard?: number;
     expert?: number;
-    master?: number;
-    [key: string]: number | undefined;
-  };
-  movesPerGame: {
-    easy?: number;
-    medium?: number;
-    hard?: number;
-    expert?: number;
-    master?: number;
-    [key: string]: number | undefined;
   };
   averageTime: {
     easy?: number;
     medium?: number;
     hard?: number;
     expert?: number;
-    master?: number;
-    [key: string]: number | undefined;
   };
-  bestTime: {
+  movesPerGame: {
     easy?: number;
     medium?: number;
     hard?: number;
     expert?: number;
-    master?: number;
-    [key: string]: number | undefined;
+  };
+  averageThinkingTime: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+    expert?: number;
   };
 }
 
-// Save current game state
-export const saveCurrentGame = (puzzle: Puzzle) => {
-  if (!puzzle.difficulty) return;
-
-  const gameStates: GameStates = JSON.parse(localStorage.getItem('hashi_current_games') || '{}');
+// Format time in mm:ss format
+export const formatTime = (ms: number): string => {
+  if (!ms) return '00:00';
   
-  gameStates[puzzle.difficulty] = {
-    puzzle,
-    lastPlayed: new Date().toISOString()
-  };
-
-  localStorage.setItem('hashi_current_games', JSON.stringify(gameStates));
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-// Get current game state for a difficulty
+// Format time in relative format (e.g., "2 hours ago")
+export const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
+  }
+};
+
+// Save current game progress
+export const saveCurrentGame = (puzzle: Puzzle): void => {
+  const gameKey = `hashi_current_game_${puzzle.difficulty}`;
+  localStorage.setItem(gameKey, JSON.stringify({
+    ...puzzle,
+    lastPlayed: Date.now()
+  }));
+};
+
+// Get current game if it exists
 export const getCurrentGame = (difficulty: string): Puzzle | null => {
-  const gameStates: GameStates = JSON.parse(localStorage.getItem('hashi_current_games') || '{}');
-  return gameStates[difficulty]?.puzzle || null;
+  const gameKey = `hashi_current_game_${difficulty}`;
+  const savedGame = localStorage.getItem(gameKey);
+  
+  if (savedGame) {
+    return JSON.parse(savedGame);
+  }
+  
+  return null;
 };
 
-// Clear current game state for a difficulty
-export const clearCurrentGame = (difficulty: string) => {
-  const gameStates: GameStates = JSON.parse(localStorage.getItem('hashi_current_games') || '{}');
-  delete gameStates[difficulty];
-  localStorage.setItem('hashi_current_games', JSON.stringify(gameStates));
-};
-
-// Get game statistics
-export const getStats = (): GameStats => {
-  const stats = localStorage.getItem('hashi_stats');
-  return stats ? JSON.parse(stats) : {
-    gamesPlayed: 0,
-    averageThinkingTime: {},
-    movesPerGame: {},
-    averageTime: {},
-    bestTime: {}
-  };
+// Clear current game when completed
+export const clearCurrentGame = (difficulty: string): void => {
+  const gameKey = `hashi_current_game_${difficulty}`;
+  localStorage.removeItem(gameKey);
 };
 
 // Update game statistics
-export const updateStats = (puzzle: Puzzle) => {
-  const stats = getStats();
-  stats.gamesPlayed += 1;
+export const updateStats = (puzzle: Puzzle): void => {
+  if (!puzzle.startTime || !puzzle.endTime) return;
   
-  if (puzzle.difficulty) {
-    const totalTime = puzzle.endTime && puzzle.startTime 
-      ? puzzle.endTime - puzzle.startTime 
-      : 0;
-    const movesCount = puzzle.moveHistory.length;
-    const thinkingTimePerMove = movesCount > 0 ? totalTime / movesCount : 0;
-
-    // Update average thinking time
-    const prevThinkingTime = stats.averageThinkingTime[puzzle.difficulty] || 0;
-    const prevGamesPlayed = stats.gamesPlayed > 1 ? stats.gamesPlayed - 1 : 1;
-    stats.averageThinkingTime[puzzle.difficulty] = 
-      (prevThinkingTime * prevGamesPlayed + thinkingTimePerMove) / stats.gamesPlayed;
-
-    // Update moves per game
-    const prevMovesPerGame = stats.movesPerGame[puzzle.difficulty] || 0;
-    stats.movesPerGame[puzzle.difficulty] = 
-      (prevMovesPerGame * prevGamesPlayed + movesCount) / stats.gamesPlayed;
-
-    // Update average completion time
-    const prevAverageTime = stats.averageTime[puzzle.difficulty] || 0;
-    stats.averageTime[puzzle.difficulty] = 
-      (prevAverageTime * prevGamesPlayed + totalTime) / stats.gamesPlayed;
-
-    // Update best time
-    if (totalTime > 0 && (!stats.bestTime[puzzle.difficulty] || totalTime < stats.bestTime[puzzle.difficulty]!)) {
-      stats.bestTime[puzzle.difficulty] = totalTime;
-    }
+  const playTime = puzzle.endTime - puzzle.startTime;
+  const statsKey = 'hashi_stats';
+  
+  // Get existing stats or create new
+  const existingStats = localStorage.getItem(statsKey);
+  const stats: GameStats = existingStats ? JSON.parse(existingStats) : {
+    gamesPlayed: 0,
+    gamesWon: 0,
+    dailyStreak: 0,
+    lastPlayed: '',
+    bestTime: {},
+    averageTime: {},
+    movesPerGame: {},
+    averageThinkingTime: {}
+  };
+  
+  // Update stats
+  stats.gamesPlayed++;
+  stats.gamesWon++;
+  stats.lastPlayed = new Date().toISOString();
+  
+  // Update best time if this is better
+  const difficulty = puzzle.difficulty as keyof GameStats['bestTime'];
+  const currentBest = stats.bestTime[difficulty];
+  if (!currentBest || playTime < currentBest) {
+    stats.bestTime[difficulty] = playTime;
   }
   
-  localStorage.setItem('hashi_stats', JSON.stringify(stats));
+  // Update average time
+  const currentAverage = stats.averageTime[difficulty];
+  if (currentAverage) {
+    stats.averageTime[difficulty] = Math.round((currentAverage + playTime) / 2);
+  } else {
+    stats.averageTime[difficulty] = playTime;
+  }
+  
+  // Update moves per game
+  const currentMoves = stats.movesPerGame[difficulty];
+  const movesMade = puzzle.moveHistory ? puzzle.moveHistory.length : 0;
+  if (currentMoves) {
+    stats.movesPerGame[difficulty] = ((currentMoves + movesMade) / 2);
+  } else {
+    stats.movesPerGame[difficulty] = movesMade;
+  }
+  
+  // Save updated stats
+  localStorage.setItem(statsKey, JSON.stringify(stats));
+  
+  // Save to game history
+  saveToGameHistory(puzzle);
 };
 
-// Format time for display
-export const formatTime = (time: number): string => {
-  const seconds = Math.floor((time / 1000) % 60);
-  const minutes = Math.floor((time / (1000 * 60)) % 60);
-  const hours = Math.floor((time / (1000 * 60 * 60)) % 24);
-  return `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
+// Save completed game to history
+const saveToGameHistory = (puzzle: Puzzle): void => {
+  const historyKey = 'hashi_game_history';
+  const existingHistory = localStorage.getItem(historyKey);
+  const history = existingHistory ? JSON.parse(existingHistory) : [];
+  
+  history.unshift({
+    seed: puzzle.seed,
+    difficulty: puzzle.difficulty,
+    date: new Date().toISOString()
+  });
+  
+  // Keep history limited to last 20 games
+  const limitedHistory = history.slice(0, 20);
+  localStorage.setItem(historyKey, JSON.stringify(limitedHistory));
 };
 
-// Format date for display
-export const formatDate = (date: Date): string => {
-  return format(date, 'MMMM do, yyyy');
+// Get all stats
+export const getStats = (): GameStats => {
+  const statsKey = 'hashi_stats';
+  const stats = localStorage.getItem(statsKey);
+  
+  return stats ? JSON.parse(stats) : {
+    gamesPlayed: 0,
+    gamesWon: 0,
+    dailyStreak: 0,
+    lastPlayed: '',
+    bestTime: {},
+    averageTime: {},
+    movesPerGame: {},
+    averageThinkingTime: {}
+  };
+};
+
+// Check if daily challenge is completed
+export const isDailyCompleted = (date: Date): boolean => {
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const completedKey = `hashi_daily_completed_${dateStr}`;
+  return localStorage.getItem(completedKey) === 'true';
+};
+
+// Mark daily challenge as completed
+export const setDailyCompleted = (date: Date): void => {
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const completedKey = `hashi_daily_completed_${dateStr}`;
+  localStorage.setItem(completedKey, 'true');
+  
+  // Update daily streak
+  updateDailyStreak();
+};
+
+// Update daily streak
+const updateDailyStreak = (): void => {
+  const statsKey = 'hashi_stats';
+  const existingStats = localStorage.getItem(statsKey);
+  
+  if (!existingStats) return;
+  
+  const stats: GameStats = JSON.parse(existingStats);
+  const lastPlayedDate = stats.lastPlayed ? new Date(stats.lastPlayed) : null;
+  const today = new Date();
+  
+  if (!lastPlayedDate) {
+    // First time playing
+    stats.dailyStreak = 1;
+  } else {
+    // Check if played yesterday to maintain streak
+    const dayDifference = differenceInDays(today, lastPlayedDate);
+    
+    if (dayDifference === 1) {
+      // Played yesterday, increment streak
+      stats.dailyStreak++;
+    } else if (dayDifference > 1) {
+      // Missed a day, reset streak
+      stats.dailyStreak = 1;
+    }
+    // if dayDifference === 0, played today already, don't change streak
+  }
+  
+  stats.lastPlayed = today.toISOString();
+  localStorage.setItem(statsKey, JSON.stringify(stats));
 };
