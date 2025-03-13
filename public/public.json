@@ -1,0 +1,21 @@
+{
+  "short_name": "The Hashi Puzzle",
+  "name": "The Hashi Puzzle",
+  "description": "Connect islands with bridges in this engaging puzzle game",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#E83015",
+  "background_color": "#D7C4BB",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
