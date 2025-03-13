@@ -8,6 +8,8 @@ import Settings from './pages/Settings';
 import Support from './pages/Support';
 import NotFound from './pages/NotFound';
 import DailyChallenge from './pages/DailyChallenge';
+import CustomGame from './pages/CustomGame';
+import CustomGamePlay from './pages/CustomGamePlay';
 import Navbar from './components/Navbar';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/toaster';
@@ -37,6 +39,14 @@ const router = createBrowserRouter([
   {
     path: '/daily',
     element: <DailyChallenge />,
+  },
+  {
+    path: '/custom',
+    element: <CustomGame />,
+  },
+  {
+    path: '/custom-play',
+    element: <CustomGamePlay />,
   },
   {
     path: '*',
