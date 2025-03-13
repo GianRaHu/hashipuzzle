@@ -1,0 +1,17 @@
+.game-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.game-board h1 {
+  color: var(--text-color);
+  font-size: 2rem;
+}
+
+.game-board p {
+  color: var(--text-muted);
+}
