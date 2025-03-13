@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef, useState, memo } from 'react';
 import { Puzzle, Island, toggleBridge, canConnect } from '@/utils/gameLogic';
 import { triggerHaptic } from '@/utils/haptics';
@@ -45,9 +46,9 @@ const Board = memo<BoardProps>(({ puzzle, onUpdate }) => {
       const isValidConnection = start.row === island.row || start.col === island.col;
 
       return isAligned && isValidConnection && 
-             canConnect(start, island, puzzle.islands, puzzle.bridges);
+             canConnect(start, island, puzzle.islands);
     }) || null;
-  }, [puzzle.islands, puzzle.bridges]);
+  }, [puzzle.islands]);
 
   const handleTouchStart = useCallback((event: MouseEvent | TouchEvent) => {
     if (touchTimeout.current) {
@@ -115,7 +116,7 @@ const Board = memo<BoardProps>(({ puzzle, onUpdate }) => {
     triggerHaptic('light');
     
     if (selectedIsland) {
-      if (canConnect(selectedIsland, island, puzzle.islands, puzzle.bridges)) {
+      if (canConnect(selectedIsland, island, puzzle.islands)) {
         const updatedPuzzle = toggleBridge(selectedIsland, island, puzzle);
         onUpdate(updatedPuzzle);
       }

@@ -1,73 +1,50 @@
-import { Island, Puzzle, Bridge } from './gameLogic';
 import { v4 as uuidv4 } from 'uuid';
+import { Island, Puzzle } from './gameLogic';
 
-// Helper function to generate IDs
-export const generateId = () => uuidv4();
+export function generateCustomPuzzle(seed: number, size: number, numIslands: number): Puzzle {
+  // Use a simple PRNG to generate consistent results based on the seed
+  let random = mulberry32(seed);
 
-// Generate a puzzle with custom parameters
-export const generateCustomPuzzle = (
-  seed: number,
-  gridSize: number,
-  islandCount: number
-): Puzzle => {
-  console.log(`Generating custom puzzle with seed: ${seed}, size: ${gridSize}, islands: ${islandCount}`);
-  
-  // Default values for safety
-  const safeSeed = seed || Math.floor(Math.random() * 1000000);
-  const safeGridSize = Math.min(Math.max(5, gridSize), 12); // Between 5 and 12
-  const safeIslandCount = Math.min(Math.max(5, islandCount), safeGridSize * 2); // Reasonable number of islands
-  
-  // Seeded random number generator
-  const seededRandom = () => {
-    let s = safeSeed;
-    return () => {
-      s = (s * 9301 + 49297) % 233280;
-      return s / 233280;
-    };
-  };
-  
-  const random = seededRandom();
-  
-  // Create grid matrix for island placement
-  const grid: (Island | null)[][] = Array(safeGridSize).fill(null).map(() => Array(safeGridSize).fill(null));
-  
-  // Track bridge paths
-  const bridgeMap = new Map<string, boolean>();
-  
   const islands: Island[] = [];
-  const bridgeConnections: {
-    startIslandId: string;
-    endIslandId: string;
-    count: 1 | 2;
-    orientation: 'horizontal' | 'vertical';
-  }[] = [];
-  
-  // Place first island near center
-  const centerOffset = Math.floor(safeGridSize / 3);
-  const startRow = Math.floor(random() * centerOffset) + centerOffset;
-  const startCol = Math.floor(random() * centerOffset) + centerOffset;
-  
-  const firstIsland: Island = {
-    id: generateId(),
-    row: startRow,
-    col: startCol,
-    value: 0
-  };
-  
-  islands.push(firstIsland);
-  grid[startRow][startCol] = firstIsland;
-  
-  // ... keep existing code
-  
-  // Create and return the puzzle
-  return {
-    id: `custom-${safeSeed}`,
-    difficulty: 'custom',
-    size: safeGridSize,
+  const occupiedSpots = new Set<string>();
+
+  while (islands.length < numIslands) {
+    const row = Math.floor(random() * size);
+    const col = Math.floor(random() * size);
+    const key = `${row},${col}`;
+
+    if (!occupiedSpots.has(key)) {
+      const value = Math.floor(random() * 7) + 1;
+      islands.push({
+        id: uuidv4(),
+        row,
+        col,
+        value
+      });
+      occupiedSpots.add(key);
+    }
+  }
+
+  const generatedPuzzle: Puzzle = {
+    id: uuidv4(),
+    size,
     islands,
-    bridges: [], // Start with no bridges for gameplay
-    moveHistory: [],
+    bridges: [],
     startTime: Date.now(),
-    seed: safeSeed
+    moveHistory: [],
+    solved: false,
+    seed: seed
   };
-};
+
+  return generatedPuzzle;
+}
+
+// Mulberry32 PRNG - Quick and decent quality
+function mulberry32(a: number) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= (t + Math.imul(t ^ (t >>> 7), t | 61)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}

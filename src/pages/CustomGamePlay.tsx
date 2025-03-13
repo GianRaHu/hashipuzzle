@@ -149,7 +149,6 @@ const CustomGamePlay: React.FC = () => {
         handleUndo={handleUndo}
         restartPuzzle={restartPuzzle}
         canUndo={puzzle?.moveHistory?.length ? puzzle.moveHistory.length > 0 : false}
-        gameStarted={gameStarted}
       />
       
       <div className="my-8 flex-1 flex items-center justify-center w-full">

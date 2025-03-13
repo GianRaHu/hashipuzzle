@@ -10,7 +10,7 @@ import Board from '../components/Board';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import DailyPuzzleList from '../components/game/DailyPuzzleList';
 import { useToast } from '@/hooks/use-toast';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 
 const DailyChallenge: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const DailyChallenge: React.FC = () => {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
-  const [timer, setTimer] = useState<number>(0);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [gameStarted, setGameStarted] = useState<boolean>(false);
@@ -53,7 +53,7 @@ const DailyChallenge: React.FC = () => {
       setTimeout(() => {
         setPuzzle(dailyPuzzle);
         setGameStarted(false);
-        setTimer(0);
+        setElapsedTime(0);
         setLoading(false);
         setGameCompleted(false);
         console.log(`Generated daily puzzle`);
@@ -72,7 +72,7 @@ const DailyChallenge: React.FC = () => {
     if (!puzzle || gameCompleted || loading || !gameStarted) return;
     
     const interval = setInterval(() => {
-      setTimer(Date.now() - puzzle.startTime!);
+      setElapsedTime(Date.now() - (puzzle.startTime || 0));
     }, 1000);
     
     return () => clearInterval(interval);
@@ -99,7 +99,7 @@ const DailyChallenge: React.FC = () => {
         setDailyCompleted(today);
         toast({
           title: "Daily Challenge Completed!",
-          description: `Great job! You've completed today's challenge in ${formatTime(Date.now() - updatedPuzzle.startTime!)}.`,
+          description: `Great job! You've completed today's challenge in ${formatTime(Date.now() - (updatedPuzzle.startTime || 0))}.`,
         });
       }
     }
@@ -200,7 +200,7 @@ const DailyChallenge: React.FC = () => {
       
       {gameCompleted && puzzle && (
         <GameCompletedModal
-          time={Date.now() - puzzle.startTime!}
+          time={Date.now() - (puzzle.startTime || 0)}
           resetPuzzle={() => {
             setShowPuzzleList(true);
             setGameCompleted(false);

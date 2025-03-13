@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Island {
@@ -24,6 +25,8 @@ export interface Puzzle {
   startTime?: number;
   endTime?: number;
   moveHistory: string[];
+  solved?: boolean;
+  seed?: number;
 }
 
 interface PuzzleConfig {
@@ -186,11 +189,16 @@ export function toggleBridge(island1: Island, island2: Island, puzzle: Puzzle): 
     });
   }
 
-  return {
+  const updatedPuzzle = {
     ...puzzle,
     bridges: newBridges,
     moveHistory: [...puzzle.moveHistory, `${island1.id}-${island2.id}`]
   };
+  
+  // Check if puzzle is solved after this move
+  updatedPuzzle.solved = isSolved(updatedPuzzle);
+  
+  return updatedPuzzle;
 }
 
 export function isSolved(puzzle: Puzzle): boolean {
@@ -215,4 +223,15 @@ export function isSolved(puzzle: Puzzle): boolean {
     const island = puzzle.islands.find(i => i.id === islandId);
     return island && count === island.value;
   });
+}
+
+export function undoLastMove(puzzle: Puzzle): Puzzle {
+  if (!puzzle.moveHistory.length) return puzzle;
+  
+  const updatedPuzzle = {...puzzle};
+  updatedPuzzle.moveHistory.pop();
+  return {
+    ...updatedPuzzle,
+    solved: false
+  };
 }
