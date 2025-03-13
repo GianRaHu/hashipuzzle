@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef, useState, memo } from 'react';
 import { Puzzle, Island, toggleBridge, canConnect } from '@/utils/gameLogic';
 import { triggerHaptic } from '@/utils/haptics';
