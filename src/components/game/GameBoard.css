@@ -1,3 +1,4 @@
+
 .game-board {
   display: flex;
   flex-direction: column;
@@ -5,13 +6,62 @@
   gap: 2rem;
   padding: 2rem;
   text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .game-board h1 {
   color: var(--text-color);
   font-size: 2rem;
+  margin-bottom: 1rem;
 }
 
 .game-board p {
   color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.game-board .island {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.game-board .island:hover {
+  transform: scale(1.1);
+}
+
+.game-board .island.selected {
+  box-shadow: 0 0 0 3px var(--primary-foreground);
+}
+
+.game-board .bridge {
+  position: absolute;
+  background-color: var(--primary);
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+@media (max-width: 768px) {
+  .game-board {
+    padding: 1rem;
+  }
+  
+  .game-board h1 {
+    font-size: 1.5rem;
+  }
+  
+  .game-board .island {
+    width: 2rem;
+    height: 2rem;
+  }
 }

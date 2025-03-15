@@ -407,7 +407,9 @@ export const generatePuzzle = (
     solved: false,
     startTime: Date.now(),
     seed: puzzleSeed,
-    moveHistory: [] // Add missing required property
+    moveHistory: [], // Add missing required property
+    lastPlayed: Date.now(),
+    lastPlayedTime: 0
   };
 };
 

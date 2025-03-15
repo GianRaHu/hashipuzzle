@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 export interface Island {
@@ -6,6 +5,7 @@ export interface Island {
   row: number;
   col: number;
   value: number;
+  connectedTo?: string[]; // Make this optional for backward compatibility
 }
 
 export interface Bridge {
@@ -27,6 +27,9 @@ export interface Puzzle {
   moveHistory: string[];
   solved?: boolean;
   seed?: number;
+  lastPlayed?: number;      // Add missing property
+  lastPlayedTime?: number;  // Add missing property
+  solution?: Bridge[];      // Add missing property
 }
 
 interface PuzzleConfig {
@@ -234,4 +237,9 @@ export function undoLastMove(puzzle: Puzzle): Puzzle {
     ...updatedPuzzle,
     solved: false
   };
+}
+
+// Add helper function that was missing in puzzleGenerator.ts
+export function generateId(): string {
+  return uuidv4();
 }

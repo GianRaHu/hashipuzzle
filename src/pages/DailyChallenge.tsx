@@ -19,7 +19,7 @@ const DailyChallenge: React.FC = () => {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
-  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [timer, setTimer] = useState<number>(0);
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [gameStarted, setGameStarted] = useState<boolean>(false);
@@ -53,7 +53,7 @@ const DailyChallenge: React.FC = () => {
       setTimeout(() => {
         setPuzzle(dailyPuzzle);
         setGameStarted(false);
-        setElapsedTime(0);
+        setTimer(0);
         setLoading(false);
         setGameCompleted(false);
         console.log(`Generated daily puzzle`);
@@ -72,7 +72,7 @@ const DailyChallenge: React.FC = () => {
     if (!puzzle || gameCompleted || loading || !gameStarted) return;
     
     const interval = setInterval(() => {
-      setElapsedTime(Date.now() - (puzzle.startTime || 0));
+      setTimer(Date.now() - (puzzle.startTime || 0));
     }, 1000);
     
     return () => clearInterval(interval);
@@ -205,7 +205,7 @@ const DailyChallenge: React.FC = () => {
             setShowPuzzleList(true);
             setGameCompleted(false);
           }}
-          seed={puzzle.id}
+          seed={Number(puzzle.seed) || 0}
         />
       )}
     </div>

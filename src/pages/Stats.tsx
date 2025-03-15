@@ -5,9 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getStats, formatTime } from '@/utils/storage';
 
+interface StatsData {
+  gamesPlayed: number;
+  bestTime: Record<string, number | undefined>;
+  averageTime: Record<string, number | undefined>;
+  movesPerGame: Record<string, number | undefined>;
+}
+
 const Stats: React.FC = () => {
   const navigate = useNavigate();
-  const stats = getStats();
+  const stats: StatsData = getStats();
 
   const difficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
 

@@ -1,3 +1,4 @@
+
 import { Puzzle, Bridge } from './gameLogic';
 
 export function validatePuzzle(puzzle: Puzzle): boolean {
@@ -8,7 +9,7 @@ export function validatePuzzle(puzzle: Puzzle): boolean {
   );
 
   const solutionBridges = new Set(
-    puzzle.solution.map(bridge => `${bridge.startIslandId}-${bridge.endIslandId}-${bridge.count}`)
+    puzzle.solution.map((bridge: Bridge) => `${bridge.startIslandId}-${bridge.endIslandId}-${bridge.count}`)
   );
 
   return (
@@ -37,10 +38,10 @@ export function getHint(puzzle: Puzzle): Bridge | null {
 export function checkProgress(puzzle: Puzzle): number {
   if (!puzzle.solution) return 0;
 
-  const totalBridges = puzzle.solution.reduce((sum, bridge) => sum + bridge.count, 0);
-  const correctBridges = puzzle.bridges.reduce((sum, bridge) => {
+  const totalBridges = puzzle.solution.reduce((sum: number, bridge: Bridge) => sum + bridge.count, 0);
+  const correctBridges = puzzle.bridges.reduce((sum: number, bridge) => {
     const solutionBridge = puzzle.solution?.find(
-      sb => sb.startIslandId === bridge.startIslandId && 
+      (sb: Bridge) => sb.startIslandId === bridge.startIslandId && 
             sb.endIslandId === bridge.endIslandId
     );
     return sum + (solutionBridge && bridge.count === solutionBridge.count ? bridge.count : 0);

@@ -7,6 +7,14 @@ import GameCompletedModal from '@/components/game/GameCompletedModal';
 import GameHeader from '@/components/game/GameHeader';
 import Game from '@/components/Game';
 
+interface GameHeaderProps {
+  timer: number;
+  bestTime: number;
+  handleUndo: () => void;
+  restartPuzzle: () => void;
+  canUndo: boolean;
+}
+
 const GamePage: React.FC = () => {
   const { difficulty = 'easy' } = useParams();
   const location = useLocation();
@@ -128,7 +136,6 @@ const GamePage: React.FC = () => {
         handleUndo={handleUndo}
         restartPuzzle={restartPuzzle}
         canUndo={puzzle?.moveHistory?.length ? puzzle.moveHistory.length > 0 : false}
-        gameStarted={gameStarted}
       />
       
       <div className="my-8 flex-1 flex items-center justify-center w-full">
