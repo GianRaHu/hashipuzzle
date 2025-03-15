@@ -1,8 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameBoard } from './components/GameBoard';
 import { BuildInfo } from './components/BuildInfo';
 import Toaster from './components/Toaster';
+import Index from './pages/Index';
+import Game from './components/Game';
 import './App.css';
 
 const App: React.FC = () => {
@@ -34,23 +37,30 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="app">
-      {isOffline && (
-        <div className="network-banner">
-          You are currently offline. Some features may be unavailable.
-        </div>
-      )}
-      <header className="app-header">
-        <BuildInfo buildTime="2025-03-13 14:42:51" author="GianRaHu" />
-      </header>
-      <main className="app-content">
-        <GameBoard />
-      </main>
-      <footer className="app-footer">
-        <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
-      </footer>
-      <Toaster />
-    </div>
+    <BrowserRouter>
+      <div className="app">
+        {isOffline && (
+          <div className="network-banner">
+            You are currently offline. Some features may be unavailable.
+          </div>
+        )}
+        <header className="app-header">
+          <BuildInfo buildTime="2025-03-13 14:42:51" author="GianRaHu" />
+        </header>
+        <main className="app-content">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/game" element={<GameBoard />} />
+            <Route path="/game/:difficulty" element={<Game />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <footer className="app-footer">
+          <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
+        </footer>
+        <Toaster />
+      </div>
+    </BrowserRouter>
   );
 };
 
