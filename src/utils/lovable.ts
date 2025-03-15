@@ -1,3 +1,4 @@
+
 import { Puzzle } from './gameLogic';
 
 export interface LovableConfig {
@@ -13,11 +14,15 @@ export const LOVABLE_CONFIG: LovableConfig = {
 };
 
 export function initializeLovable() {
-  // Add Lovable script to the document
-  const script = document.createElement('script');
-  script.src = 'https://cdn.gpteng.co/gptengineer.js';
-  script.type = 'module';
-  document.body.appendChild(script);
+  // GPT Engineer script is already added in index.html
+  console.log('Lovable initialized');
+  
+  // Wait for GPT Engineer to be ready
+  if (window.gptengineer) {
+    window.gptengineer.ready().then(() => {
+      console.log('GPT Engineer is ready');
+    });
+  }
 }
 
 export function savePuzzleToLovable(puzzle: Puzzle) {

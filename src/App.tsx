@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { BuildInfo } from './components/BuildInfo';
+import Toaster from './components/Toaster';
 import './App.css';
 
 const App: React.FC = () => {
@@ -47,6 +49,7 @@ const App: React.FC = () => {
       <footer className="app-footer">
         <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
       </footer>
+      <Toaster />
     </div>
   );
 };
