@@ -1,34 +1,20 @@
+
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
-    <!-- Security headers -->
-    <meta http-equiv="Content-Security-Policy" 
-          content="default-src 'self' https://api.gpteng.co;
-                   img-src 'self' data: blob: https:;
-                   style-src 'self' 'unsafe-inline';
-                   script-src 'self' 'unsafe-inline' 'unsafe-eval';
-                   connect-src 'self' https://api.gpteng.co;
-                   worker-src 'self' blob:;
-                   manifest-src 'self';">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
-    <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()">
-    
-    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#E83015" />
+    <meta name="description" content="The Hashi Puzzle - Connect islands with bridges in this engaging puzzle game" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
     <link rel="manifest" href="/manifest.json" />
-    
     <title>The Hashi Puzzle</title>
-    <meta name="description" content="A bridge-building puzzle game by GianRaHu" />
-    <meta name="author" content="GianRaHu" />
-    <meta name="build-time" content="2025-03-13 10:50:05" />
-</head>
-<body>
+  </head>
+  <body>
     <div id="root"></div>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- GPT Engineer script for Lovable "Select" feature -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
-</body>
+  </body>
 </html>

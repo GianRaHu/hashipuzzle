@@ -1,66 +1,59 @@
-import React, { createContext, useContext, useState } from 'react';
 
-interface ToastAction {
-  label: string;
-  onClick: () => void;
-}
+import React from 'react';
+import { useToast } from '@/hooks/use-toast';
+import './Toast.css';
 
-interface ToastOptions {
-  title: string;
-  message: string;
-  type?: 'info' | 'success' | 'warning' | 'error';
+interface ToastProps {
+  id: string;
+  title?: string;
+  description?: string;
+  type?: 'default' | 'success' | 'error' | 'warning' | 'info';
   duration?: number;
-  action?: ToastAction;
+  onClose?: () => void;
 }
 
-interface ToastContextValue {
-  show: (options: ToastOptions) => void;
-  hide: () => void;
-}
+const Toast: React.FC<ToastProps> = ({
+  id,
+  title,
+  description,
+  type = 'default',
+  duration = 5000,
+  onClose,
+}) => {
+  const { removeToast } = useToast();
 
-const ToastContext = createContext<ToastContextValue>({
-  show: () => {},
-  hide: () => {}
-});
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      removeToast(id);
+      if (onClose) onClose();
+    }, duration);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toast, setToast] = useState<ToastOptions | null>(null);
-
-  const show = (options: ToastOptions) => {
-    setToast(options);
-    if (options.duration !== 0) {
-      setTimeout(() => {
-        setToast(null);
-      }, options.duration || 3000);
-    }
-  };
-
-  const hide = () => setToast(null);
+    return () => clearTimeout(timer);
+  }, [id, duration, removeToast, onClose]);
 
   return (
-    <ToastContext.Provider value={{ show, hide }}>
-      {children}
-      {toast && (
-        <div className={`toast toast-${toast.type || 'info'}`}>
-          <div className="toast-content">
-            <h4>{toast.title}</h4>
-            <p>{toast.message}</p>
-          </div>
-          {toast.action && (
-            <button onClick={toast.action.onClick}>
-              {toast.action.label}
-            </button>
-          )}
-          <button className="toast-close" onClick={hide}>
-            ×
-          </button>
-        </div>
-      )}
-    </ToastContext.Provider>
+    <div 
+      className={`toast toast--${type}`} 
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
+      <div className="toast__content">
+        {title && <h3 className="toast__title">{title}</h3>}
+        {description && <p className="toast__description">{description}</p>}
+      </div>
+      <button 
+        className="toast__close-button" 
+        onClick={() => {
+          removeToast(id);
+          if (onClose) onClose();
+        }}
+        aria-label="Close toast"
+      >
+        &times;
+      </button>
+    </div>
   );
-}
+};
 
-export const toast = {
-  show: (options: ToastOptions) => {
-    const context = useContext(ToastContext);
-    context.show(
+export default Toast;
