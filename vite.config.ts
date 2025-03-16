@@ -28,17 +28,8 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     esbuildOptions: {
-      tsconfig: './tsconfig.app.json' // Use the app-specific tsconfig instead
+      // Skip checking tsconfig.node.json entirely
+      tsconfig: './tsconfig.app.json'
     }
   }
 }));
-// vite.config.js
-export default {
-  server: {
-    allowedHosts: [
-      '9464df3c-5cea-4919-9737-0a39aca6b984.lovableproject.com',
-      // Add other allowed hosts if necessary
-    ],
-  },
-  // other configurations...
-};
