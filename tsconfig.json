@@ -13,12 +13,16 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
 
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    
+    /* Paths */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
