@@ -15,7 +15,7 @@ export const LOVABLE_CONFIG: LovableConfig = {
 
 export function initializeLovable() {
   // GPT Engineer script is already added in index.html
-  console.log('Lovable initialized');
+  console.log('Lovable initialized with latest version');
   
   // Wait for GPT Engineer to be ready
   if (window.gptengineer) {
