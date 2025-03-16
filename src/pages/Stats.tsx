@@ -1,62 +1,23 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getStats, formatTime } from '@/utils/storage';
-
-interface StatsData {
-  gamesPlayed: number;
-  bestTime: Record<string, number | undefined>;
-  averageTime: Record<string, number | undefined>;
-  movesPerGame: Record<string, number | undefined>;
-}
+import React, { useState, useEffect } from 'react';
+import { getStats } from '../utils/storage';
+import GameStats from '../components/GameStats';
 
 const Stats: React.FC = () => {
-  const navigate = useNavigate();
-  const stats: StatsData = getStats();
-
-  const difficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+  const [stats, setStats] = useState(getStats());
+  
+  useEffect(() => {
+    setStats(getStats());
+  }, []);
 
   return (
-    <div className="container max-w-2xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold">Statistics</h1>
-        <div className="w-16" /> {/* Spacer for alignment */}
+    <div className="content-container max-w-4xl animate-fade-in page-transition">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-medium mb-2">Your Statistics</h1>
+        <p className="text-foreground/70">Track your progress and improvements</p>
       </div>
-
-      <div className="grid gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Overall Stats</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Total Games Played: {stats.gamesPlayed}</p>
-          </CardContent>
-        </Card>
-
-        {difficulties.map(difficulty => (
-          <Card key={difficulty}>
-            <CardHeader>
-              <CardTitle className="capitalize">{difficulty}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {stats.bestTime[difficulty] && (
-                <p>Best Time: {formatTime(stats.bestTime[difficulty]!)}</p>
-              )}
-              {stats.averageTime[difficulty] && (
-                <p>Average Time: {formatTime(stats.averageTime[difficulty]!)}</p>
-              )}
-              {stats.movesPerGame[difficulty] && (
-                <p>Average Moves: {Math.round(stats.movesPerGame[difficulty]!)}</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      
+      <GameStats stats={stats} />
     </div>
   );
 };

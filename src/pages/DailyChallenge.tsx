@@ -1,16 +1,16 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Puzzle } from '../utils/gameLogic';
 import { generateDailyChallenge } from '../utils/puzzleGenerator';
-import { updateStats, formatTime, setDailyCompleted } from '../utils/storage';
+import { savePuzzle, updateStats, formatTime, isDailyCompleted, setDailyCompleted } from '../utils/storage';
 import Board from '../components/Board';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import DailyPuzzleList from '../components/game/DailyPuzzleList';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 const DailyChallenge: React.FC = () => {
   const navigate = useNavigate();
@@ -24,9 +24,13 @@ const DailyChallenge: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [showPuzzleList, setShowPuzzleList] = useState<boolean>(true);
+  const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
   
   // Calculate date range for calendar
   const today = new Date();
+  const pastDaysLimit = 7;
+  const minSelectableDate = subDays(today, pastDaysLimit);
   
   // Generate the daily challenge when user selects a date
   const loadDailyChallenge = (date: Date) => {
@@ -42,21 +46,25 @@ const DailyChallenge: React.FC = () => {
       });
     }, 200);
     
+    // Use setTimeout to delay puzzle generation
     setTimeout(() => {
       console.log(`Generating daily challenge for: ${format(date, 'yyyy-MM-dd')}`);
       const dailyPuzzle = generateDailyChallenge(date);
-      dailyPuzzle.moveHistory = [];
       
+      // Complete the loading progress
       clearInterval(loadingInterval);
       setLoadingProgress(100);
       
+      // Add a small delay before showing the puzzle
       setTimeout(() => {
         setPuzzle(dailyPuzzle);
+        setMoveHistory([dailyPuzzle]);
+        setCurrentMoveIndex(0);
         setGameStarted(false);
         setTimer(0);
         setLoading(false);
         setGameCompleted(false);
-        console.log(`Generated daily puzzle`);
+        console.log(`Generated daily puzzle with seed: ${dailyPuzzle.seed}`);
       }, 500);
     }, 1000);
   };
@@ -72,14 +80,15 @@ const DailyChallenge: React.FC = () => {
     if (!puzzle || gameCompleted || loading || !gameStarted) return;
     
     const interval = setInterval(() => {
-      setTimer(Date.now() - (puzzle.startTime || 0));
+      setTimer(Date.now() - puzzle.startTime!);
     }, 1000);
     
     return () => clearInterval(interval);
   }, [puzzle, gameCompleted, loading, gameStarted]);
   
   // Handle puzzle updates
-  const handlePuzzleUpdate = useCallback((updatedPuzzle: Puzzle) => {
+  const handlePuzzleUpdate = (updatedPuzzle: Puzzle) => {
+    // Start the timer on first move
     if (!gameStarted) {
       setGameStarted(true);
       updatedPuzzle = {
@@ -90,124 +99,125 @@ const DailyChallenge: React.FC = () => {
     
     setPuzzle(updatedPuzzle);
     
+    // Only add to history if it's a new move (not from undo/redo)
+    const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
+    setMoveHistory(newHistory);
+    setCurrentMoveIndex(newHistory.length - 1);
+    
+    // Check if puzzle is solved
     if (updatedPuzzle.solved && !gameCompleted) {
       setGameCompleted(true);
+      savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
       
       // Only update daily completion for today's challenge
       if (format(selectedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
-        setDailyCompleted(today);
-        toast({
-          title: "Daily Challenge Completed!",
-          description: `Great job! You've completed today's challenge in ${formatTime(Date.now() - (updatedPuzzle.startTime || 0))}.`,
-        });
+        setDailyCompleted();
       }
+      
+      toast({
+        title: "Daily Challenge Completed!",
+        description: `You completed the challenge in ${formatTime(updatedPuzzle.endTime! - updatedPuzzle.startTime!)}`,
+      });
     }
-  }, [gameStarted, gameCompleted, selectedDate, today, toast]);
+  };
   
-  // Load the current date's challenge on mount
-  useEffect(() => {
-    handleDateSelect(new Date());
-  }, []);
+  // Restart the daily puzzle
+  const restartPuzzle = () => {
+    console.log(`Restarting daily challenge for: ${format(selectedDate, 'yyyy-MM-dd')}`);
+    const dailyPuzzle = generateDailyChallenge(selectedDate);
+    setPuzzle(dailyPuzzle);
+    setMoveHistory([dailyPuzzle]);
+    setCurrentMoveIndex(0);
+    setGameStarted(false);
+    setTimer(0);
+    setGameCompleted(false);
+  };
   
-  return (
-    <div className="content-container flex flex-col items-center justify-center max-w-4xl mx-auto px-4 py-6 animate-fade-in page-transition">
-      <div className="w-full max-w-md mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="p-0 h-9 w-9"
-            aria-label="Back to home"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </Button>
-          
-          <h1 className="text-2xl font-bold text-center">Daily Challenge</h1>
-          
-          <Button
-            variant="ghost"
-            onClick={() => setShowPuzzleList(!showPuzzleList)}
-            className="p-0 h-9 w-9"
-            aria-label="Toggle calendar"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-              <line x1="16" x2="16" y1="2" y2="6" />
-              <line x1="8" x2="8" y1="2" y2="6" />
-              <line x1="3" x2="21" y1="10" y2="10" />
-            </svg>
-          </Button>
+  // Go back to puzzle list
+  const handleBackToPuzzleList = () => {
+    setShowPuzzleList(true);
+  };
+  
+  // Handle undo
+  const handleUndo = () => {
+    if (currentMoveIndex > 0) {
+      const previousMove = moveHistory[currentMoveIndex - 1];
+      setPuzzle(previousMove);
+      setCurrentMoveIndex(currentMoveIndex - 1);
+    }
+  };
+
+  // Handle redo
+  const handleRedo = () => {
+    if (currentMoveIndex < moveHistory.length - 1) {
+      const nextMove = moveHistory[currentMoveIndex + 1];
+      setPuzzle(nextMove);
+      setCurrentMoveIndex(currentMoveIndex + 1);
+    }
+  };
+  
+  // Display puzzle list if no date selected yet
+  if (showPuzzleList) {
+    return (
+      <div className="content-container max-w-4xl animate-fade-in page-transition">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-center">Daily Challenge</h1>
         </div>
         
-        {showPuzzleList ? (
-          <DailyPuzzleList onSelectDate={handleDateSelect} selectedDate={selectedDate} />
-        ) : loading ? (
-          <div className="text-center p-8 space-y-4">
-            <p className="text-lg">Generating daily challenge...</p>
-            <Progress value={loadingProgress} className="w-full h-2" />
-          </div>
-        ) : (
-          <div className="flex flex-col items-center space-y-6">
-            <div className="flex justify-between w-full items-center">
-              <div className="flex space-x-2 items-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPuzzleList(true)}
-                  className="h-8"
-                >
-                  Change Date
-                </Button>
-                <p className="text-sm font-medium">
-                  {format(selectedDate, 'MMMM d, yyyy')}
-                </p>
-              </div>
-              
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (puzzle?.moveHistory?.length) {
-                      const updatedPuzzle = {...puzzle};
-                      if (updatedPuzzle.moveHistory.length > 0) {
-                        updatedPuzzle.moveHistory.pop();
-                        handlePuzzleUpdate(updatedPuzzle);
-                      }
-                    }
-                  }}
-                  disabled={!puzzle?.moveHistory?.length}
-                  className="h-8"
-                >
-                  Undo
-                </Button>
-              </div>
-            </div>
-            
-            <div className="bg-card rounded-lg border shadow-sm w-full overflow-hidden">
-              {puzzle && (
-                <div className="p-4 w-full">
-                  <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {gameCompleted && puzzle && (
-        <GameCompletedModal
-          time={Date.now() - (puzzle.startTime || 0)}
-          resetPuzzle={() => {
-            setShowPuzzleList(true);
-            setGameCompleted(false);
-          }}
-          seed={Number(puzzle.seed) || 0}
+        <DailyPuzzleList
+          selectedDate={selectedDate}
+          onSelectDate={handleDateSelect}
         />
-      )}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 animate-fade-in">
+        <div className="w-full max-w-md space-y-4">
+          <Progress value={loadingProgress} className="h-2 w-full" />
+          <p className="text-center text-sm text-muted-foreground">
+            Generating daily challenge...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!puzzle) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading puzzle...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col animate-fade-in page-transition">
+      <GameHeader 
+        timer={timer}
+        bestTime={0}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
+        restartPuzzle={restartPuzzle}
+        canUndo={currentMoveIndex > 0}
+        canRedo={currentMoveIndex < moveHistory.length - 1}
+        gameStarted={gameStarted}
+      />
+      
+      <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
+        <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+        
+        {gameCompleted && (
+          <GameCompletedModal 
+            time={puzzle.endTime! - puzzle.startTime!}
+            resetPuzzle={restartPuzzle}
+            seed={puzzle.seed}
+          />
+        )}
+      </main>
     </div>
   );
 };

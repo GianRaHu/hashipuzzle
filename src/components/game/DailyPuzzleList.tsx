@@ -1,8 +1,9 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { isDailyCompleted } from '@/utils/storage';
+import { isDailyCompleted, formatTime } from '@/utils/storage';
 import { format, subDays } from 'date-fns';
 
 interface DailyPuzzleListProps {
@@ -11,6 +12,7 @@ interface DailyPuzzleListProps {
 }
 
 const DailyPuzzleList: React.FC<DailyPuzzleListProps> = ({ onSelectDate, selectedDate }) => {
+  const navigate = useNavigate();
   const today = new Date();
   
   // Generate the list of dates (today and past 6 days)

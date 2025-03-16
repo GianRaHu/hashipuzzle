@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -29,7 +30,7 @@ const Island: React.FC<IslandProps> = ({
   
   // Connection completeness (for visual feedback)
   const connectionsNeeded = island.value;
-  const actualConnections = island.connectedTo?.length || 0;
+  const actualConnections = island.connectedTo.length;
   
   // Determine visual state with fixed sizes and consistent transparency
   let stateClass = '';
@@ -55,7 +56,7 @@ const Island: React.FC<IslandProps> = ({
   }
 
   // Handle touch start
-  const handleTouchStart = () => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     // Start a timer to differentiate between tap and drag
     moveDetectedRef.current = false;
     
@@ -86,7 +87,7 @@ const Island: React.FC<IslandProps> = ({
   };
 
   // Handle touch end
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     // If a drag was in progress, end it
     if (isDragging) {
       setIsDragging(false);
@@ -113,7 +114,7 @@ const Island: React.FC<IslandProps> = ({
     onDragStart(e);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.MouseEvent) => {
     // If was dragging, end drag
     if (isDragging) {
       setIsDragging(false);

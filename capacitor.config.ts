@@ -1,27 +1,17 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.gianrahu.hashipuzzle',
-  appName: 'The Hashi Puzzle',
+  appId: 'app.lovable.9464df3c5cea491997370a39aca6b984',
+  appName: 'Hashi Puzzle',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
-    cleartext: true,
-    allowNavigation: ['*']
+    url: 'https://9464df3c-5cea-4919-9737-0a39aca6b984.lovableproject.com?forceHideBadge=true',
+    cleartext: true
   },
-  plugins: {
-    SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: '#ffffff',
-      androidScaleType: 'CENTER_CROP',
-      showSpinner: true,
-      androidSpinnerStyle: 'large',
-      spinnerColor: '#3880ff'
-    },
-    StatusBar: {
-      style: 'dark',
-      backgroundColor: '#ffffff'
-    }
+  // Add proper status bar configuration for a better look on mobile
+  android: {
+    backgroundColor: "#FFFFFF"
   }
 };
 

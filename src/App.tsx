@@ -1,54 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import { GameBoard } from './components/GameBoard';
-import { BuildInfo } from './components/BuildInfo';
-import './App.css';
 
-const App: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
+import Index from "./pages/Index";
+import Game from "./pages/Game";
+import DailyChallenge from "./pages/DailyChallenge";
+import Stats from "./pages/Stats";
+import Settings from "./pages/Settings";
+import Support from "./pages/Support";
+import NotFound from "./pages/NotFound";
+import Navbar from "./components/Navbar";
 
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
+const queryClient = new QueryClient();
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Simulate initial loading
-    setTimeout(() => setIsLoading(false), 1000);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="app-loading">
-        <div className="loading-spinner" />
-      </div>
-    );
+// Navbar wrapper component that conditionally renders the navbar
+const NavbarWrapper = () => {
+  const location = useLocation();
+  const isGamePage = location.pathname.includes('/game/');
+  
+  if (isGamePage) {
+    return null;
   }
-
-  return (
-    <div className="app">
-      {isOffline && (
-        <div className="network-banner">
-          You are currently offline. Some features may be unavailable.
-        </div>
-      )}
-      <header className="app-header">
-        <BuildInfo buildTime="2025-03-13 14:42:51" author="GianRaHu" />
-      </header>
-      <main className="app-content">
-        <GameBoard />
-      </main>
-      <footer className="app-footer">
-        <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
-      </footer>
-    </div>
-  );
+  
+  return <Navbar />;
 };
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="flex flex-col min-h-[100dvh] overflow-hidden">
+            <main className="flex-1 overflow-auto pb-20 md:pb-0 md:pt-16">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/game/:difficulty" element={<Game />} />
+                <Route path="/daily" element={<DailyChallenge />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <NavbarWrapper />
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
 export default App;
