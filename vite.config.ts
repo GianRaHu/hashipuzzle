@@ -17,6 +17,26 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     port: 8080,
-    host: '::',
+    host: '::'
+  },
+  // Override TypeScript configuration
+  esbuild: {
+    logOverride: {
+      'ts-compiler-error': 'silent'
+    }
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      tsconfigRaw: {
+        compilerOptions: {
+          experimentalDecorators: true,
+          useDefineForClassFields: true,
+          target: "ES2020",
+          module: "ESNext",
+          skipLibCheck: true,
+          noEmit: false
+        }
+      }
+    }
   }
 }))
