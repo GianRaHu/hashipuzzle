@@ -1,143 +1,26 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 19 29% 76%; /* #D7C4BB */
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 9 86% 50%; /* #E83015 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 9 86% 50%; /* #E83015 */
-    --radius: 0.75rem;
-    --gameAccent: 9 86% 50%; /* #E83015 */
-  }
-
-  .dark {
-    --background: 0 0% 11%; /* #1C1C1C */
-    --foreground: 0 0% 98%;
-    --card: 0 0% 13%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 13%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 9 86% 50%; /* #E83015 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 9 86% 50%; /* #E83015 */
-    --gameAccent: 9 86% 50%; /* #E83015 */
-  }
+:root {
+  --app-bg: #ffffff;
+  --header-bg: #f8f9fa;
+  --footer-bg: #f8f9fa;
+  --text-color: #333333;
+  --text-muted: #6c757d;
+  --border-color: #dee2e6;
+  --primary-color: #3498db;
+  --warning-bg: #fff3cd;
+  --warning-text: #856404;
+  --error-bg: #fff5f5;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground antialiased overscroll-none font-inter;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
-    /* Prevent pull-to-refresh on mobile */
-    overscroll-behavior-y: none;
-    /* Use full viewport height on mobile */
-    height: 100%;
-    height: 100dvh;
-    width: 100%;
-    width: 100dvw;
-    overflow: hidden;
-    position: fixed;
-  }
-  html {
-    @apply scroll-smooth overscroll-none;
-    height: 100%;
-    width: 100%;
-  }
-  /* Better mobile buttons */
-  button, a {
-    -webkit-tap-highlight-color: transparent;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@layer utilities {
-  .content-container {
-    @apply px-4 pt-4 pb-24 md:py-12 md:px-6 mx-auto;
-    max-height: 100vh;
-    overflow-y: auto;
-  }
-  
-  .hashi-island {
-    @apply w-9 h-9 rounded-full flex items-center justify-center bg-secondary font-medium text-foreground transition-all duration-300;
-    touch-action: manipulation;
-  }
-  
-  .hashi-island-selected {
-    @apply ring-1 ring-primary ring-offset-1 ring-offset-background;
-  }
-  
-  .hashi-bridge {
-    @apply bg-primary/80 rounded-full transition-all;
-  }
-  
-  .page-transition {
-    @apply transition-all duration-300 ease-in-out;
-  }
-  
-  /* Mobile-specific utilities */
-  .mobile-safe-area {
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
-    padding-top: env(safe-area-inset-top, 0);
-  }
-  
-  .touch-callout-none {
-    -webkit-touch-callout: none;
-    touch-callout: none;
-  }
-  
-  /* Make difficulty cards smaller and fit better on mobile */
-  :root [class*="difficulty-card"] {
-    @apply py-2 max-w-xs mx-auto;
-  }
-  
-  /* Add portrait/landscape orientation utility classes */
-  .board-portrait {
-    @apply aspect-[4/5] md:aspect-square;
-  }
-  
-  .board-landscape {
-    @apply aspect-square md:aspect-[5/4];
-  }
-  
-  /* Scrollable container */
-  .scrollable-container {
-    @apply overflow-y-auto overscroll-contain max-h-[80vh] pb-24;
-  }
-}
-
-#root {
-  @apply min-h-screen w-full overflow-hidden;
-  min-height: 100dvh;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-color);
 }
