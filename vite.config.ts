@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
   ].filter(Boolean),
   server: {
+    allowedHosts: [
+      '9464df3c-5cea-4919-9737-0a39aca6b984.lovableproject.com',
+      // Add other allowed hosts if necessary
+    ],
     host: "::",
     port: 8080
   },
@@ -28,3 +32,13 @@ export default defineConfig(({ mode }) => ({
     }
   }
 }));
+// vite.config.js
+export default {
+  server: {
+    allowedHosts: [
+      '9464df3c-5cea-4919-9737-0a39aca6b984.lovableproject.com',
+      // Add other allowed hosts if necessary
+    ],
+  },
+  // other configurations...
+};
