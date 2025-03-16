@@ -1,8 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { GameBoard } from './components/GameBoard';
 import { BuildInfo } from './components/BuildInfo';
 import Toaster from './components/Toaster';
+import Index from './pages/Index';
+import Game from './pages/Game';
+import Home from './pages/Home';
 import './App.css';
 
 const App: React.FC = () => {
@@ -40,16 +44,29 @@ const App: React.FC = () => {
           You are currently offline. Some features may be unavailable.
         </div>
       )}
-      <header className="app-header">
-        <BuildInfo buildTime="2025-03-13 14:42:51" author="GianRaHu" />
-      </header>
-      <main className="app-content">
-        <GameBoard />
-      </main>
-      <footer className="app-footer">
-        <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
-      </footer>
-      <Toaster />
+      
+      <Router>
+        <header className="app-header">
+          <BuildInfo buildTime="2025-03-13 14:42:51" author="GianRaHu" />
+        </header>
+        
+        <main className="app-content">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/game" element={<GameBoard />} />
+            <Route path="/game/:difficulty" element={<Game />} />
+            <Route path="/daily" element={<Game />} />
+            <Route path="/custom" element={<Game />} />
+          </Routes>
+        </main>
+        
+        <footer className="app-footer">
+          <p>© 2025 The Hashi Puzzle. All rights reserved.</p>
+        </footer>
+        
+        <Toaster />
+      </Router>
     </div>
   );
 };
