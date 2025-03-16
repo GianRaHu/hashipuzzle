@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { GameBoard } from './components/game/GameBoard';
@@ -6,6 +7,7 @@ import Toaster from './components/Toaster';
 import Index from './pages/Index';
 import Game from './pages/Game';
 import Home from './pages/Home';
+import Custom from './pages/Custom';
 import './App.css';
 
 const App: React.FC = () => {
@@ -56,7 +58,7 @@ const App: React.FC = () => {
             <Route path="/game" element={<GameBoard />} />
             <Route path="/game/:difficulty" element={<Game />} />
             <Route path="/daily" element={<Game />} />
-            <Route path="/custom" element={<Game />} />
+            <Route path="/custom" element={<Custom />} />
           </Routes>
         </main>
         

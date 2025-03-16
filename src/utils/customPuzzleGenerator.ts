@@ -1,8 +1,9 @@
-import { Puzzle, generatePuzzle } from './gameLogic';
+
+import { Puzzle, generatePuzzle, generateId } from './gameLogic';
 
 export const generateCustomPuzzle = (size: number, islandCount: number): Puzzle => {
-  // For simplicity, we'll just use the regular puzzle generator with a difficulty level
-  // that most closely matches the requested size
+  // For simplicity, we'll base this on the difficulty that most closely matches 
+  // the requested size, but override the size property
   let difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master' = 'easy';
   
   if (size >= 10) {
@@ -17,9 +18,12 @@ export const generateCustomPuzzle = (size: number, islandCount: number): Puzzle 
   
   const puzzle = generatePuzzle(difficulty);
   
-  // Override the size in the puzzle object
+  // Override the size and set custom properties
   puzzle.size = size;
+  puzzle.difficulty = 'custom';
+  
+  // Add a custom identifier
+  puzzle.id = generateId();
   
   return puzzle;
 };
-

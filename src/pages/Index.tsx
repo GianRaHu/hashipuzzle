@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DifficultySelector from '../components/DifficultySelector';
@@ -34,7 +35,6 @@ const Index: React.FC = () => {
         </div>
       </div>
       
-      {/* Added bottom padding/spacer */}
       <div className="h-12"></div>
     </div>
   );
