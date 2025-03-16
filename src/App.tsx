@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { GameBoard } from './components/GameBoard';
+import { GameBoard } from './components/game/GameBoard';
 import { BuildInfo } from './components/BuildInfo';
 import Toaster from './components/Toaster';
 import Index from './pages/Index';
