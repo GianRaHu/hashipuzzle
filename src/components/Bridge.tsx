@@ -9,7 +9,7 @@ interface BridgeProps {
   animate?: boolean;
 }
 
-const NODE_RADIUS = 30; // Adjust this value based on your node size
+const NODE_RADIUS = 1; // Adjust this value based on your node size
 
 const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true }) => {
   // Calculate the angle of the bridge relative to the start island
