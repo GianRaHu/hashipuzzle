@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Moon, Sun, Laptop, User, LogIn, 
   LogOut, UserPlus, BellRing, Volume2,
-  Settings as SettingsIcon
+  Settings as SettingsIcon, Shield
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { 
@@ -169,8 +169,9 @@ const Settings = () => {
       <h1 className="text-3xl font-medium mb-6">Settings</h1>
       
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid grid-cols-2 mb-4">
+        <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="game">Game</TabsTrigger>
           <TabsTrigger value="theme">Appearance</TabsTrigger>
         </TabsList>
         
@@ -272,13 +273,49 @@ const Settings = () => {
             </CardContent>
           </Card>
           
-          {/* Game Settings Card */}
+          {/* Privacy and Data Protection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Shield className="h-5 w-5 mr-2" />
+                Privacy & Data Protection
+              </CardTitle>
+              <CardDescription>
+                How we handle your data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-sm">
+                <p>
+                  Hashi Puzzle respects your privacy and is committed to protecting your personal data.
+                </p>
+                <p>
+                  We only store the data necessary to provide our services, such as game statistics and preferences.
+                  You can delete all your data at any time from the Stats page.
+                </p>
+                <p>
+                  When you're signed in, your game data is synced across devices. When you're not signed in,
+                  your data is stored locally on your device only.
+                </p>
+                <p>
+                  For more information, please contact us at support@hashipuzzle.com
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* New Game Settings Tab */}
+        <TabsContent value="game" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <SettingsIcon className="h-5 w-5 mr-2" />
                 Game Settings
               </CardTitle>
+              <CardDescription>
+                Customize your gameplay experience
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col space-y-4">

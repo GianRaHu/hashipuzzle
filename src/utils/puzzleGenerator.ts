@@ -1,13 +1,11 @@
-
 import { Island, Puzzle, Bridge, generateId } from './gameLogic';
 
 // Difficulty settings - defines parameters for each difficulty level
 const difficultySettings = {
   easy: { size: 7, islandCount: 8, maxValue: 4 },
-  medium: { size: 7, islandCount: 10, maxValue: 6 },
-  hard: { size: 8, islandCount: 12, maxValue: 6 },
-  expert: { size: 8, islandCount: 15, maxValue: 8 },
-  master: { size: 9, islandCount: 18, maxValue: 8 }
+  medium: { size: 7, islandCount: 11, maxValue: 6 },
+  hard: { size: 8, islandCount: 15, maxValue: 8 },
+  expert: { size: 9, islandCount: 18, maxValue: 8 }
 };
 
 // Seeded random number generator for reproducible puzzles
@@ -148,7 +146,7 @@ const findConnectableIslands = (
 
 // Create a new puzzle using a step-by-step approach
 export const generatePuzzle = (
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master', 
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert', 
   seed?: number
 ): Puzzle => {
   console.log(`Generating puzzle with difficulty: ${difficulty}`);
@@ -424,8 +422,8 @@ export const generateDailyChallenge = (date: Date = new Date()): Puzzle => {
   }
   
   // Use seed to determine difficulty
-  const difficulties: ('easy' | 'medium' | 'hard' | 'expert' | 'master')[] = ['easy', 'medium', 'hard', 'expert', 'master'];
-  const difficultyIndex = Math.abs(seed) % 5;
+  const difficulties: ('easy' | 'medium' | 'hard' | 'expert')[] = ['easy', 'medium', 'hard', 'expert'];
+  const difficultyIndex = Math.abs(seed) % 4;
   const difficulty = difficulties[difficultyIndex];
   
   // Generate puzzle with selected difficulty and seed
