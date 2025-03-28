@@ -6,7 +6,7 @@ const Index: React.FC = () => {
   return (
     <div className="content-container max-w-4xl animate-fade-in page-transition">
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-medium mb-2">Hashi Puzzle</h1>
+        <h1 className="text-3xl font-medium mb-2">Hashi. The Bridge Game</h1>
         <p className="text-foreground/70">Connect the islands with bridges</p>
       </div>
       
