@@ -28,7 +28,7 @@ const Support: React.FC = () => {
     <div className="content-container max-w-4xl animate-fade-in page-transition scrollable-container">
       <div className="text-center mb-8">
         <HeartHandshake className="h-12 w-12 mx-auto text-primary mb-4" />
-        <h1 className="text-3xl font-medium mb-2">Support Hashi. The Bridge Game</h1>
+        <h1 className="text-3xl font-medium mb-2">Support<br />Hashi. The Bridge Game</h1>
         <p className="text-foreground/70 max-w-md mx-auto">
           Our puzzle game is completely free without ads. If you enjoy playing, consider supporting our work.
         </p>

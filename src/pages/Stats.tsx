@@ -86,9 +86,9 @@ const Stats: React.FC = () => {
       
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-6">
-          <TabsTrigger value="basic">Basic Stats</TabsTrigger>
-          <TabsTrigger value="detailed">Detailed Analytics</TabsTrigger>
-          <TabsTrigger value="history">Game History</TabsTrigger>
+          <TabsTrigger value="basic">Basic</TabsTrigger>
+          <TabsTrigger value="detailed">Advanced</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
         
         <TabsContent value="basic">

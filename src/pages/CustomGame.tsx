@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generatePuzzle } from '../utils/puzzleGenerator';
-import DifficultySelector from '../components/DifficultySelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -140,18 +140,43 @@ const CustomGame = () => {
                       <RadioGroupItem value="10" id="size-10" />
                       <Label htmlFor="size-10">10x10</Label>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="12" id="size-12" />
+                      <Label htmlFor="size-12">12x12</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="14" id="size-14" />
+                      <Label htmlFor="size-14">14x14</Label>
+                    </div>
                   </RadioGroup>
                 </div>
 
                 <Separator />
 
-                <div className="space-y-2">
+                <div>
                   <Label>Difficulty</Label>
-                  <div className="pt-2">
-                    <DifficultySelector 
-                      onSelect={(difficulty) => setConfig({...config, difficulty})}
-                    />
-                  </div>
+                  <RadioGroup 
+                    value={config.difficulty}
+                    onValueChange={(value) => setConfig({...config, difficulty: value as 'easy' | 'medium' | 'hard' | 'expert'})}
+                    className="grid grid-cols-2 gap-4 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="easy" id="diff-easy" />
+                      <Label htmlFor="diff-easy">Easy</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="medium" id="diff-medium" />
+                      <Label htmlFor="diff-medium">Medium</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="hard" id="diff-hard" />
+                      <Label htmlFor="diff-hard">Hard</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="expert" id="diff-expert" />
+                      <Label htmlFor="diff-expert">Expert</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
 
                 <Button 
