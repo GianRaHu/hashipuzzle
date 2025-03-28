@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
@@ -9,6 +10,7 @@ import { savePuzzle, updateStats, formatTime, isDailyCompleted, setDailyComplete
 import Board from '../components/Board';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import DailyPuzzleList from '../components/game/DailyPuzzleList';
+import GameHeader from '../components/game/GameHeader';
 import { useToast } from '@/hooks/use-toast';
 import { format, subDays } from 'date-fns';
 

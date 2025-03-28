@@ -1,3 +1,4 @@
+
 // Types for our game
 export type Island = {
   id: string;
@@ -17,7 +18,7 @@ export type Bridge = {
 
 export type Puzzle = {
   id: string;
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert' | 'master';
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert';
   size: number;
   islands: Island[];
   bridges: Bridge[];

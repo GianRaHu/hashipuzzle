@@ -33,9 +33,9 @@ const Game: React.FC = () => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const stats = getStats();
   
-  const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+  const validDifficulties = ['easy', 'medium', 'hard', 'expert'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
-    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
+    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' 
     : 'easy';
   
   // Update extended stats in Supabase

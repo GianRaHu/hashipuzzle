@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generatePuzzle } from '../utils/puzzleGenerator';
@@ -12,7 +11,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { game } from '@/utils/gameLogic';
 
 const CustomGame = () => {
   const navigate = useNavigate();
