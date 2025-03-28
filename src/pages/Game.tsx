@@ -9,12 +9,18 @@ import { Progress } from '@/components/ui/progress';
 import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { difficulty } = useParams<{ difficulty: string }>();
   const location = useLocation();
+  
+  // Get seed from URL if provided
+  const urlParams = new URLSearchParams(location.search);
+  const seedParam = urlParams.get('seed');
+  const initialSeed = seedParam ? parseInt(seedParam, 10) : undefined;
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -32,6 +38,94 @@ const Game: React.FC = () => {
     ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master' 
     : 'easy';
   
+  // Update extended stats in Supabase
+  const updateExtendedStats = async (
+    difficulty: string, 
+    completionTime: number | null = null, 
+    completed: boolean = false
+  ) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+      
+      const userId = user.user.id;
+      
+      // First check if stats for this difficulty already exist
+      const { data: existingStats } = await supabase
+        .from('extended_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('difficulty', difficulty)
+        .single();
+      
+      if (existingStats) {
+        // Update existing stats
+        const updates: any = {
+          games_played: existingStats.games_played + 1,
+          total_time: existingStats.total_time + (completionTime || 0),
+          updated_at: new Date().toISOString()
+        };
+        
+        if (completed) {
+          updates.games_won = existingStats.games_won + 1;
+          
+          // Calculate average completion time
+          const newTotalCompletions = existingStats.games_won + 1;
+          if (completionTime) {
+            updates.avg_completion_time = Math.round(
+              (existingStats.avg_completion_time || 0) * existingStats.games_won / newTotalCompletions + 
+              completionTime / newTotalCompletions
+            );
+            
+            // Update best time if this is better
+            if (!existingStats.best_completion_time || completionTime < existingStats.best_completion_time) {
+              updates.best_completion_time = completionTime;
+              updates.best_time_date = new Date().toISOString();
+            }
+          }
+        }
+        
+        await supabase
+          .from('extended_stats')
+          .update(updates)
+          .eq('id', existingStats.id);
+      } else {
+        // Create new stats entry
+        const newStats: any = {
+          user_id: userId,
+          difficulty,
+          games_played: 1,
+          games_won: completed ? 1 : 0,
+          total_time: completionTime || 0
+        };
+        
+        if (completed && completionTime) {
+          newStats.avg_completion_time = completionTime;
+          newStats.best_completion_time = completionTime;
+          newStats.best_time_date = new Date().toISOString();
+        }
+        
+        await supabase
+          .from('extended_stats')
+          .insert(newStats);
+      }
+      
+      // If the game was completed, add to completed_puzzles
+      if (completed && completionTime && puzzle) {
+        await supabase
+          .from('completed_puzzles')
+          .insert({
+            user_id: userId,
+            puzzle_id: puzzle.id,
+            difficulty,
+            completion_time: completionTime
+          });
+      }
+    } catch (error) {
+      console.error('Error updating extended stats:', error);
+    }
+  };
+  
   useEffect(() => {
     if (validDifficulty) {
       setLoading(true);
@@ -47,8 +141,8 @@ const Game: React.FC = () => {
       
       setTimeout(() => {
         try {
-          console.log(`Generating new puzzle with difficulty: ${validDifficulty}`);
-          const newPuzzle = generatePuzzle(validDifficulty);
+          console.log(`Generating new puzzle with difficulty: ${validDifficulty}, seed: ${initialSeed || 'random'}`);
+          const newPuzzle = generatePuzzle(validDifficulty, initialSeed);
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -80,7 +174,7 @@ const Game: React.FC = () => {
       
       return () => clearInterval(loadingInterval);
     }
-  }, [validDifficulty, location.search, navigate, toast]);
+  }, [validDifficulty, location.search, navigate, toast, initialSeed]);
   
   useEffect(() => {
     if (!puzzle || gameCompleted || loading) return;
@@ -116,9 +210,10 @@ const Game: React.FC = () => {
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
       
-      // Removed toast notification since we now only have the modal
+      const completionTime = updatedPuzzle.endTime! - updatedPuzzle.startTime!;
+      updateExtendedStats(validDifficulty, completionTime, true);
     }
-  }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory]);
+  }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory, validDifficulty]);
   
   const resetPuzzle = () => {
     if (validDifficulty) {
@@ -148,6 +243,9 @@ const Game: React.FC = () => {
             setTimer(0);
             setLoading(false);
             console.log(`Generated new puzzle with seed: ${newPuzzle.seed}`);
+            
+            // Update extended stats for a new game
+            updateExtendedStats(validDifficulty);
           }, 500);
         } catch (error) {
           console.error("Error generating puzzle:", error);
@@ -276,7 +374,7 @@ const Game: React.FC = () => {
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
-        <h1 className="text-lg font-medium capitalize mb-4">{difficulty} Puzzle</h1>
+        <h1 className="text-lg font-medium capitalize mb-4">{difficulty} Puzzle {initialSeed && <span className="text-sm text-muted-foreground">(Seed: {initialSeed})</span>}</h1>
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         

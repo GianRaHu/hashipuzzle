@@ -65,6 +65,48 @@ export type Database = {
         }
         Relationships: []
       }
+      extended_stats: {
+        Row: {
+          avg_completion_time: number | null
+          best_completion_time: number | null
+          best_time_date: string | null
+          created_at: string
+          difficulty: string
+          games_played: number
+          games_won: number
+          id: string
+          total_time: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_completion_time?: number | null
+          best_completion_time?: number | null
+          best_time_date?: string | null
+          created_at?: string
+          difficulty: string
+          games_played?: number
+          games_won?: number
+          id?: string
+          total_time?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_completion_time?: number | null
+          best_completion_time?: number | null
+          best_time_date?: string | null
+          created_at?: string
+          difficulty?: string
+          games_played?: number
+          games_won?: number
+          id?: string
+          total_time?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_stats: {
         Row: {
           best_time_daily: number | null
@@ -153,7 +195,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_all_user_stats: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

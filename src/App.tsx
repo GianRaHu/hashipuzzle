@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Game from "./pages/Game";
-import DailyChallenge from "./pages/DailyChallenge";
+import CustomGame from "./pages/CustomGame";
 import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
@@ -40,7 +40,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/game/:difficulty" element={<Game />} />
-                <Route path="/daily" element={<DailyChallenge />} />
+                <Route path="/custom" element={<CustomGame />} />
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/support" element={<Support />} />

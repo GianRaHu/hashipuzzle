@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Home, BarChart3, Settings, HeartHandshake } from 'lucide-react';
+import { Settings, Home, BarChart3, HeartHandshake, Gamepad2 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
@@ -30,14 +30,14 @@ const Navbar: React.FC = () => {
           </Link>
           
           <Link 
-            to="/daily" 
+            to="/custom" 
             className={`flex flex-col md:flex-row items-center justify-center p-2 transition-all duration-200 ${
-              isActive('/daily') ? 'text-primary' : 'text-foreground/70 hover:text-foreground'
+              isActive('/custom') ? 'text-primary' : 'text-foreground/70 hover:text-foreground'
             }`}
-            aria-label="Daily Challenge"
+            aria-label="Custom Game"
           >
-            <Calendar className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
-            <span className="text-xs mt-1 md:text-sm md:mt-0">Daily</span>
+            <Gamepad2 className="h-6 w-6 md:h-5 md:w-5 md:mr-2" />
+            <span className="text-xs mt-1 md:text-sm md:mt-0">Custom</span>
           </Link>
           
           <Link 
