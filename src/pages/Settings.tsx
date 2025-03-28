@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Moon, Sun, Laptop, Trash, User, LogIn, 
+  Moon, Sun, Laptop, User, LogIn, 
   LogOut, UserPlus, BellRing, Volume2,
   Settings as SettingsIcon
 } from 'lucide-react';
@@ -31,7 +31,6 @@ import { supabase } from "@/integrations/supabase/client";
 const Settings = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
-  const [gameHistory, setGameHistory] = useState<{seed: number, difficulty: string, date: string}[]>([]);
   const [settings, setSettings] = useState({
     soundEnabled: true,
     notificationsEnabled: true,
@@ -65,12 +64,6 @@ const Settings = () => {
     
     checkUser();
     
-    // Load game history from localStorage
-    const history = localStorage.getItem('hashi_game_history');
-    if (history) {
-      setGameHistory(JSON.parse(history));
-    }
-    
     // Load user settings from localStorage
     const savedSettings = localStorage.getItem('hashi_user_settings');
     if (savedSettings) {
@@ -86,15 +79,6 @@ const Settings = () => {
     toast({
       title: "Settings updated",
       description: `${key} has been ${value ? 'enabled' : 'disabled'}.`
-    });
-  };
-  
-  const clearGameHistory = () => {
-    localStorage.removeItem('hashi_game_history');
-    setGameHistory([]);
-    toast({
-      title: "History cleared",
-      description: "Your game history has been cleared."
     });
   };
   
@@ -185,10 +169,9 @@ const Settings = () => {
       <h1 className="text-3xl font-medium mb-6">Settings</h1>
       
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-2 mb-4">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="theme">Appearance</TabsTrigger>
-          <TabsTrigger value="history">Game History</TabsTrigger>
         </TabsList>
         
         <TabsContent value="account" className="mt-4 space-y-6">
@@ -402,49 +385,6 @@ const Settings = () => {
                   <span>System</span>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="history">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Game History</CardTitle>
-                <CardDescription>
-                  Your previously played games
-                </CardDescription>
-              </div>
-              {gameHistory.length > 0 && (
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="flex items-center gap-1"
-                  onClick={clearGameHistory}
-                >
-                  <Trash className="h-4 w-4" />
-                  Clear
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {gameHistory.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No game history found
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {gameHistory.map((game, index) => (
-                    <div key={index} className="p-3 border rounded-md flex justify-between items-center">
-                      <div>
-                        <p className="font-medium capitalize">{game.difficulty}</p>
-                        <p className="text-sm text-muted-foreground">Seed: {game.seed}</p>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{game.date}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

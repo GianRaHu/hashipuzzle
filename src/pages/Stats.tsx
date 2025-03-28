@@ -1,19 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { getStats } from '../utils/storage';
+import { getStats, getGameHistory } from '../utils/storage';
 import GameStats from '../components/GameStats';
 import StatsResetDialog from '../components/StatsResetDialog';
 import StatsDetailedView from '../components/stats/StatsDetailedView';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const Stats: React.FC = () => {
   const [localStats, setLocalStats] = useState(getStats());
   const [extendedStats, setExtendedStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [gameHistory, setGameHistory] = useState(getGameHistory());
+  const { toast } = useToast();
   
   useEffect(() => {
     // Check if user is logged in
@@ -53,10 +57,20 @@ const Stats: React.FC = () => {
   
   const handleReset = () => {
     setLocalStats(getStats());
+    setGameHistory(getGameHistory());
     
     if (user) {
       loadExtendedStats(user.id);
     }
+  };
+  
+  const clearGameHistory = () => {
+    localStorage.removeItem('hashi_game_history');
+    setGameHistory([]);
+    toast({
+      title: "History cleared",
+      description: "Your game history has been cleared."
+    });
   };
   
   return (
@@ -71,9 +85,10 @@ const Stats: React.FC = () => {
       </div>
       
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+        <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-6">
           <TabsTrigger value="basic">Basic Stats</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Analytics</TabsTrigger>
+          <TabsTrigger value="history">Game History</TabsTrigger>
         </TabsList>
         
         <TabsContent value="basic">
@@ -97,6 +112,49 @@ const Stats: React.FC = () => {
               </p>
             </Card>
           )}
+        </TabsContent>
+        
+        <TabsContent value="history">
+          <Card>
+            <div className="px-6 py-4 flex flex-row items-center justify-between border-b">
+              <div>
+                <h3 className="text-lg font-medium">Game History</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your previously played games
+                </p>
+              </div>
+              {gameHistory.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={clearGameHistory}
+                >
+                  <Trash className="h-4 w-4" />
+                  Clear
+                </Button>
+              )}
+            </div>
+            <div className="p-6">
+              {gameHistory.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No game history found
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {gameHistory.map((game, index) => (
+                    <div key={index} className="p-3 border rounded-md flex justify-between items-center">
+                      <div>
+                        <p className="font-medium capitalize">{game.difficulty}</p>
+                        <p className="text-sm text-muted-foreground">Seed: {game.seed}</p>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{game.date}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

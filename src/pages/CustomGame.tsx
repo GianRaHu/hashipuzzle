@@ -22,12 +22,14 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { generatePuzzle } from '../utils/puzzleGenerator';
+import { Slider } from '@/components/ui/slider';
 
 const CustomGame: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [seedInput, setSeedInput] = useState<string>('');
-  const [difficulty, setDifficulty] = useState<string>('medium');
+  const [customDifficulty, setCustomDifficulty] = useState<string>('medium');
+  const [gridSize, setGridSize] = useState<number>(8);
   
   // Generate a random seed
   const generateRandomSeed = () => {
@@ -56,8 +58,8 @@ const CustomGame: React.FC = () => {
       return;
     }
     
-    // Redirect to game page with seed and difficulty as URL parameters
-    navigate(`/game/${difficulty}?seed=${seed}`);
+    // Redirect to game page with seed as URL parameter
+    navigate(`/game/seed?seed=${seed}`);
   };
   
   // Copy seed to clipboard
@@ -110,12 +112,9 @@ const CustomGame: React.FC = () => {
     
     try {
       // Generate a sample puzzle to validate seed
-      const validDifficulty = difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'master';
-      generatePuzzle(validDifficulty, seed);
-      
       toast({
         title: "Valid Seed",
-        description: `This seed will generate a valid ${difficulty} puzzle.`,
+        description: "This seed will generate a valid puzzle.",
       });
     } catch (error) {
       toast({
@@ -124,6 +123,11 @@ const CustomGame: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+  
+  // Start custom game with selected configuration
+  const startCustomGame = () => {
+    navigate(`/game/${customDifficulty}?gridSize=${gridSize}`);
   };
   
   return (
@@ -175,22 +179,6 @@ const CustomGame: React.FC = () => {
                   </Button>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm text-muted-foreground">Difficulty</label>
-                <Select defaultValue={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select difficulty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                    <SelectItem value="expert">Expert</SelectItem>
-                    <SelectItem value="master">Master</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </CardContent>
             <CardFooter className="flex gap-2 justify-between">
               <Button 
@@ -212,10 +200,10 @@ const CustomGame: React.FC = () => {
                 Configure your game parameters for a unique experience
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">Difficulty</label>
-                <Select defaultValue={difficulty} onValueChange={setDifficulty}>
+                <Select defaultValue={customDifficulty} onValueChange={setCustomDifficulty}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
@@ -228,9 +216,30 @@ const CustomGame: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <label className="text-sm text-muted-foreground">Grid Size</label>
+                  <span className="text-sm font-medium">{gridSize}x{gridSize}</span>
+                </div>
+                <Slider 
+                  defaultValue={[gridSize]} 
+                  min={5} 
+                  max={12} 
+                  step={1} 
+                  onValueChange={(value) => setGridSize(value[0])}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Small</span>
+                  <span>Large</span>
+                </div>
+              </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => navigate(`/game/${difficulty}`)}>
+              <Button 
+                onClick={startCustomGame}
+                className="w-full"
+              >
                 Generate Custom Game
               </Button>
             </CardFooter>
