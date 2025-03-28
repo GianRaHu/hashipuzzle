@@ -1,90 +1,130 @@
+
 import React from 'react';
-import { Bridge as BridgeType, Island as IslandType } from '../utils/gameLogic';
+import { Bridge as BridgeType, Island } from '../utils/gameLogic';
 
 interface BridgeProps {
   bridge: BridgeType;
-  startIsland: IslandType;
-  endIsland: IslandType;
+  startIsland: Island;
+  endIsland: Island;
   gridSize: number;
   animate?: boolean;
 }
 
-const NODE_RADIUS = 1; // Adjust this value based on your node size
-
 const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true }) => {
-  // Calculate the angle of the bridge relative to the start island
-  const angle = Math.atan2(
-    endIsland.row - startIsland.row,
-    endIsland.col - startIsland.col
-  );
-
-  // Calculate the offset to the edge of the island circle 
-  const offsetX = NODE_RADIUS * Math.cos(angle);
-  const offsetY = NODE_RADIUS * Math.sin(angle);
-
-  // Adjust the start and end points to the edge of the islands
-  const startX = (startIsland.col + 0.5) * 100 / gridSize + offsetX * 100 / (gridSize * window.innerWidth);
-  const startY = (startIsland.row + 0.5) * 100 / gridSize + offsetY * 100 / (gridSize * window.innerHeight);
-  const endX = (endIsland.col + 0.5) * 100 / gridSize - offsetX * 100 / (gridSize * window.innerWidth);
-  const endY = (endIsland.row + 0.5) * 100 / gridSize - offsetY * 100 / (gridSize * window.innerHeight);
-
+  const cellSize = 100 / gridSize;
+  
   const bridgeStyle: React.CSSProperties = {
     position: 'absolute',
     backgroundColor: 'hsl(var(--gameAccent)/0.8)',
     transition: 'all 0.3s ease',
     zIndex: 5
   };
-
-  const lineProps = {
-    stroke: 'black',
-    strokeWidth: '2',
-  };
-
+  
   const isHorizontal = bridge.orientation === 'horizontal';
   const isSingleBridge = bridge.count === 1;
-
-  // Shared styles for both horizontal and vertical bridges
-  const sharedStyle: React.CSSProperties = {
-    ...bridgeStyle,
-    width: isHorizontal ? '100%' : '2px',
-    height: isHorizontal ? '2px' : '100%',
-    transform: isHorizontal ? 'translateY(-50%)' : 'translateX(-50%)',
-  };
-
-  const firstBridgeStyle: React.CSSProperties = {
-    ...sharedStyle,
-    left: isHorizontal ? `${startX}%` : `${startX - (isSingleBridge ? 0 : 0.5)}%`,
-    top: isHorizontal ? `${startY - (isSingleBridge ? 0 : 0.5)}%` : `${startY}%`,
-  };
-
-  const secondBridgeStyle: React.CSSProperties = {
-    ...sharedStyle,
-    left: isHorizontal ? `${startX}%` : `${startX + 0.5}%`,
-    top: isHorizontal ? `${startY + 0.5}%` : `${startY}%`,
-    opacity: bridge.count === 2 ? 1 : 0,
-  };
-
-  return (
-    <>
-      <line
-        x1={`${startX}%`}
-        y1={`${startY}%`}
-        x2={`${endX}%`}
-        y2={`${endY}%`}
-        {...lineProps}
-      />
-      {bridge.count === 2 && (
-        <line
-          x1={`${startX + offsetX / gridSize}%`}
-          y1={`${startY + offsetY / gridSize}%`}
-          x2={`${endX + offsetX / gridSize}%`}
-          y2={`${endY + offsetY / gridSize}%`}
-          {...lineProps}
-          opacity={0.7}
+  
+  // Reduced node radius for smaller islands
+  const nodeRadius = 1;
+  
+  if (isHorizontal) {
+    const minCol = Math.min(startIsland.col, endIsland.col);
+    const maxCol = Math.max(startIsland.col, endIsland.col);
+    const width = (maxCol - minCol) * cellSize;
+    const xPos = minCol * cellSize + cellSize / 2;
+    const yPos = startIsland.row * cellSize + cellSize / 2;
+    
+    const adjustedWidth = width - (cellSize * nodeRadius / gridSize);
+    const adjustedPos = xPos + (cellSize * nodeRadius / (2 * gridSize));
+    
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
+    
+    const firstBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${adjustedPos}%`,
+      top: `${yPos - firstBridgeOffset}%`,
+      width: animate ? '0%' : `${adjustedWidth}%`,
+      height: '2px',
+      transform: 'translateY(-50%)'
+    };
+    
+    const secondBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${adjustedPos}%`,
+      top: `${yPos + secondBridgeOffset}%`,
+      width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
+      height: '2px',
+      transform: 'translateY(-50%)',
+      opacity: bridge.count === 2 ? 1 : 0
+    };
+    
+    return (
+      <>
+        <div 
+          className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+          style={firstBridgeStyle}
+          aria-hidden="true"
         />
-      )}
-    </>
-  );
+        {bridge.count === 2 && (
+          <div 
+            className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+            style={secondBridgeStyle}
+            aria-hidden="true"
+          />
+        )}
+      </>
+    );
+  } else {
+    const minRow = Math.min(startIsland.row, endIsland.row);
+    const maxRow = Math.max(startIsland.row, endIsland.row);
+    const height = (maxRow - minRow) * cellSize;
+    const xPos = startIsland.col * cellSize + cellSize / 2;
+    const yPos = minRow * cellSize + cellSize / 2;
+    
+    const adjustedHeight = height - (cellSize * nodeRadius / gridSize);
+    const adjustedPos = yPos + (cellSize * nodeRadius / (2 * gridSize));
+    
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
+    
+    const firstBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${xPos - firstBridgeOffset}%`,
+      top: `${adjustedPos}%`,
+      width: '2px',
+      height: animate ? '0%' : `${adjustedHeight}%`,
+      transform: 'translateX(-50%)'
+    };
+    
+    const secondBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${xPos + secondBridgeOffset}%`,
+      top: `${adjustedPos}%`,
+      width: '2px',
+      height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
+      transform: 'translateX(-50%)',
+      opacity: bridge.count === 2 ? 1 : 0
+    };
+    
+    return (
+      <>
+        <div 
+          className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+          style={firstBridgeStyle}
+          aria-hidden="true"
+        />
+        {bridge.count === 2 && (
+          <div 
+            className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+            style={secondBridgeStyle}
+            aria-hidden="true"
+          />
+        )}
+      </>
+    );
+  }
 };
 
 export default Bridge;
