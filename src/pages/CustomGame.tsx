@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generatePuzzle } from '../utils/puzzleGenerator';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -47,7 +46,7 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Navigate to the game page with custom configuration
+    // Pass gridSize as a URL parameter to the game page
     navigate(`/game/${config.difficulty}?gridSize=${config.gridSize}`);
   };
 

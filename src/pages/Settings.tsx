@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Moon, Sun, Laptop, User, LogIn, 
-  LogOut, UserPlus, BellRing, Volume2,
-  Settings as SettingsIcon, Shield
+  LogOut, UserPlus, Shield, Trash
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { 
@@ -27,6 +26,17 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -75,11 +85,7 @@ const Settings = () => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     localStorage.setItem('hashi_user_settings', JSON.stringify(newSettings));
-    
-    toast({
-      title: "Settings updated",
-      description: `${key} has been ${value ? 'enabled' : 'disabled'}.`
-    });
+    // Toast notifications removed as requested
   };
   
   const handleSignIn = async (e: React.FormEvent) => {
@@ -97,7 +103,7 @@ const Settings = () => {
       
       toast({
         title: "Signed in successfully",
-        description: "Welcome back to Hashi Puzzle!"
+        description: "Welcome back to Hashi. The Bridge Game!"
       });
       
       setEmail('');
@@ -158,6 +164,48 @@ const Settings = () => {
     } catch (error: any) {
       toast({
         title: "Error signing out",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      // Delete user's data from Supabase
+      if (user) {
+        // Call Supabase Edge Function to delete user data
+        const { error: functionError } = await supabase.functions.invoke('delete-stats', {
+          body: { user_id: user.id }
+        });
+        
+        if (functionError) throw functionError;
+        
+        // Delete user account
+        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+        if (authError) throw authError;
+      }
+      
+      // Clear local storage data
+      localStorage.removeItem('hashi_stats');
+      localStorage.removeItem('hashi_user_settings');
+      localStorage.removeItem('daily_completed_date');
+      localStorage.removeItem('last_streak_date');
+      localStorage.removeItem('hashi_game_history');
+      
+      // Sign out after deletion
+      await supabase.auth.signOut();
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account and all associated data have been deleted."
+      });
+      
+      // Reset user state
+      setUser(null);
+    } catch (error: any) {
+      toast({
+        title: "Error deleting account",
         description: error.message,
         variant: "destructive"
       });
@@ -287,7 +335,7 @@ const Settings = () => {
             <CardContent>
               <div className="space-y-4 text-sm">
                 <p>
-                  Hashi Puzzle respects your privacy and is committed to protecting your personal data.
+                  Hashi. The Bridge Game respects your privacy and is committed to protecting your personal data.
                 </p>
                 <p>
                   We only store the data necessary to provide our services, such as game statistics and preferences.
@@ -302,15 +350,42 @@ const Settings = () => {
                 </p>
               </div>
             </CardContent>
+            <CardFooter>
+              {user && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      <Trash className="h-4 w-4 mr-2" />
+                      Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove all of your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground">
+                        Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </CardFooter>
           </Card>
         </TabsContent>
         
-        {/* New Game Settings Tab */}
+        {/* Game Settings Tab */}
         <TabsContent value="game" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <SettingsIcon className="h-5 w-5 mr-2" />
+                <Shield className="h-5 w-5 mr-2" />
                 Game Settings
               </CardTitle>
               <CardDescription>
@@ -385,6 +460,7 @@ const Settings = () => {
           </Card>
         </TabsContent>
         
+        {/* Theme Tab */}
         <TabsContent value="theme" className="mt-4">
           <Card>
             <CardHeader>

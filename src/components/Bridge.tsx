@@ -23,8 +23,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   const isHorizontal = bridge.orientation === 'horizontal';
   const isSingleBridge = bridge.count === 1;
   
-  // Reduced node radius for smaller islands
-  const nodeRadius = 1;
+  // Node radius as a percentage of cell size for better scaling
+  const nodeRadiusPercent = 6; // Percentage of cell size
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
@@ -33,8 +33,10 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = minCol * cellSize + cellSize / 2;
     const yPos = startIsland.row * cellSize + cellSize / 2;
     
-    const adjustedWidth = width - (cellSize * nodeRadius / gridSize);
-    const adjustedPos = xPos + (cellSize * nodeRadius / (2 * gridSize));
+    // Calculate bridge start and end positions to avoid overlapping with islands
+    const nodeOffsetX = (nodeRadiusPercent / 100) * cellSize;
+    const adjustedWidth = width - (nodeOffsetX * 2);
+    const adjustedPos = xPos + nodeOffsetX;
     
     // Reduced spacing between bridges
     const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
@@ -82,8 +84,10 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = startIsland.col * cellSize + cellSize / 2;
     const yPos = minRow * cellSize + cellSize / 2;
     
-    const adjustedHeight = height - (cellSize * nodeRadius / gridSize);
-    const adjustedPos = yPos + (cellSize * nodeRadius / (2 * gridSize));
+    // Calculate bridge start and end positions to avoid overlapping with islands
+    const nodeOffsetY = (nodeRadiusPercent / 100) * cellSize;
+    const adjustedHeight = height - (nodeOffsetY * 2);
+    const adjustedPos = yPos + nodeOffsetY;
     
     // Reduced spacing between bridges
     const firstBridgeOffset = isSingleBridge ? 0 : 0.5;

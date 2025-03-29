@@ -1,3 +1,4 @@
+
 import { Puzzle } from './gameLogic';
 import { format } from 'date-fns';
 
@@ -13,6 +14,14 @@ export interface GameStats {
     expert?: number;
     master?: number;
     [key: string]: number | undefined;
+  };
+  // Track games played per difficulty
+  difficultyGamesPlayed?: {
+    [key: string]: number;
+  };
+  // Track total time spent per difficulty
+  totalTime?: {
+    [key: string]: number;
   };
 }
 
@@ -67,6 +76,20 @@ export const getStats = (): GameStats => {
       hard: 0,
       expert: 0,
       master: 0
+    },
+    difficultyGamesPlayed: {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      expert: 0,
+      master: 0
+    },
+    totalTime: {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      expert: 0,
+      master: 0
     }
   };
 };
@@ -76,6 +99,19 @@ export const updateStats = (puzzle: Puzzle) => {
   const stats = getStats();
   stats.gamesPlayed += 1;
   
+  // Initialize difficultyGamesPlayed and totalTime if they don't exist
+  if (!stats.difficultyGamesPlayed) {
+    stats.difficultyGamesPlayed = {};
+  }
+  if (!stats.totalTime) {
+    stats.totalTime = {};
+  }
+  
+  // Increment difficulty-specific game count
+  if (puzzle.difficulty) {
+    stats.difficultyGamesPlayed[puzzle.difficulty] = (stats.difficultyGamesPlayed[puzzle.difficulty] || 0) + 1;
+  }
+  
   // If puzzle is solved, increment wins and update best time
   if (puzzle.solved && puzzle.endTime && puzzle.startTime) {
     stats.gamesWon = (stats.gamesWon || 0) + 1;
@@ -84,6 +120,11 @@ export const updateStats = (puzzle: Puzzle) => {
     // Update best time if this solve is faster or if there's no previous best time
     if (puzzle.difficulty && (!stats.bestTime[puzzle.difficulty] || solveTime < stats.bestTime[puzzle.difficulty]!)) {
       stats.bestTime[puzzle.difficulty] = solveTime;
+    }
+    
+    // Update total time spent on this difficulty
+    if (puzzle.difficulty) {
+      stats.totalTime[puzzle.difficulty] = (stats.totalTime[puzzle.difficulty] || 0) + solveTime;
     }
   }
   
