@@ -3,48 +3,49 @@ import React from 'react';
 import { Island } from '../utils/gameLogic';
 
 interface GridBackgroundProps {
-  gridSize: { width: number, height: number };
+  gridSize: number;
   islands: Island[];
 }
 
 const GridBackground: React.FC<GridBackgroundProps> = ({ gridSize, islands }) => {
-  const gridLines = [];
-  const { width, height } = gridSize;
+  // Create a grid with dots at each position
+  const gridDots = [];
   
-  // Create grid lines
-  for (let row = 0; row < height; row++) {
-    gridLines.push(
-      <line 
-        key={`h-${row}`}
-        x1="0%" 
-        y1={`${(row / height) * 100}%`}
-        x2="100%" 
-        y2={`${(row / height) * 100}%`}
-        className="stroke-border/10"
-        strokeWidth="1"
-      />
-    );
-  }
+  // Calculate cell size (in percentage)
+  const cellSize = 100 / gridSize;
   
-  for (let col = 0; col < width; col++) {
-    gridLines.push(
-      <line 
-        key={`v-${col}`}
-        x1={`${(col / width) * 100}%`}
-        y1="0%" 
-        x2={`${(col / width) * 100}%`}
-        y2="100%"
-        className="stroke-border/10"
-        strokeWidth="1"
-      />
-    );
+  // Generate the grid dots
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      // Check if there's an island at this position
+      const hasIsland = islands.some(island => island.row === row && island.col === col);
+      
+      // Only render dots where there's no island
+      if (!hasIsland) {
+        const xPos = col * cellSize + cellSize / 2;
+        const yPos = row * cellSize + cellSize / 2;
+        
+        gridDots.push(
+          <div 
+            key={`dot-${row}-${col}`}
+            className="absolute w-1.5 h-1.5 rounded-full bg-muted-foreground/20"
+            style={{
+              left: `${xPos}%`,
+              top: `${yPos}%`,
+              transform: 'translate(-50%, -50%)'
+            }}
+            aria-hidden="true"
+          />
+        );
+      }
+    }
   }
   
   return (
-    <svg className="absolute inset-0 w-full h-full">
-      {gridLines}
-    </svg>
+    <div className="absolute inset-0">
+      {gridDots}
+    </div>
   );
 };
 
-export default GridBackground;
+export default React.memo(GridBackground);

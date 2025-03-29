@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
@@ -145,7 +144,7 @@ const DailyChallenge: React.FC = () => {
     if (moveHistory.length > 1 && puzzle) {
       // Remove the most recent bridge state
       const newHistory = [...moveHistory];
-      newHistory.pop();
+      newHistory.pop(); // Remove last bridge state
       
       // Get the previous bridge state
       const previousBridges = newHistory[newHistory.length - 1];
@@ -154,7 +153,7 @@ const DailyChallenge: React.FC = () => {
       setPuzzle({
         ...puzzle,
         bridges: [...previousBridges],
-        solved: false
+        solved: false // Reset solved state since we're undoing
       });
       
       // Update the history
@@ -213,11 +212,6 @@ const DailyChallenge: React.FC = () => {
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
-        <h1 className="text-lg font-medium mb-4">
-          Daily Challenge: {format(selectedDate, 'MMMM d, yyyy')}
-          {puzzle?.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
-        </h1>
-        
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         
         {gameCompleted && (

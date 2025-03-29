@@ -1,22 +1,13 @@
+
 import { Island, Puzzle, Bridge, generateId } from './gameLogic';
 
 // Difficulty settings - defines parameters for each difficulty level
 const difficultySettings = {
-  easy: { width: 7, height: 10, islandCount: 10, maxValue: 4, advancedTactics: false },
-  medium: { width: 8, height: 12, islandCount: 14, maxValue: 6, advancedTactics: false },
-  hard: { width: 10, height: 14, islandCount: 18, maxValue: 8, advancedTactics: true },
-  expert: { width: 12, height: 16, islandCount: 22, maxValue: 8, advancedTactics: true }
+  easy: { size: 7, islandCount: 8, maxValue: 4, advancedTactics: false },
+  medium: { size: 7, islandCount: 11, maxValue: 6, advancedTactics: false },
+  hard: { size: 8, islandCount: 15, maxValue: 8, advancedTactics: true },
+  expert: { size: 9, islandCount: 18, maxValue: 8, advancedTactics: true }
 };
-
-// Available grid sizes for custom games
-export const availableGridSizes = [
-  { width: 7, height: 10, label: '7 × 10' },
-  { width: 8, height: 12, label: '8 × 12' },
-  { width: 10, height: 14, label: '10 × 14' },
-  { width: 12, height: 16, label: '12 × 16' },
-  { width: 13, height: 18, label: '13 × 18' },
-  { width: 15, height: 20, label: '15 × 20' }
-];
 
 // Seeded random number generator for reproducible puzzles
 const seededRandom = (seed: number) => {
@@ -31,12 +22,11 @@ const isValidPosition = (
   row: number, 
   col: number, 
   grid: (Island | null)[][], 
-  gridWidth: number,
-  gridHeight: number,
+  gridSize: number,
   bridgeMap: Map<string, boolean>
 ): boolean => {
   // Check if position is within grid
-  if (row < 0 || row >= gridHeight || col < 0 || col >= gridWidth) {
+  if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) {
     return false;
   }
   
@@ -227,24 +217,21 @@ export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert', 
   seed?: number,
   customOptions?: {
-    gridSize?: { width: number, height: number },
+    gridSize?: number,
     advancedTactics?: boolean
   }
 ): Puzzle => {
   console.log(`Generating puzzle with difficulty: ${difficulty}`);
   
   // Start with default settings for the difficulty
-  let { width, height, islandCount, maxValue, advancedTactics } = difficultySettings[difficulty];
+  let { size, islandCount, maxValue, advancedTactics } = difficultySettings[difficulty];
   
   // Apply custom options if provided
   if (customOptions) {
     if (customOptions.gridSize) {
-      width = customOptions.gridSize.width;
-      height = customOptions.gridSize.height;
+      size = customOptions.gridSize;
       // Adjust island count based on grid size
-      const gridArea = width * height;
-      const defaultArea = difficultySettings[difficulty].width * difficultySettings[difficulty].height;
-      islandCount = Math.max(Math.floor(islandCount * (gridArea / defaultArea)), islandCount);
+      islandCount = Math.max(Math.floor(size * size * 0.25), islandCount);
     }
     
     if (customOptions.advancedTactics !== undefined) {
@@ -252,7 +239,7 @@ export const generatePuzzle = (
     }
   }
   
-  console.log(`Grid size: ${width}x${height}, Advanced tactics: ${advancedTactics}`);
+  console.log(`Grid size: ${size}, Advanced tactics: ${advancedTactics}`);
   
   // Use provided seed or generate a random one
   const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
@@ -260,7 +247,7 @@ export const generatePuzzle = (
   const random = seededRandom(puzzleSeed);
   
   // Create empty grid for islands
-  const grid: (Island | null)[][] = Array(height).fill(null).map(() => Array(width).fill(null));
+  const grid: (Island | null)[][] = Array(size).fill(null).map(() => Array(size).fill(null));
   
   // Use a Map for bridge tracking (faster lookups)
   const bridgeMap = new Map<string, boolean>();
@@ -288,10 +275,9 @@ export const generatePuzzle = (
     bridgeConnections.length = 0;
     
     // Place first island in a somewhat central position
-    const centerOffsetRow = Math.floor(height / 3);
-    const centerOffsetCol = Math.floor(width / 3);
-    const startRow = Math.floor(random() * centerOffsetRow) + centerOffsetRow;
-    const startCol = Math.floor(random() * centerOffsetCol) + centerOffsetCol;
+    const centerOffset = Math.floor(size / 3);
+    const startRow = Math.floor(random() * centerOffset) + centerOffset;
+    const startCol = Math.floor(random() * centerOffset) + centerOffset;
     
     const firstIsland: Island = {
       id: generateId(),
@@ -314,10 +300,10 @@ export const generatePuzzle = (
       while (!placed && positionAttempts < maxPositionAttempts) {
         positionAttempts++;
         
-        const row = Math.floor(random() * height);
-        const col = Math.floor(random() * width);
+        const row = Math.floor(random() * size);
+        const col = Math.floor(random() * size);
         
-        if (isValidPosition(row, col, grid, width, height, bridgeMap)) {
+        if (isValidPosition(row, col, grid, size, bridgeMap)) {
           const newIsland: Island = {
             id: generateId(),
             row,
@@ -434,7 +420,7 @@ export const generatePuzzle = (
         // For advanced tactics, create some logical deduction situations
         if (advancedTactics && islands.length > 5) {
           // Create 1-3 advanced tactics situations depending on grid size
-          const numAdvancedSituations = Math.min(3, Math.floor(Math.max(width, height) / 4));
+          const numAdvancedSituations = Math.min(3, Math.floor(size / 4));
           
           for (let i = 0; i < numAdvancedSituations; i++) {
             createAdvancedTacticsConnection(islands, bridgeConnections, grid, bridgeMap, random, maxValue);
@@ -451,14 +437,13 @@ export const generatePuzzle = (
     console.log("Failed to generate ideal puzzle, creating a simple fallback");
     // Create a fallback puzzle with reduced complexity
     const reducedDifficulty = {
-      width: Math.max(5, width - 2),
-      height: Math.max(5, height - 2),
+      size: Math.max(5, size - 2),
       islandCount: Math.max(4, islandCount - 4),
       maxValue: Math.max(3, maxValue - 2)
     };
     
     // Create a simple grid pattern
-    const grid = Array(reducedDifficulty.height).fill(null).map(() => Array(reducedDifficulty.width).fill(null));
+    const grid = Array(reducedDifficulty.size).fill(null).map(() => Array(reducedDifficulty.size).fill(null));
     const islands: Island[] = [];
     const bridgeConnections: any[] = [];
     
@@ -467,7 +452,7 @@ export const generatePuzzle = (
       const row = Math.floor(i / 3) * 2;
       const col = (i % 3) * 2;
       
-      if (row < reducedDifficulty.height && col < reducedDifficulty.width) {
+      if (row < reducedDifficulty.size && col < reducedDifficulty.size) {
         const island: Island = {
           id: generateId(),
           row,
@@ -515,7 +500,7 @@ export const generatePuzzle = (
   return {
     id: generateId(),
     difficulty,
-    size: { width, height },
+    size,
     islands,
     bridges: [], // Start with no bridges for gameplay
     solved: false,
