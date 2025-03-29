@@ -6,7 +6,8 @@ import {
   canConnect, 
   toggleBridge, 
   getIslandById,
-  checkPuzzleSolved
+  checkPuzzleSolved,
+  getBridgeBetweenIslands
 } from '../utils/gameLogic';
 import Island from './Island';
 import Bridge from './Bridge';
@@ -45,6 +46,17 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     } else {
       // No island selected yet, select this one
       setSelectedIsland(island);
+    }
+  };
+
+  // Handle bridge click to remove it
+  const handleBridgeClick = (startIslandId: string, endIslandId: string) => {
+    const startIsland = getIslandById(puzzle.islands, startIslandId);
+    const endIsland = getIslandById(puzzle.islands, endIslandId);
+    
+    if (startIsland && endIsland) {
+      const updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
+      onUpdate(updatedPuzzle);
     }
   };
 
@@ -221,6 +233,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
               endIsland={endIsland}
               gridSize={puzzle.size}
               animate={false}
+              onClick={() => handleBridgeClick(bridge.startIslandId, bridge.endIslandId)}
             />
           );
         }

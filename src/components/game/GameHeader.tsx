@@ -1,19 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, CornerUpLeft, CornerUpRight, RotateCcw, Clock } from 'lucide-react';
+import { Home, CornerUpLeft, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/storage';
 import HelpDialog from './HelpDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface GameHeaderProps {
   timer: number;
   bestTime: number;
   handleUndo: () => void;
-  handleRedo: () => void;
   restartPuzzle: () => void;
   canUndo: boolean;
-  canRedo: boolean;
   gameStarted: boolean;
 }
 
@@ -21,13 +29,17 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   timer,
   bestTime,
   handleUndo,
-  handleRedo,
   restartPuzzle,
   canUndo,
-  canRedo,
   gameStarted
 }) => {
   const navigate = useNavigate();
+  const [showRestartDialog, setShowRestartDialog] = useState(false);
+
+  const confirmRestart = () => {
+    setShowRestartDialog(false);
+    restartPuzzle();
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background z-50 border-b border-border/10 shadow-sm">
@@ -72,18 +84,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className="rounded-full h-8 w-8"
-            aria-label="Redo"
-          >
-            <CornerUpRight className="h-4 w-4" />
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={restartPuzzle}
+            onClick={() => setShowRestartDialog(true)}
             className="rounded-full h-8 w-8"
             aria-label="Restart puzzle"
             title="Restart with same layout"
@@ -94,6 +95,21 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           <HelpDialog />
         </div>
       </div>
+
+      <AlertDialog open={showRestartDialog} onOpenChange={setShowRestartDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restart puzzle?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset the puzzle to its initial state. Any progress will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRestart}>Restart</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 };

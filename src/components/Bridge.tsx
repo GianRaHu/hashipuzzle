@@ -8,9 +8,10 @@ interface BridgeProps {
   endIsland: Island;
   gridSize: number;
   animate?: boolean;
+  onClick?: () => void;
 }
 
-const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true }) => {
+const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true, onClick }) => {
   const cellSize = 100 / gridSize;
   
   const bridgeStyle: React.CSSProperties = {
@@ -24,7 +25,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   const isSingleBridge = bridge.count === 1;
   
   // Node radius as a percentage of cell size for better scaling
-  const nodeRadiusPercent = 6; // Percentage of cell size
+  const nodeRadiusPercent = 12; // Increased from 6 to 12 for better visual spacing
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
@@ -48,7 +49,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       top: `${yPos - firstBridgeOffset}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
-      transform: 'translateY(-50%)'
+      transform: 'translateY(-50%)',
+      cursor: 'pointer'
     };
     
     const secondBridgeStyle: React.CSSProperties = {
@@ -58,11 +60,12 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)',
-      opacity: bridge.count === 2 ? 1 : 0
+      opacity: bridge.count === 2 ? 1 : 0,
+      cursor: 'pointer'
     };
     
     return (
-      <>
+      <div className="bridge-container" onClick={onClick}>
         <div 
           className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
           style={firstBridgeStyle}
@@ -75,7 +78,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
             aria-hidden="true"
           />
         )}
-      </>
+      </div>
     );
   } else {
     const minRow = Math.min(startIsland.row, endIsland.row);
@@ -99,7 +102,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       top: `${adjustedPos}%`,
       width: '2px',
       height: animate ? '0%' : `${adjustedHeight}%`,
-      transform: 'translateX(-50%)'
+      transform: 'translateX(-50%)',
+      cursor: 'pointer'
     };
     
     const secondBridgeStyle: React.CSSProperties = {
@@ -109,11 +113,12 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
       transform: 'translateX(-50%)',
-      opacity: bridge.count === 2 ? 1 : 0
+      opacity: bridge.count === 2 ? 1 : 0,
+      cursor: 'pointer'
     };
     
     return (
-      <>
+      <div className="bridge-container" onClick={onClick}>
         <div 
           className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
           style={firstBridgeStyle}
@@ -126,7 +131,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
             aria-hidden="true"
           />
         )}
-      </>
+      </div>
     );
   }
 };

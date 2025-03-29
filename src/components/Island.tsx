@@ -34,25 +34,26 @@ const Island: React.FC<IslandProps> = ({
   
   // Determine visual state with fixed sizes and consistent transparency
   let stateClass = '';
-  let bgColorClass = 'bg-secondary/90'; // Consistent transparency
+  let bgColorClass = 'bg-secondary/80';
   
   if (isSelected || isDragging) {
-    stateClass = 'ring-1 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
+    stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background bg-primary/20 text-primary font-bold';
+    bgColorClass = 'bg-primary/20';
   } else if (actualConnections === connectionsNeeded) {
-    // Connections match exactly - show green ring
-    stateClass = 'ring-1 ring-green-500 text-green-600 font-bold';
-    bgColorClass = 'bg-green-100/90 dark:bg-green-900/20';
+    // Connections match exactly - show green state
+    stateClass = 'ring-2 ring-green-500 text-green-600 font-bold';
+    bgColorClass = 'bg-green-100 dark:bg-green-900/50';
   } else if (actualConnections > connectionsNeeded) {
     // Too many connections - show yellow warning
-    stateClass = 'ring-1 ring-yellow-500 text-yellow-600 font-bold';
-    bgColorClass = 'bg-yellow-100/90 dark:bg-yellow-900/20';
+    stateClass = 'ring-2 ring-yellow-500 text-yellow-600 font-bold';
+    bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/50';
   } else if (actualConnections === 0) {
-    // No connections yet - show white ring
-    stateClass = 'ring-1 ring-white dark:ring-slate-300';
+    // No connections yet - show neutral state
+    stateClass = 'ring-2 ring-white/70 dark:ring-slate-400';
   } else if (actualConnections < connectionsNeeded) {
-    // Some connections but not complete - show red ring
-    stateClass = 'ring-1 ring-red-500 text-red-600';
-    bgColorClass = 'bg-red-50/90 dark:bg-red-900/20';
+    // Some connections but not complete - show red warning
+    stateClass = 'ring-2 ring-red-500 text-red-600';
+    bgColorClass = 'bg-red-50 dark:bg-red-900/50';
   }
 
   // Handle touch start
@@ -137,7 +138,7 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-300 ${bgColorClass} ${stateClass}`}
+      className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-foreground transition-all duration-200 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,

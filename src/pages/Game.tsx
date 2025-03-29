@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Puzzle } from '../utils/gameLogic';
+import { Puzzle, Bridge } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, getStats } from '../utils/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -27,10 +28,9 @@ const Game: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [timer, setTimer] = useState<number>(0);
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
-  const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
-  const [generateError, setGenerateError] = useState<boolean>(false);
+  const [moveHistory, setMoveHistory] = useState<Bridge[][]>([]);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [generateError, setGenerateError] = useState<boolean>(false);
   const stats = getStats();
   
   const validDifficulties = ['easy', 'medium', 'hard', 'expert'];
@@ -149,8 +149,7 @@ const Game: React.FC = () => {
           
           setTimeout(() => {
             setPuzzle(newPuzzle);
-            setMoveHistory([newPuzzle]);
-            setCurrentMoveIndex(0);
+            setMoveHistory([[]]);
             setGameCompleted(false);
             setLoading(false);
             console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
@@ -200,10 +199,10 @@ const Game: React.FC = () => {
     
     setPuzzle(updatedPuzzle);
     
-    // Only add to history if it's a new move (not from undo/redo)
-    const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
+    // Create a new entry in move history - store only bridges
+    const newHistory = [...moveHistory];
+    newHistory.push([...updatedPuzzle.bridges]);
     setMoveHistory(newHistory);
-    setCurrentMoveIndex(newHistory.length - 1);
     
     if (updatedPuzzle.solved && !gameCompleted) {
       setGameCompleted(true);
@@ -213,7 +212,7 @@ const Game: React.FC = () => {
       const completionTime = updatedPuzzle.endTime! - updatedPuzzle.startTime!;
       updateExtendedStats(validDifficulty, completionTime, true);
     }
-  }, [currentMoveIndex, gameCompleted, gameStarted, moveHistory, validDifficulty]);
+  }, [gameCompleted, gameStarted, moveHistory, updateExtendedStats, validDifficulty]);
   
   const resetPuzzle = () => {
     if (validDifficulty) {
@@ -237,8 +236,7 @@ const Game: React.FC = () => {
           setTimeout(() => {
             setPuzzle(newPuzzle);
             setGameCompleted(false);
-            setMoveHistory([newPuzzle]);
-            setCurrentMoveIndex(0);
+            setMoveHistory([[]]);
             setGameStarted(false);
             setTimer(0);
             setLoading(false);
@@ -289,8 +287,7 @@ const Game: React.FC = () => {
           setTimeout(() => {
             setPuzzle(newPuzzle);
             setGameCompleted(false);
-            setMoveHistory([newPuzzle]);
-            setCurrentMoveIndex(0);
+            setMoveHistory([[]]);
             setLoading(false);
             console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
           }, 500);
@@ -313,20 +310,25 @@ const Game: React.FC = () => {
   };
 
   const handleUndo = useCallback(() => {
-    if (currentMoveIndex > 0) {
-      const previousMove = moveHistory[currentMoveIndex - 1];
-      setPuzzle(previousMove);
-      setCurrentMoveIndex(currentMoveIndex - 1);
+    if (moveHistory.length > 1 && puzzle) {
+      // Remove the most recent bridge state
+      const newHistory = [...moveHistory];
+      newHistory.pop(); // Remove last bridge state
+      
+      // Get the previous bridge state
+      const previousBridges = newHistory[newHistory.length - 1];
+      
+      // Update the puzzle with the previous bridges
+      setPuzzle({
+        ...puzzle,
+        bridges: [...previousBridges],
+        solved: false // Reset solved state since we're undoing
+      });
+      
+      // Update the history
+      setMoveHistory(newHistory);
     }
-  }, [currentMoveIndex, moveHistory]);
-
-  const handleRedo = useCallback(() => {
-    if (currentMoveIndex < moveHistory.length - 1) {
-      const nextMove = moveHistory[currentMoveIndex + 1];
-      setPuzzle(nextMove);
-      setCurrentMoveIndex(currentMoveIndex + 1);
-    }
-  }, [currentMoveIndex, moveHistory]);
+  }, [moveHistory, puzzle]);
 
   const showHelp = () => {
     toast({
@@ -366,10 +368,8 @@ const Game: React.FC = () => {
         timer={timer}
         bestTime={stats.bestTime[difficulty as string] || 0}
         handleUndo={handleUndo}
-        handleRedo={handleRedo}
         restartPuzzle={restartPuzzle}
-        canUndo={currentMoveIndex > 0}
-        canRedo={currentMoveIndex < moveHistory.length - 1}
+        canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
       />
       

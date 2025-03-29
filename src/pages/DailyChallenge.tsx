@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Puzzle } from '../utils/gameLogic';
+import { Puzzle, Bridge } from '../utils/gameLogic';
 import { generateDailyChallenge } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, formatTime, isDailyCompleted, setDailyCompleted } from '../utils/storage';
 import Board from '../components/Board';
@@ -26,8 +26,7 @@ const DailyChallenge: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [showPuzzleList, setShowPuzzleList] = useState<boolean>(true);
-  const [moveHistory, setMoveHistory] = useState<Puzzle[]>([]);
-  const [currentMoveIndex, setCurrentMoveIndex] = useState<number>(-1);
+  const [moveHistory, setMoveHistory] = useState<Bridge[][]>([]);
   
   // Calculate date range for calendar
   const today = new Date();
@@ -60,8 +59,7 @@ const DailyChallenge: React.FC = () => {
       // Add a small delay before showing the puzzle
       setTimeout(() => {
         setPuzzle(dailyPuzzle);
-        setMoveHistory([dailyPuzzle]);
-        setCurrentMoveIndex(0);
+        setMoveHistory([[]]);
         setGameStarted(false);
         setTimer(0);
         setLoading(false);
@@ -101,10 +99,10 @@ const DailyChallenge: React.FC = () => {
     
     setPuzzle(updatedPuzzle);
     
-    // Only add to history if it's a new move (not from undo/redo)
-    const newHistory = [...moveHistory.slice(0, currentMoveIndex + 1), updatedPuzzle];
+    // Store bridges for undo functionality
+    const newHistory = [...moveHistory];
+    newHistory.push([...updatedPuzzle.bridges]);
     setMoveHistory(newHistory);
-    setCurrentMoveIndex(newHistory.length - 1);
     
     // Check if puzzle is solved
     if (updatedPuzzle.solved && !gameCompleted) {
@@ -129,8 +127,7 @@ const DailyChallenge: React.FC = () => {
     console.log(`Restarting daily challenge for: ${format(selectedDate, 'yyyy-MM-dd')}`);
     const dailyPuzzle = generateDailyChallenge(selectedDate);
     setPuzzle(dailyPuzzle);
-    setMoveHistory([dailyPuzzle]);
-    setCurrentMoveIndex(0);
+    setMoveHistory([[]]);
     setGameStarted(false);
     setTimer(0);
     setGameCompleted(false);
@@ -142,22 +139,26 @@ const DailyChallenge: React.FC = () => {
   };
   
   // Handle undo
-  const handleUndo = () => {
-    if (currentMoveIndex > 0) {
-      const previousMove = moveHistory[currentMoveIndex - 1];
-      setPuzzle(previousMove);
-      setCurrentMoveIndex(currentMoveIndex - 1);
+  const handleUndo = useCallback(() => {
+    if (moveHistory.length > 1 && puzzle) {
+      // Remove the most recent bridge state
+      const newHistory = [...moveHistory];
+      newHistory.pop(); // Remove last bridge state
+      
+      // Get the previous bridge state
+      const previousBridges = newHistory[newHistory.length - 1];
+      
+      // Update the puzzle with the previous bridges
+      setPuzzle({
+        ...puzzle,
+        bridges: [...previousBridges],
+        solved: false // Reset solved state since we're undoing
+      });
+      
+      // Update the history
+      setMoveHistory(newHistory);
     }
-  };
-
-  // Handle redo
-  const handleRedo = () => {
-    if (currentMoveIndex < moveHistory.length - 1) {
-      const nextMove = moveHistory[currentMoveIndex + 1];
-      setPuzzle(nextMove);
-      setCurrentMoveIndex(currentMoveIndex + 1);
-    }
-  };
+  }, [moveHistory, puzzle]);
   
   // Display puzzle list if no date selected yet
   if (showPuzzleList) {
@@ -202,10 +203,8 @@ const DailyChallenge: React.FC = () => {
         timer={timer}
         bestTime={0}
         handleUndo={handleUndo}
-        handleRedo={handleRedo}
         restartPuzzle={restartPuzzle}
-        canUndo={currentMoveIndex > 0}
-        canRedo={currentMoveIndex < moveHistory.length - 1}
+        canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
       />
       
