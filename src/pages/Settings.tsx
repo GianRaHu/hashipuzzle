@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +31,7 @@ const Settings = () => {
   
   // Settings state
   const [username, setUsername] = useState('');
-  const [darkMode, setDarkMode] = useState(false);
+  const [themePreference, setThemePreference] = useState<'light' | 'dark' | 'system'>('system');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
   const [showTimer, setShowTimer] = useState(true);
@@ -48,7 +47,8 @@ const Settings = () => {
       
       // Load settings
       const settings = getSettings();
-      setDarkMode(settings.darkMode);
+      const currentTheme = settings.themePreference || (settings.darkMode ? 'dark' : 'light');
+      setThemePreference(currentTheme);
       setSoundEnabled(settings.soundEnabled);
       setAnalyticsEnabled(settings.analyticsEnabled);
       setShowTimer(settings.showTimer);
@@ -75,11 +75,6 @@ const Settings = () => {
   // Handle toggle changes
   const handleToggleChange = (setting: string, value: boolean) => {
     switch (setting) {
-      case 'darkMode':
-        setDarkMode(value);
-        // Apply theme change immediately
-        document.documentElement.classList.toggle('dark', value);
-        break;
       case 'soundEnabled':
         setSoundEnabled(value);
         break;
@@ -92,6 +87,22 @@ const Settings = () => {
     }
   };
   
+  // Apply theme based on selection
+  const applyTheme = (theme: 'light' | 'dark' | 'system') => {
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', prefersDark);
+    } else {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }
+  };
+  
+  // Handle theme preference change
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    setThemePreference(newTheme);
+    applyTheme(newTheme);
+  };
+  
   // Save settings
   const handleSaveSettings = async () => {
     setSaving(true);
@@ -99,7 +110,8 @@ const Settings = () => {
     try {
       // Save local settings
       saveSettings({
-        darkMode,
+        themePreference,
+        darkMode: themePreference === 'dark' || (themePreference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches),
         soundEnabled,
         analyticsEnabled,
         showTimer
@@ -116,8 +128,18 @@ const Settings = () => {
           
         if (error) throw error;
       }
+      
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated.",
+      });
     } catch (error) {
       console.error('Error saving settings:', error);
+      toast({
+        title: "Error saving settings",
+        description: "There was a problem saving your preferences.",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
     }
@@ -183,6 +205,7 @@ const Settings = () => {
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
         
+        {/* Keep existing account tab content */}
         <TabsContent value="account" className="space-y-6">
           {/* Account Settings */}
           <div className="space-y-4">
@@ -350,23 +373,41 @@ const Settings = () => {
             </div>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <label 
-                    htmlFor="darkMode" 
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              <div className="space-y-2">
+                <label 
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Theme Preference
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    type="button" 
+                    variant={themePreference === 'light' ? 'default' : 'outline'} 
+                    className="w-full" 
+                    onClick={() => handleThemeChange('light')}
                   >
-                    Dark Mode
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    Enable dark theme for the application
-                  </p>
+                    Light
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant={themePreference === 'system' ? 'default' : 'outline'} 
+                    className="w-full" 
+                    onClick={() => handleThemeChange('system')}
+                  >
+                    Auto
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant={themePreference === 'dark' ? 'default' : 'outline'} 
+                    className="w-full" 
+                    onClick={() => handleThemeChange('dark')}
+                  >
+                    Dark
+                  </Button>
                 </div>
-                <Switch
-                  id="darkMode"
-                  checked={darkMode}
-                  onCheckedChange={(value) => handleToggleChange('darkMode', value)}
-                />
+                <p className="text-xs text-muted-foreground">
+                  Select your preferred theme or use system settings
+                </p>
               </div>
               
               <div className="flex items-center justify-between">

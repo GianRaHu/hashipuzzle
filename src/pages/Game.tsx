@@ -22,8 +22,17 @@ const Game: React.FC = () => {
   const urlParams = new URLSearchParams(location.search);
   const seedParam = urlParams.get('seed');
   const initialSeed = seedParam ? parseInt(seedParam, 10) : undefined;
+  
   const gridSizeParam = urlParams.get('gridSize');
-  const initialGridSize = gridSizeParam ? parseInt(gridSizeParam, 10) : undefined;
+  let initialGridSize: { width: number, height: number } | undefined = undefined;
+  
+  if (gridSizeParam) {
+    const [width, height] = gridSizeParam.split('x').map(Number);
+    if (!isNaN(width) && !isNaN(height)) {
+      initialGridSize = { width, height };
+    }
+  }
+  
   const advancedTacticsParam = urlParams.get('advancedTactics');
   const initialAdvancedTactics = advancedTacticsParam === 'true';
   
@@ -173,7 +182,7 @@ const Game: React.FC = () => {
             setMoveHistory([[]]);
             setGameCompleted(false);
             setLoading(false);
-            console.log(`Generated puzzle with seed: ${newPuzzle.seed}, size: ${newPuzzle.size}, advanced tactics: ${newPuzzle.requiresAdvancedTactics}`);
+            console.log(`Generated puzzle with seed: ${newPuzzle.seed}, size: ${newPuzzle.size.width}x${newPuzzle.size.height}, advanced tactics: ${newPuzzle.requiresAdvancedTactics}`);
           }, 500);
         } catch (error) {
           console.error("Error generating puzzle:", error);
@@ -435,6 +444,7 @@ const Game: React.FC = () => {
           {difficulty} Puzzle 
           {initialSeed && <span className="text-sm text-muted-foreground ml-2">(Seed: {initialSeed})</span>}
           {puzzle?.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
+          {puzzle && <span className="text-sm text-muted-foreground ml-2">({puzzle.size.width}×{puzzle.size.height})</span>}
         </h1>
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
