@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, CornerUpLeft, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,8 @@ interface GameHeaderProps {
   restartPuzzle: () => void;
   canUndo: boolean;
   gameStarted: boolean;
+  showRestartDialog: boolean;
+  setShowRestartDialog: (show: boolean) => void;
 }
 
 const GameHeader: React.FC<GameHeaderProps> = ({
@@ -31,15 +33,11 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   handleUndo,
   restartPuzzle,
   canUndo,
-  gameStarted
+  gameStarted,
+  showRestartDialog,
+  setShowRestartDialog
 }) => {
   const navigate = useNavigate();
-  const [showRestartDialog, setShowRestartDialog] = useState(false);
-
-  const confirmRestart = () => {
-    setShowRestartDialog(false);
-    restartPuzzle();
-  };
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background z-50 border-b border-border/10 shadow-sm">
@@ -106,7 +104,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRestart}>Restart</AlertDialogAction>
+            <AlertDialogAction onClick={restartPuzzle}>Restart</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

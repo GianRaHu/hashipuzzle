@@ -24,8 +24,16 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   const isHorizontal = bridge.orientation === 'horizontal';
   const isSingleBridge = bridge.count === 1;
   
+  // Determine node radius as a percentage of cell size based on grid size
+  const getNodeRadiusPercent = () => {
+    if (gridSize <= 7) return 18; // Increased from 16 to 18 for better spacing
+    if (gridSize <= 10) return 16;
+    if (gridSize <= 12) return 14;
+    return 12; // For largest grids (14x14)
+  };
+  
   // Node radius as a percentage of cell size for better scaling
-  const nodeRadiusPercent = 16; // Increased from 12 to 16 for better visual spacing
+  const nodeRadiusPercent = getNodeRadiusPercent();
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);

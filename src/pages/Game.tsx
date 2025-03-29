@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge } from '../utils/gameLogic';
@@ -299,9 +298,8 @@ const Game: React.FC = () => {
     }
   };
   
-  const confirmRestartPuzzle = () => {
-    setRestartConfirmOpen(true);
-  };
+  // We're removing the confirmRestartPuzzle function and using the restartPuzzle directly
+  // with the dialog state controlled in the GameHeader component
   
   const restartPuzzle = () => {
     setRestartConfirmOpen(false);
@@ -425,7 +423,9 @@ const Game: React.FC = () => {
         timer={timer}
         bestTime={bestTime}
         handleUndo={handleUndo}
-        restartPuzzle={confirmRestartPuzzle}
+        restartPuzzle={restartPuzzle} // Pass the function directly without confirmation
+        setShowRestartDialog={setRestartConfirmOpen} // Pass the state setter instead
+        showRestartDialog={restartConfirmOpen} // Pass the state
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
       />
@@ -434,7 +434,7 @@ const Game: React.FC = () => {
         <h1 className="text-lg font-medium capitalize mb-4">
           {difficulty} Puzzle 
           {initialSeed && <span className="text-sm text-muted-foreground ml-2">(Seed: {initialSeed})</span>}
-          {puzzle.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
+          {puzzle?.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
         </h1>
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
@@ -447,20 +447,7 @@ const Game: React.FC = () => {
           />
         )}
         
-        <AlertDialog open={restartConfirmOpen} onOpenChange={setRestartConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Restart Puzzle?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will reset the current puzzle to its initial state. Any progress will be lost.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={restartPuzzle}>Restart</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Remove duplicate AlertDialog here since we'll handle it in the GameHeader */}
       </main>
     </div>
   );

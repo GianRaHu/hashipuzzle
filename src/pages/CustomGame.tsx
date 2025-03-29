@@ -38,7 +38,9 @@ const CustomGame = () => {
       return a & a;
     }, 0));
 
-    navigate(`/game/custom?seed=${seedNumber}&advancedTactics=${config.advancedTactics}`);
+    // When using a seed, we don't need to pass advancedTactics parameter as it is
+    // deterministically generated from the seed
+    navigate(`/game/custom?seed=${seedNumber}`);
   };
 
   const generateRandomSeed = () => {
@@ -95,19 +97,7 @@ const CustomGame = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="advanced-tactics">Advanced Tactics</Label>
-                    <Switch 
-                      id="advanced-tactics"
-                      checked={config.advancedTactics}
-                      onCheckedChange={(checked) => setConfig({...config, advancedTactics: checked})}
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Puzzles with advanced tactics require more logical deduction to solve
-                  </p>
-                </div>
+                {/* Removed advanced tactics toggle for seed mode */}
 
                 <Button type="submit" className="w-full">
                   Generate Puzzle

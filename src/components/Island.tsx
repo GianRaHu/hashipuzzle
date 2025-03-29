@@ -36,6 +36,16 @@ const Island: React.FC<IslandProps> = ({
   let stateClass = '';
   let bgColorClass = '';
   
+  // Responsive node sizing based on grid size
+  const getNodeSize = () => {
+    if (gridSize <= 7) return 'w-8 h-8 text-base';
+    if (gridSize <= 10) return 'w-7 h-7 text-sm';
+    if (gridSize <= 12) return 'w-6 h-6 text-xs';
+    return 'w-5 h-5 text-xs'; // For largest grids (14x14)
+  };
+  
+  const nodeSize = getNodeSize();
+  
   if (isSelected || isDragging) {
     stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background';
     bgColorClass = 'bg-primary/20 text-primary font-bold';
@@ -139,16 +149,13 @@ const Island: React.FC<IslandProps> = ({
   return (
     <button
       type="button"
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-medium transition-all duration-200 ${bgColorClass} ${stateClass}`}
+      className={`${nodeSize} rounded-full flex items-center justify-center font-medium transition-all duration-200 ${bgColorClass} ${stateClass}`}
       style={{
         position: 'absolute',
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
         zIndex: 10,
-        minWidth: '2rem',
-        minHeight: '2rem',
-        fontSize: '1rem',
         fontWeight: 600
       }}
       onTouchStart={handleTouchStart}
