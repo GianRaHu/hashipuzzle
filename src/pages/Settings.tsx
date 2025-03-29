@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,14 +55,14 @@ const Settings = () => {
       
       // If user is logged in, get their profile
       if (data.user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
+        const { data: userData } = await supabase
+          .from('users')
           .select('username')
           .eq('id', data.user.id)
           .single();
           
-        if (profileData) {
-          setUsername(profileData.username || '');
+        if (userData) {
+          setUsername(userData.username || '');
         }
       }
       
@@ -107,30 +108,16 @@ const Settings = () => {
       // If user is logged in, update profile
       if (user) {
         const { error } = await supabase
-          .from('profiles')
+          .from('users')
           .update({ 
             username,
-            dark_mode: darkMode,
-            sound_enabled: soundEnabled,
-            analytics_enabled: analyticsEnabled,
-            show_timer: showTimer
           })
           .eq('id', user.id);
           
         if (error) throw error;
       }
-      
-      toast({
-        title: "Settings saved",
-        description: "Your preferences have been updated.",
-      });
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive"
-      });
     } finally {
       setSaving(false);
     }
@@ -141,18 +128,8 @@ const Settings = () => {
     try {
       await supabase.auth.signOut();
       navigate('/');
-      
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
     } catch (error) {
       console.error('Error logging out:', error);
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive"
-      });
     }
   };
   
@@ -293,32 +270,34 @@ const Settings = () => {
                 />
               </div>
               
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full mt-4 flex items-center gap-2"
-                  >
-                    <Trash2 size={18} />
-                    Delete Account
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your account
-                      and remove all your data from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {user && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      className="w-full mt-4 flex items-center gap-2"
+                    >
+                      <Trash2 size={18} />
                       Delete Account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove all your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </div>
           

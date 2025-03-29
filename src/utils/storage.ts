@@ -1,4 +1,3 @@
-
 import { Puzzle } from './gameLogic';
 import { format } from 'date-fns';
 
@@ -23,6 +22,14 @@ export interface GameStats {
   totalTime?: {
     [key: string]: number;
   };
+}
+
+// Game settings interface
+export interface GameSettings {
+  darkMode: boolean;
+  soundEnabled: boolean;
+  analyticsEnabled: boolean;
+  showTimer: boolean;
 }
 
 // Game history type
@@ -184,4 +191,46 @@ export const setDailyCompleted = (): void => {
 export const getGameHistory = (): GameHistoryEntry[] => {
   const history = localStorage.getItem('hashi_game_history');
   return history ? JSON.parse(history) : [];
+};
+
+// Get game settings from local storage
+export const getSettings = (): GameSettings => {
+  const settings = localStorage.getItem('hashi_settings');
+  return settings ? JSON.parse(settings) : {
+    darkMode: false,
+    soundEnabled: true,
+    analyticsEnabled: true,
+    showTimer: true
+  };
+};
+
+// Save game settings to local storage
+export const saveSettings = (settings: GameSettings): void => {
+  localStorage.setItem('hashi_settings', JSON.stringify(settings));
+  
+  // Apply dark mode immediately
+  document.documentElement.classList.toggle('dark', settings.darkMode);
+};
+
+// Clear all local data
+export const clearAllData = (): void => {
+  const keys = [
+    'hashi_stats',
+    'hashi_game_history',
+    'hashi_settings',
+    'daily_completed_date',
+    'daily_completed_dates',
+    'last_streak_date'
+  ];
+  
+  // Clear all game-specific items
+  keys.forEach(key => localStorage.removeItem(key));
+  
+  // Clear all saved puzzles
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('puzzle_')) {
+      localStorage.removeItem(key);
+    }
+  }
 };
