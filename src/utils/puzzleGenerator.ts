@@ -1,11 +1,12 @@
+
 import { Island, Puzzle, Bridge, generateId } from './gameLogic';
 
 // Difficulty settings - defines parameters for each difficulty level
 const difficultySettings = {
-  easy: { size: 7, islandCount: 8, maxValue: 4 },
-  medium: { size: 7, islandCount: 11, maxValue: 6 },
-  hard: { size: 8, islandCount: 15, maxValue: 8 },
-  expert: { size: 9, islandCount: 18, maxValue: 8 }
+  easy: { size: 7, islandCount: 8, maxValue: 4, advancedTactics: false },
+  medium: { size: 7, islandCount: 11, maxValue: 6, advancedTactics: false },
+  hard: { size: 8, islandCount: 15, maxValue: 8, advancedTactics: true },
+  expert: { size: 9, islandCount: 18, maxValue: 8, advancedTactics: true }
 };
 
 // Seeded random number generator for reproducible puzzles
@@ -144,13 +145,101 @@ const findConnectableIslands = (
   );
 };
 
+// Create complex island connections that might require logical deduction
+const createAdvancedTacticsConnection = (
+  islands: Island[],
+  bridges: { startIslandId: string, endIslandId: string, count: 1 | 2, orientation: 'horizontal' | 'vertical' }[],
+  grid: (Island | null)[][],
+  bridgeMap: Map<string, boolean>,
+  random: () => number,
+  maxValue: number
+): boolean => {
+  // Find islands that could be part of a logical deduction chain
+  const candidateIslands = islands.filter(island => island.value < maxValue - 1);
+  if (candidateIslands.length < 3) return false;
+  
+  // Pick a chain of islands that will require logical deduction
+  const startIsland = candidateIslands[Math.floor(random() * candidateIslands.length)];
+  
+  // Find islands that can connect to our start island
+  const connectable = findConnectableIslands(startIsland, islands, bridgeMap, maxValue);
+  if (connectable.length < 2) return false;
+  
+  // Pick two islands to connect to our start island
+  const island1 = connectable[Math.floor(random() * connectable.length)];
+  
+  // Remove the first selected island and choose another
+  const otherConnectable = connectable.filter(i => i.id !== island1.id);
+  if (otherConnectable.length === 0) return false;
+  
+  const island2 = otherConnectable[Math.floor(random() * otherConnectable.length)];
+  
+  // Create a situation where the only solution requires deduction:
+  // - Connect start island to both island1 and island2 with a single bridge each
+  // - Make either island1 or island2 have a value that forces connection to the start island
+  
+  // Connect start island to island1
+  bridges.push({
+    startIslandId: startIsland.id,
+    endIslandId: island1.id,
+    count: 1,
+    orientation: startIsland.row === island1.row ? 'horizontal' : 'vertical'
+  });
+  
+  startIsland.value += 1;
+  island1.value += 1;
+  markPath(startIsland, island1, bridgeMap);
+  
+  // Connect start island to island2
+  bridges.push({
+    startIslandId: startIsland.id,
+    endIslandId: island2.id,
+    count: 1,
+    orientation: startIsland.row === island2.row ? 'horizontal' : 'vertical'
+  });
+  
+  startIsland.value += 1;
+  island2.value += 1;
+  markPath(startIsland, island2, bridgeMap);
+  
+  // Make one of the islands require an additional connection
+  if (random() < 0.5 && island1.value < maxValue - 1) {
+    island1.value += 1;
+  } else if (island2.value < maxValue - 1) {
+    island2.value += 1;
+  }
+  
+  return true;
+}
+
 // Create a new puzzle using a step-by-step approach
 export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert', 
-  seed?: number
+  seed?: number,
+  customOptions?: {
+    gridSize?: number,
+    advancedTactics?: boolean
+  }
 ): Puzzle => {
   console.log(`Generating puzzle with difficulty: ${difficulty}`);
-  const { size, islandCount, maxValue } = difficultySettings[difficulty];
+  
+  // Start with default settings for the difficulty
+  let { size, islandCount, maxValue, advancedTactics } = difficultySettings[difficulty];
+  
+  // Apply custom options if provided
+  if (customOptions) {
+    if (customOptions.gridSize) {
+      size = customOptions.gridSize;
+      // Adjust island count based on grid size
+      islandCount = Math.max(Math.floor(size * size * 0.25), islandCount);
+    }
+    
+    if (customOptions.advancedTactics !== undefined) {
+      advancedTactics = customOptions.advancedTactics;
+    }
+  }
+  
+  console.log(`Grid size: ${size}, Advanced tactics: ${advancedTactics}`);
   
   // Use provided seed or generate a random one
   const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
@@ -327,6 +416,17 @@ export const generatePuzzle = (
       // If we've reached the target island count, we're done
       if (islands.length >= islandCount) {
         success = true;
+        
+        // For advanced tactics, create some logical deduction situations
+        if (advancedTactics && islands.length > 5) {
+          // Create 1-3 advanced tactics situations depending on grid size
+          const numAdvancedSituations = Math.min(3, Math.floor(size / 4));
+          
+          for (let i = 0; i < numAdvancedSituations; i++) {
+            createAdvancedTacticsConnection(islands, bridgeConnections, grid, bridgeMap, random, maxValue);
+          }
+        }
+        
         break;
       }
     }
@@ -405,7 +505,8 @@ export const generatePuzzle = (
     bridges: [], // Start with no bridges for gameplay
     solved: false,
     startTime: Date.now(),
-    seed: puzzleSeed
+    seed: puzzleSeed,
+    requiresAdvancedTactics: advancedTactics
   };
 };
 

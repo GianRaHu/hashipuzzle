@@ -25,7 +25,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   const isSingleBridge = bridge.count === 1;
   
   // Node radius as a percentage of cell size for better scaling
-  const nodeRadiusPercent = 12; // Increased from 6 to 12 for better visual spacing
+  const nodeRadiusPercent = 16; // Increased from 12 to 16 for better visual spacing
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);

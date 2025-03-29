@@ -6,6 +6,7 @@ import { generatePuzzle } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, getStats } from '../utils/storage';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction, AlertDialogFooter } from '@/components/ui/alert-dialog';
 
 import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
@@ -18,10 +19,14 @@ const Game: React.FC = () => {
   const { difficulty } = useParams<{ difficulty: string }>();
   const location = useLocation();
   
-  // Get seed from URL if provided
+  // Get URL parameters
   const urlParams = new URLSearchParams(location.search);
   const seedParam = urlParams.get('seed');
   const initialSeed = seedParam ? parseInt(seedParam, 10) : undefined;
+  const gridSizeParam = urlParams.get('gridSize');
+  const initialGridSize = gridSizeParam ? parseInt(gridSizeParam, 10) : undefined;
+  const advancedTacticsParam = urlParams.get('advancedTactics');
+  const initialAdvancedTactics = advancedTacticsParam === 'true';
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,11 +36,12 @@ const Game: React.FC = () => {
   const [moveHistory, setMoveHistory] = useState<Bridge[][]>([]);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [generateError, setGenerateError] = useState<boolean>(false);
+  const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
   const stats = getStats();
   
-  const validDifficulties = ['easy', 'medium', 'hard', 'expert'];
+  const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'custom'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
-    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' 
+    ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'custom'
     : 'easy';
   
   // Update extended stats in Supabase
@@ -142,7 +148,23 @@ const Game: React.FC = () => {
       setTimeout(() => {
         try {
           console.log(`Generating new puzzle with difficulty: ${validDifficulty}, seed: ${initialSeed || 'random'}`);
-          const newPuzzle = generatePuzzle(validDifficulty, initialSeed);
+          
+          // Create custom options if needed
+          const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
+            ? {
+                gridSize: initialGridSize,
+                advancedTactics: initialAdvancedTactics
+              }
+            : undefined;
+          
+          // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
+          const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
+          
+          const newPuzzle = generatePuzzle(
+            difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
+            initialSeed, 
+            customOptions
+          );
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -152,7 +174,7 @@ const Game: React.FC = () => {
             setMoveHistory([[]]);
             setGameCompleted(false);
             setLoading(false);
-            console.log(`Generated puzzle with seed: ${newPuzzle.seed}`);
+            console.log(`Generated puzzle with seed: ${newPuzzle.seed}, size: ${newPuzzle.size}, advanced tactics: ${newPuzzle.requiresAdvancedTactics}`);
           }, 500);
         } catch (error) {
           console.error("Error generating puzzle:", error);
@@ -173,7 +195,7 @@ const Game: React.FC = () => {
       
       return () => clearInterval(loadingInterval);
     }
-  }, [validDifficulty, location.search, navigate, toast, initialSeed]);
+  }, [validDifficulty, location.search, navigate, toast, initialSeed, initialGridSize, initialAdvancedTactics]);
   
   useEffect(() => {
     if (!puzzle || gameCompleted || loading) return;
@@ -228,7 +250,22 @@ const Game: React.FC = () => {
       
       setTimeout(() => {
         try {
-          const newPuzzle = generatePuzzle(validDifficulty);
+          // Create custom options if needed
+          const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
+            ? {
+                gridSize: initialGridSize,
+                advancedTactics: initialAdvancedTactics
+              }
+            : undefined;
+          
+          // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
+          const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
+          
+          const newPuzzle = generatePuzzle(
+            difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
+            undefined, // No seed for new puzzle
+            customOptions
+          );
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -262,7 +299,12 @@ const Game: React.FC = () => {
     }
   };
   
+  const confirmRestartPuzzle = () => {
+    setRestartConfirmOpen(true);
+  };
+  
   const restartPuzzle = () => {
+    setRestartConfirmOpen(false);
     setGameStarted(false);
     setTimer(0);
     
@@ -279,7 +321,22 @@ const Game: React.FC = () => {
       
       setTimeout(() => {
         try {
-          const newPuzzle = generatePuzzle(validDifficulty, puzzle.seed);
+          // Create custom options if needed
+          const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
+            ? {
+                gridSize: initialGridSize,
+                advancedTactics: initialAdvancedTactics
+              }
+            : undefined;
+          
+          // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
+          const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
+          
+          const newPuzzle = generatePuzzle(
+            difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
+            puzzle.seed,
+            customOptions
+          );
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -366,15 +423,19 @@ const Game: React.FC = () => {
     <div className="min-h-screen flex flex-col animate-fade-in page-transition">
       <GameHeader 
         timer={timer}
-        bestTime={stats.bestTime[difficulty as string] || 0}
+        bestTime={bestTime}
         handleUndo={handleUndo}
-        restartPuzzle={restartPuzzle}
+        restartPuzzle={confirmRestartPuzzle}
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
-        <h1 className="text-lg font-medium capitalize mb-4">{difficulty} Puzzle {initialSeed && <span className="text-sm text-muted-foreground">(Seed: {initialSeed})</span>}</h1>
+        <h1 className="text-lg font-medium capitalize mb-4">
+          {difficulty} Puzzle 
+          {initialSeed && <span className="text-sm text-muted-foreground ml-2">(Seed: {initialSeed})</span>}
+          {puzzle.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
+        </h1>
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         
@@ -385,6 +446,21 @@ const Game: React.FC = () => {
             seed={puzzle.seed}
           />
         )}
+        
+        <AlertDialog open={restartConfirmOpen} onOpenChange={setRestartConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Restart Puzzle?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will reset the current puzzle to its initial state. Any progress will be lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={restartPuzzle}>Restart</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 
 const CustomGame = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const CustomGame = () => {
   const [seed, setSeed] = useState('');
   const [config, setConfig] = useState({
     gridSize: 7,
-    difficulty: 'medium' as 'easy' | 'medium' | 'hard' | 'expert'
+    advancedTactics: false
   });
 
   const handleSeedSubmit = (e: React.FormEvent) => {
@@ -37,7 +38,7 @@ const CustomGame = () => {
       return a & a;
     }, 0));
 
-    navigate(`/game/${config.difficulty}?seed=${seedNumber}`);
+    navigate(`/game/custom?seed=${seedNumber}&advancedTactics=${config.advancedTactics}`);
   };
 
   const generateRandomSeed = () => {
@@ -46,8 +47,8 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Pass gridSize as a URL parameter to the game page
-    navigate(`/game/${config.difficulty}?gridSize=${config.gridSize}`);
+    // Pass gridSize and advanced tactics as URL parameters
+    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}`);
   };
 
   return (
@@ -92,6 +93,20 @@ const CustomGame = () => {
                       Random
                     </Button>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="advanced-tactics">Advanced Tactics</Label>
+                    <Switch 
+                      id="advanced-tactics"
+                      checked={config.advancedTactics}
+                      onCheckedChange={(checked) => setConfig({...config, advancedTactics: checked})}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Puzzles with advanced tactics require more logical deduction to solve
+                  </p>
                 </div>
 
                 <Button type="submit" className="w-full">
@@ -151,31 +166,19 @@ const CustomGame = () => {
                 </div>
 
                 <Separator />
-
-                <div>
-                  <Label>Difficulty</Label>
-                  <RadioGroup 
-                    value={config.difficulty}
-                    onValueChange={(value) => setConfig({...config, difficulty: value as 'easy' | 'medium' | 'hard' | 'expert'})}
-                    className="grid grid-cols-2 gap-4 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="easy" id="diff-easy" />
-                      <Label htmlFor="diff-easy">Easy</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="medium" id="diff-medium" />
-                      <Label htmlFor="diff-medium">Medium</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="hard" id="diff-hard" />
-                      <Label htmlFor="diff-hard">Hard</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="expert" id="diff-expert" />
-                      <Label htmlFor="diff-expert">Expert</Label>
-                    </div>
-                  </RadioGroup>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="custom-advanced-tactics">Advanced Tactics</Label>
+                    <Switch 
+                      id="custom-advanced-tactics"
+                      checked={config.advancedTactics}
+                      onCheckedChange={(checked) => setConfig({...config, advancedTactics: checked})}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Puzzles with advanced tactics require more logical deduction to solve
+                  </p>
                 </div>
 
                 <Button 

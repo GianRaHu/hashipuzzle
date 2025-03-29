@@ -26,6 +26,7 @@ export type Puzzle = {
   startTime?: number;
   endTime?: number;
   seed?: number;  // Added seed for reproducible puzzles
+  requiresAdvancedTactics?: boolean; // Whether this puzzle requires advanced tactics
 };
 
 // Generate a unique ID
