@@ -50,8 +50,8 @@ const HelpDialog: React.FC = () => {
             <div className="space-y-2">
               <h3 className="font-medium">How to Play</h3>
               <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li><strong>Mobile:</strong> Tap an island then tap another to connect them, or drag from one island to another.</li>
-                <li><strong>Desktop:</strong> Click an island then click another to connect them.</li>
+                <li><strong>Mobile:</strong> Drag your finger from one Island to the other to connect them.</li>
+                <li><strong>Desktop:</strong> Click an island then click another to connect them, or drag the mouse from one island to the other.</li>
                 <li>Tap/click the same connection again to add a second bridge.</li>
                 <li>Tap/click a double bridge to remove it completely.</li>
                 <li>Green islands have the correct number of bridges.</li>
