@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
@@ -27,6 +26,7 @@ const DailyChallenge: React.FC = () => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [showPuzzleList, setShowPuzzleList] = useState<boolean>(true);
   const [moveHistory, setMoveHistory] = useState<Bridge[][]>([]);
+  const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
   
   // Calculate date range for calendar
   const today = new Date();
@@ -124,6 +124,7 @@ const DailyChallenge: React.FC = () => {
   
   // Restart the daily puzzle
   const restartPuzzle = () => {
+    setRestartConfirmOpen(false);
     console.log(`Restarting daily challenge for: ${format(selectedDate, 'yyyy-MM-dd')}`);
     const dailyPuzzle = generateDailyChallenge(selectedDate);
     setPuzzle(dailyPuzzle);
@@ -206,6 +207,8 @@ const DailyChallenge: React.FC = () => {
         restartPuzzle={restartPuzzle}
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
+        showRestartDialog={restartConfirmOpen}
+        setShowRestartDialog={setRestartConfirmOpen}
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">

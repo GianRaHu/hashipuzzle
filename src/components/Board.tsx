@@ -157,7 +157,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     
     e.preventDefault();
   };
-  
+
   // Handle pointer up anywhere in the document (to end drag)
   useEffect(() => {
     const handlePointerUp = () => {

@@ -3,7 +3,7 @@ import React from 'react';
 import { Island } from '../utils/gameLogic';
 
 interface GridBackgroundProps {
-  gridSize: number;
+  gridSize: { rows: number; cols: number };
   islands: Island[];
 }
 
@@ -11,19 +11,20 @@ const GridBackground: React.FC<GridBackgroundProps> = ({ gridSize, islands }) =>
   // Create a grid with dots at each position
   const gridDots = [];
   
-  // Calculate cell size (in percentage)
-  const cellSize = 100 / gridSize;
-  
   // Generate the grid dots
-  for (let row = 0; row < gridSize; row++) {
-    for (let col = 0; col < gridSize; col++) {
+  for (let row = 0; row < gridSize.rows; row++) {
+    for (let col = 0; col < gridSize.cols; col++) {
       // Check if there's an island at this position
       const hasIsland = islands.some(island => island.row === row && island.col === col);
       
       // Only render dots where there's no island
       if (!hasIsland) {
-        const xPos = col * cellSize + cellSize / 2;
-        const yPos = row * cellSize + cellSize / 2;
+        // Calculate cell size (in percentage)
+        const cellSizeX = 100 / gridSize.cols;
+        const cellSizeY = 100 / gridSize.rows;
+        
+        const xPos = col * cellSizeX + cellSizeX / 2;
+        const yPos = row * cellSizeY + cellSizeY / 2;
         
         gridDots.push(
           <div 
