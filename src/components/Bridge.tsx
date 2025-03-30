@@ -27,10 +27,12 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   
   // Determine node radius as a percentage of cell size based on grid size
   const getNodeRadiusPercent = () => {
-    if (Math.min(gridSize.rows, gridSize.cols) <= 7) return 18; // Increased from 16 to 18 for better spacing
-    if (Math.min(gridSize.rows, gridSize.cols) <= 10) return 16;
-    if (Math.min(gridSize.rows, gridSize.cols) <= 12) return 14;
-    return 12; // For largest grids
+    const minGridSize = Math.min(gridSize.rows, gridSize.cols);
+    if (minGridSize <= 6) return 12; // Smaller radius for smaller grids
+    if (minGridSize <= 8) return 10;
+    if (minGridSize <= 10) return 8;
+    if (minGridSize <= 12) return 7;
+    return 6; // For largest grids
   };
   
   // Node radius as a percentage of cell size for better scaling
@@ -49,8 +51,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedPos = xPos + nodeOffsetX;
     
     // Reduced spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
-    const secondBridgeOffset = 0.5;
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.4;
+    const secondBridgeOffset = 0.4;
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -102,8 +104,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedPos = yPos + nodeOffsetY;
     
     // Reduced spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
-    const secondBridgeOffset = 0.5;
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.4;
+    const secondBridgeOffset = 0.4;
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -37,13 +36,14 @@ const Island: React.FC<IslandProps> = ({
   let stateClass = '';
   let bgColorClass = '';
   
-  // Responsive node sizing based on grid size
+  // Responsive node sizing based on grid size - make even smaller for larger grids
   const getNodeSize = () => {
     const minGridSize = Math.min(gridSize.rows, gridSize.cols);
-    if (minGridSize <= 7) return 'w-8 h-8 text-base';
-    if (minGridSize <= 10) return 'w-7 h-7 text-sm';
-    if (minGridSize <= 12) return 'w-6 h-6 text-xs';
-    return 'w-5 h-5 text-xs'; // For largest grids
+    if (minGridSize <= 6) return 'w-7 h-7 text-sm';
+    if (minGridSize <= 8) return 'w-6 h-6 text-xs';
+    if (minGridSize <= 10) return 'w-5 h-5 text-xs';
+    if (minGridSize <= 12) return 'w-4 h-4 text-[10px]';
+    return 'w-3.5 h-3.5 text-[9px]'; // For largest grids
   };
   
   const nodeSize = getNodeSize();
@@ -53,19 +53,19 @@ const Island: React.FC<IslandProps> = ({
     bgColorClass = 'bg-primary/20 text-primary font-bold';
   } else if (actualConnections === 0) {
     // No connections yet - white
-    stateClass = 'ring-2 ring-white/70 dark:ring-slate-400';
+    stateClass = 'ring-1 ring-white/70 dark:ring-slate-400';
     bgColorClass = 'bg-white dark:bg-slate-800 text-foreground';
   } else if (actualConnections === connectionsNeeded) {
     // Connections match exactly - green
-    stateClass = 'ring-2 ring-green-500';
+    stateClass = 'ring-1 ring-green-500';
     bgColorClass = 'bg-green-100 dark:bg-green-900/50 text-green-600 font-bold';
   } else if (actualConnections > connectionsNeeded) {
     // Too many connections - yellow
-    stateClass = 'ring-2 ring-yellow-500';
+    stateClass = 'ring-1 ring-yellow-500';
     bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 font-bold';
   } else if (actualConnections < connectionsNeeded) {
     // Some connections but not complete - red
-    stateClass = 'ring-2 ring-red-500';
+    stateClass = 'ring-1 ring-red-500';
     bgColorClass = 'bg-red-50 dark:bg-red-900/50 text-red-600';
   }
 

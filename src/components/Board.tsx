@@ -138,22 +138,37 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     const relativeX = clientX - boardRect.left;
     const relativeY = clientY - boardRect.top;
     
+    // Calculate island detection radius based on grid size
+    const getDetectionRadius = () => {
+      const minGridSize = Math.min(puzzle.size.rows, puzzle.size.cols);
+      if (minGridSize <= 6) return 28;
+      if (minGridSize <= 8) return 24;
+      if (minGridSize <= 10) return 20;
+      if (minGridSize <= 12) return 18;
+      return 16; // For largest grids
+    };
+    
+    const detectionRadius = getDetectionRadius();
+    
     // Find if we're over any island (excluding the start island)
     const draggedOverIsland = puzzle.islands.find(island => {
       if (island.id === dragStartIsland.id) return false;
       
-      const cellSizeX = 100 / puzzle.size.cols;
-      const cellSizeY = 100 / puzzle.size.rows;
+      const cellSizeX = boardRect.width / puzzle.size.cols;
+      const cellSizeY = boardRect.height / puzzle.size.rows;
       
-      const islandX = (island.col * cellSizeX + cellSizeX / 2) * boardRect.width / 100;
-      const islandY = (island.row * cellSizeY + cellSizeY / 2) * boardRect.height / 100;
+      const islandX = (island.col + 0.5) * cellSizeX;
+      const islandY = (island.row + 0.5) * cellSizeY;
       
-      // Check if pointer is within island radius (using 30px as approximate radius)
+      // Check if pointer is within island radius
       const dx = relativeX - islandX;
       const dy = relativeY - islandY;
       const distanceSquared = dx * dx + dy * dy;
       
-      return distanceSquared <= 900; // 30px radius squared
+      // Increased tolerance for detection radius
+      const radiusSquared = detectionRadius * detectionRadius;
+      
+      return distanceSquared <= radiusSquared;
     });
     
     setDragOverIsland(draggedOverIsland || null);
