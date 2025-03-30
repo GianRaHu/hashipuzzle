@@ -28,11 +28,11 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   // Determine node radius as a percentage of cell size based on grid size
   const getNodeRadiusPercent = () => {
     const minGridSize = Math.min(gridSize.rows, gridSize.cols);
-    if (minGridSize <= 6) return 12; // Smaller radius for smaller grids
-    if (minGridSize <= 8) return 10;
-    if (minGridSize <= 10) return 8;
-    if (minGridSize <= 12) return 7;
-    return 6; // For largest grids
+    if (minGridSize <= 6) return 14; // Increased from 12
+    if (minGridSize <= 8) return 12; // Increased from 10
+    if (minGridSize <= 10) return 10; // Increased from 8
+    if (minGridSize <= 12) return 8;  // Increased from 7
+    return 7; // Increased from 6
   };
   
   // Node radius as a percentage of cell size for better scaling

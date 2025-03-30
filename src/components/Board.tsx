@@ -27,6 +27,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [dragOverIsland, setDragOverIsland] = useState<IslandType | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
+  
+  // Lower threshold for starting drag detection (pixels)
+  const DRAG_START_THRESHOLD = 3;
+  const dragStartPositionRef = useRef<{x: number, y: number} | null>(null);
 
   // Update the grid layout CSS to handle rectangular grids
   const gridStyle = {
@@ -91,7 +95,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       clientY = event.clientY;
     }
     
-    setDragPosition({ x: clientX, y: clientY });
+    // Store the initial position for threshold checking
+    dragStartPositionRef.current = { x: clientX, y: clientY };
+    
+    // Don't set dragPosition yet - we'll wait until we exceed the threshold
     
     // Prevent default behavior
     event.preventDefault();
@@ -114,6 +121,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     setIsPointerDown(false);
     setDragPosition(null);
     setDragOverIsland(null);
+    dragStartPositionRef.current = null;
   };
   
   // Handle board mouse/touch move (for drawing drag line)
@@ -131,7 +139,21 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       clientY = e.clientY;
     }
     
-    setDragPosition({ x: clientX, y: clientY });
+    // Check if we've exceeded the drag threshold
+    if (dragStartPositionRef.current) {
+      const dx = clientX - dragStartPositionRef.current.x;
+      const dy = clientY - dragStartPositionRef.current.y;
+      const distanceSquared = dx * dx + dy * dy;
+      
+      // Only start showing the drag line when we exceed the threshold
+      if (distanceSquared > DRAG_START_THRESHOLD * DRAG_START_THRESHOLD) {
+        setDragPosition({ x: clientX, y: clientY });
+      } else {
+        return; // Don't show drag line yet
+      }
+    } else {
+      setDragPosition({ x: clientX, y: clientY });
+    }
     
     // Check if we're hovering over an island
     const boardRect = boardRef.current.getBoundingClientRect();
@@ -141,11 +163,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     // Calculate island detection radius based on grid size
     const getDetectionRadius = () => {
       const minGridSize = Math.min(puzzle.size.rows, puzzle.size.cols);
-      if (minGridSize <= 6) return 28;
-      if (minGridSize <= 8) return 24;
-      if (minGridSize <= 10) return 20;
-      if (minGridSize <= 12) return 18;
-      return 16; // For largest grids
+      if (minGridSize <= 6) return 40; // Increased from 28
+      if (minGridSize <= 8) return 32; // Increased from 24
+      if (minGridSize <= 10) return 26; // Increased from 20
+      if (minGridSize <= 12) return 22; // Increased from 18
+      return 18; // For largest grids, increased from 16
     };
     
     const detectionRadius = getDetectionRadius();
