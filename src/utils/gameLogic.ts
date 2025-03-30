@@ -30,6 +30,7 @@ export type Puzzle = {
   endTime?: number;
   seed?: number;
   requiresAdvancedTactics?: boolean;
+  allIslandsConnected?: boolean;
 };
 
 // Generate a unique ID
@@ -154,7 +155,11 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
   }
   
   // Check if puzzle is solved
-  newPuzzle.solved = checkPuzzleSolved(newPuzzle);
+  const correctConnections = checkAllIslandsHaveCorrectConnections(newPuzzle);
+  const allConnected = checkAllIslandsConnected(newPuzzle.islands);
+  
+  newPuzzle.allIslandsConnected = allConnected;
+  newPuzzle.solved = correctConnections && allConnected;
   
   // If solved, set the end time
   if (newPuzzle.solved && !puzzle.solved) {
@@ -164,9 +169,8 @@ export const toggleBridge = (island1: Island, island2: Island, puzzle: Puzzle): 
   return newPuzzle;
 };
 
-// Check if the puzzle is solved
-export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
-  // A puzzle is solved when all islands have exactly the correct number of connections
+// Check if all islands have the correct number of connections
+export const checkAllIslandsHaveCorrectConnections = (puzzle: Puzzle): boolean => {
   return puzzle.islands.every(island => {
     const connections = puzzle.bridges.reduce((count, bridge) => {
       if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
@@ -177,6 +181,39 @@ export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
     
     return connections === island.value;
   });
+};
+
+// Check if all islands are connected to each other (one connected component)
+export const checkAllIslandsConnected = (islands: Island[]): boolean => {
+  if (islands.length === 0) return true;
+  
+  const visited = new Set<string>();
+  const queue: string[] = [islands[0].id];
+  visited.add(islands[0].id);
+  
+  while (queue.length > 0) {
+    const currentIslandId = queue.shift()!;
+    const currentIsland = islands.find(island => island.id === currentIslandId);
+    
+    if (currentIsland) {
+      for (const connectedIslandId of currentIsland.connectedTo) {
+        if (!visited.has(connectedIslandId)) {
+          visited.add(connectedIslandId);
+          queue.push(connectedIslandId);
+        }
+      }
+    }
+  }
+  
+  return visited.size === islands.length;
+};
+
+// Check if the puzzle is solved
+export const checkPuzzleSolved = (puzzle: Puzzle): boolean => {
+  const correctConnections = checkAllIslandsHaveCorrectConnections(puzzle);
+  const allConnected = checkAllIslandsConnected(puzzle.islands);
+  
+  return correctConnections && allConnected;
 };
 
 // Helper to get an island by id

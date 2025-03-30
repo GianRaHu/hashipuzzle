@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Puzzle, Bridge } from '../utils/gameLogic';
+import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
 import { savePuzzle, updateStats, getStats } from '../utils/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHea
 import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
+import ConnectivityAlert from '../components/ConnectivityAlert';
 import { supabase } from '@/integrations/supabase/client';
 
 const Game: React.FC = () => {
@@ -36,6 +37,9 @@ const Game: React.FC = () => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [generateError, setGenerateError] = useState<boolean>(false);
   const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
+  const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
+  const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
+  
   const stats = getStats();
   
   const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'custom'];
@@ -225,7 +229,45 @@ const Game: React.FC = () => {
     newHistory.push([...updatedPuzzle.bridges]);
     setMoveHistory(newHistory);
     
-    if (updatedPuzzle.solved && !gameCompleted) {
+    // Check for the condition where bridges are correct but not all islands are connected
+    const correctConnections = checkAllIslandsHaveCorrectConnections(updatedPuzzle);
+    const allConnected = checkAllIslandsConnected(updatedPuzzle.islands);
+    
+    if (correctConnections && !allConnected && !userOverrodeConnectivity) {
+      setShowConnectionAlert(true);
+    } else {
+      setShowConnectionAlert(false);
+    }
+    
+    if (updatedPuzzle.solved || (correctConnections && allConnected)) {
+      const fullyCompleted = {
+        ...updatedPuzzle,
+        solved: true,
+        endTime: Date.now()
+      };
+      
+      setPuzzle(fullyCompleted);
+      setGameCompleted(true);
+      savePuzzle(fullyCompleted);
+      updateStats(fullyCompleted);
+      
+      const completionTime = fullyCompleted.endTime! - fullyCompleted.startTime!;
+      updateExtendedStats(validDifficulty, completionTime, true);
+    }
+  }, [gameCompleted, gameStarted, moveHistory, updateExtendedStats, validDifficulty, userOverrodeConnectivity]);
+  
+  const handleContinueAnyway = () => {
+    setUserOverrodeConnectivity(true);
+    setShowConnectionAlert(false);
+    
+    if (puzzle) {
+      const updatedPuzzle = {
+        ...puzzle,
+        solved: true,
+        endTime: Date.now()
+      };
+      
+      setPuzzle(updatedPuzzle);
       setGameCompleted(true);
       savePuzzle(updatedPuzzle);
       updateStats(updatedPuzzle);
@@ -233,7 +275,11 @@ const Game: React.FC = () => {
       const completionTime = updatedPuzzle.endTime! - updatedPuzzle.startTime!;
       updateExtendedStats(validDifficulty, completionTime, true);
     }
-  }, [gameCompleted, gameStarted, moveHistory, updateExtendedStats, validDifficulty]);
+  };
+  
+  const handleContinuePlaying = () => {
+    setShowConnectionAlert(false);
+  };
   
   const resetPuzzle = () => {
     if (validDifficulty) {
@@ -391,7 +437,7 @@ const Game: React.FC = () => {
   const showHelp = () => {
     toast({
       title: "How to Play",
-      description: "Connect islands with bridges. Each island must have exactly the number of bridges shown on it. Bridges can't cross each other.",
+      description: "Connect islands with bridges. Each island must have exactly the number of bridges shown on it. Bridges can't cross each other. All islands must be connected to each other.",
       duration: 5000,
     });
   };
@@ -439,6 +485,13 @@ const Game: React.FC = () => {
           {initialSeed && <span className="text-sm text-muted-foreground ml-2">(Seed: {initialSeed})</span>}
           {puzzle?.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
         </h1>
+        
+        {showConnectionAlert && !gameCompleted && (
+          <ConnectivityAlert 
+            onContinue={handleContinueAnyway}
+            onContinueToPlay={handleContinuePlaying}
+          />
+        )}
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         
