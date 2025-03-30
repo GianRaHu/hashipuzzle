@@ -1,4 +1,3 @@
-
 import { Island, Bridge, Puzzle } from './gameLogic';
 import { difficultySettings } from './difficultySettings';
 
@@ -103,7 +102,7 @@ export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert',
   seed?: number,
   customOptions?: {
-    gridSize?: { rows: number; cols: number };
+    gridSize?: number;
     advancedTactics?: boolean;
   }
 ): Puzzle => {
@@ -142,336 +141,6 @@ export const generatePuzzle = (
   
   const islands: Island[] = [];
   const bridgeConnections: Bridge[] = [];
-  
-  // [Rest of the implementation remains the same as in the previous response]
-  // ... [Copy the rest of the function implementation from the previous response]
-
-  return {
-    id: generateId(),
-    difficulty,
-    size,
-    islands,
-    bridges: bridgeConnections,
-    solved: false,
-    seed: puzzleSeed,
-    requiresAdvancedTactics: advancedTactics
-  };
-};
-
-// Helper function to check if position is valid for new island
-const isValidPosition = (
-  row: number,
-  col: number,
-  grid: (Island | null)[][],
-  size: { rows: number; cols: number },
-  bridgeMap: Map<string, boolean>
-): boolean => {
-  // Check bounds
-  if (row < 0 || row >= size.rows || col < 0 || col >= size.cols) {
-    return false;
-  }
-  
-  // Check if position is already occupied
-  if (grid[row][col] !== null) {
-    return false;
-  }
-  
-  // Check adjacent cells (prevent islands from being too close)
-  for (let r = Math.max(0, row - 1); r <= Math.min(size.rows - 1, row + 1); r++) {
-    for (let c = Math.max(0, col - 1); c <= Math.min(size.cols - 1, col + 1); c++) {
-      if (grid[r][c] !== null) {
-        return false;
-      }
-    }
-  }
-  
-  return true;
-};
-
-// Difficulty settings - defines parameters for each difficulty level
-const difficultySettings = {
-  easy: {
-    size: { rows: 6, cols: 9 }, // 6x9 grid
-    islandCount: 12, // Adjust based on grid size
-    maxValue: 3,
-    advancedTactics: false
-  },
-  medium: {
-    size: { rows: 9, cols: 14 }, // 9x14 grid
-    islandCount: 25, // Adjust based on grid size
-    maxValue: 4,
-    advancedTactics: false
-  },
-  hard: {
-    size: { rows: 12, cols: 16 }, // 12x16 grid
-    islandCount: 35, // Adjust based on grid size
-    maxValue: 5,
-    advancedTactics: true
-  },
-  expert: {
-    size: { rows: 14, cols: 21 }, // 14x21 grid
-    islandCount: 45, // Adjust based on grid size
-    maxValue: 6,
-    advancedTactics: true
-  }
-};
-
-// Seeded random number generator for reproducible puzzles
-const seededRandom = (seed: number) => {
-  return () => {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-  };
-};
-
-// Check if a position is valid for a new island
-const isValidPosition = (
-  row: number, 
-  col: number, 
-  grid: (Island | null)[][], 
-  gridSize: number,
-  bridgeMap: Map<string, boolean>
-): boolean => {
-  // Check if position is within grid
-  if (row < 0 || row >= gridSize || col < 0 || col >= gridSize) {
-    return false;
-  }
-  
-  // Check if position is already occupied by an island
-  if (grid[row][col] !== null) {
-    return false;
-  }
-  
-  // Check if position is occupied by a bridge
-  const key = `${row},${col}`;
-  if (bridgeMap.has(key)) {
-    return false;
-  }
-  
-  return true;
-};
-
-// Mark path between islands as used by bridges
-const markPath = (
-  island1: Island,
-  island2: Island,
-  bridgeMap: Map<string, boolean>
-): void => {
-  if (island1.row === island2.row) {
-    // Horizontal bridge
-    const r = island1.row;
-    const minCol = Math.min(island1.col, island2.col);
-    const maxCol = Math.max(island1.col, island2.col);
-    
-    for (let c = minCol + 1; c < maxCol; c++) {
-      bridgeMap.set(`${r},${c}`, true);
-    }
-  } else {
-    // Vertical bridge
-    const c = island1.col;
-    const minRow = Math.min(island1.row, island2.row);
-    const maxRow = Math.max(island1.row, island2.row);
-    
-    for (let r = minRow + 1; r < maxRow; r++) {
-      bridgeMap.set(`${r},${c}`, true);
-    }
-  }
-};
-
-// Check if a path between islands is clear
-const isPathClear = (
-  island1: Island,
-  island2: Island,
-  islands: Island[],
-  bridgeMap: Map<string, boolean>
-): boolean => {
-  // Can only connect if they're in the same row or column
-  if (island1.row !== island2.row && island1.col !== island2.col) {
-    return false;
-  }
-  
-  if (island1.row === island2.row) {
-    // Horizontal check
-    const r = island1.row;
-    const minCol = Math.min(island1.col, island2.col);
-    const maxCol = Math.max(island1.col, island2.col);
-    
-    // Check for islands in between
-    const hasIslandBetween = islands.some(island => 
-      island.row === r && island.col > minCol && island.col < maxCol
-    );
-    
-    if (hasIslandBetween) {
-      return false;
-    }
-    
-    // Check for bridges in between
-    for (let c = minCol + 1; c < maxCol; c++) {
-      if (bridgeMap.has(`${r},${c}`)) {
-        return false;
-      }
-    }
-  } else {
-    // Vertical check
-    const c = island1.col;
-    const minRow = Math.min(island1.row, island2.row);
-    const maxRow = Math.max(island1.row, island2.row);
-    
-    // Check for islands in between
-    const hasIslandBetween = islands.some(island => 
-      island.col === c && island.row > minRow && island.row < maxRow
-    );
-    
-    if (hasIslandBetween) {
-      return false;
-    }
-    
-    // Check for bridges in between
-    for (let r = minRow + 1; r < maxRow; r++) {
-      if (bridgeMap.has(`${r},${c}`)) {
-        return false;
-      }
-    }
-  }
-  
-  return true;
-};
-
-// Find possible islands to connect to
-const findConnectableIslands = (
-  targetIsland: Island,
-  islands: Island[],
-  bridgeMap: Map<string, boolean>,
-  maxValue: number
-): Island[] => {
-  return islands.filter(island => 
-    island.id !== targetIsland.id && 
-    island.value < maxValue && 
-    targetIsland.value < maxValue &&
-    isPathClear(targetIsland, island, islands, bridgeMap)
-  );
-};
-
-// Create complex island connections that might require logical deduction
-const createAdvancedTacticsConnection = (
-  islands: Island[],
-  bridges: { startIslandId: string, endIslandId: string, count: 1 | 2, orientation: 'horizontal' | 'vertical' }[],
-  grid: (Island | null)[][],
-  bridgeMap: Map<string, boolean>,
-  random: () => number,
-  maxValue: number
-): boolean => {
-  // Find islands that could be part of a logical deduction chain
-  const candidateIslands = islands.filter(island => island.value < maxValue - 1);
-  if (candidateIslands.length < 3) return false;
-  
-  // Pick a chain of islands that will require logical deduction
-  const startIsland = candidateIslands[Math.floor(random() * candidateIslands.length)];
-  
-  // Find islands that can connect to our start island
-  const connectable = findConnectableIslands(startIsland, islands, bridgeMap, maxValue);
-  if (connectable.length < 2) return false;
-  
-  // Pick two islands to connect to our start island
-  const island1 = connectable[Math.floor(random() * connectable.length)];
-  
-  // Remove the first selected island and choose another
-  const otherConnectable = connectable.filter(i => i.id !== island1.id);
-  if (otherConnectable.length === 0) return false;
-  
-  const island2 = otherConnectable[Math.floor(random() * otherConnectable.length)];
-  
-  // Create a situation where the only solution requires deduction:
-  // - Connect start island to both island1 and island2 with a single bridge each
-  // - Make either island1 or island2 have a value that forces connection to the start island
-  
-  // Connect start island to island1
-  bridges.push({
-    startIslandId: startIsland.id,
-    endIslandId: island1.id,
-    count: 1,
-    orientation: startIsland.row === island1.row ? 'horizontal' : 'vertical'
-  });
-  
-  startIsland.value += 1;
-  island1.value += 1;
-  markPath(startIsland, island1, bridgeMap);
-  
-  // Connect start island to island2
-  bridges.push({
-    startIslandId: startIsland.id,
-    endIslandId: island2.id,
-    count: 1,
-    orientation: startIsland.row === island2.row ? 'horizontal' : 'vertical'
-  });
-  
-  startIsland.value += 1;
-  island2.value += 1;
-  markPath(startIsland, island2, bridgeMap);
-  
-  // Make one of the islands require an additional connection
-  if (random() < 0.5 && island1.value < maxValue - 1) {
-    island1.value += 1;
-  } else if (island2.value < maxValue - 1) {
-    island2.value += 1;
-  }
-  
-  return true;
-}
-
-export const generatePuzzle = (
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert',
-  seed?: number,
-  customOptions?: {
-    gridSize?: { rows: number; cols: number };
-    advancedTactics?: boolean;
-  }
-): Puzzle => {
-  console.log(`Generating puzzle with difficulty: ${difficulty}`);
-  
-  // Start with default settings for the difficulty
-  let { size, islandCount, maxValue, advancedTactics } = difficultySettings[difficulty];
-  
-  // Apply custom options if provided
-  if (customOptions) {
-    if (customOptions.gridSize) {
-      size = customOptions.gridSize;
-      // Adjust island count based on grid size
-      islandCount = Math.max(Math.floor((size.rows * size.cols) * 0.25), islandCount);
-    }
-    
-    if (customOptions.advancedTactics !== undefined) {
-      advancedTactics = customOptions.advancedTactics;
-    }
-  }
-  
-  console.log(`Grid size: ${size.rows}x${size.cols}, Advanced tactics: ${advancedTactics}`);
-  
-  // Use provided seed or generate a random one
-  const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
-  console.log(`Using seed: ${puzzleSeed}`);
-  const random = seededRandom(puzzleSeed);
-  
-  // Create empty grid for islands
-  const grid: (Island | null)[][] = Array(size.rows)
-    .fill(null)
-    .map(() => Array(size.cols).fill(null));
-  
-  // Rest of the puzzle generation logic...
-  // Make sure to use size.rows and size.cols instead of a single size value
-  // when checking grid boundaries and placing islands
-};
-
-  // Use a Map for bridge tracking (faster lookups)
-  const bridgeMap = new Map<string, boolean>();
-  
-  const islands: Island[] = [];
-  const bridgeConnections: {
-    startIslandId: string;
-    endIslandId: string;
-    count: 1 | 2;
-    orientation: 'horizontal' | 'vertical';
-  }[] = [];
   
   // Step 1: Place first island
   let attempts = 0;
@@ -746,3 +415,265 @@ export const generateDailyChallenge = (date: Date = new Date()): Puzzle => {
   
   return puzzle;
 };
+
+// Helper function to check if position is valid for new island
+const isValidPosition = (
+  row: number,
+  col: number,
+  grid: (Island | null)[][],
+  size: { rows: number; cols: number },
+  bridgeMap: Map<string, boolean>
+): boolean => {
+  // Check bounds
+  if (row < 0 || row >= size.rows || col < 0 || col >= size.cols) {
+    return false;
+  }
+  
+  // Check if position is already occupied
+  if (grid[row][col] !== null) {
+    return false;
+  }
+  
+  // Check adjacent cells (prevent islands from being too close)
+  for (let r = Math.max(0, row - 1); r <= Math.min(size.rows - 1, row + 1); r++) {
+    for (let c = Math.max(0, col - 1); c <= Math.min(size.cols - 1, col + 1); c++) {
+      if (grid[r][c] !== null) {
+        return false;
+      }
+    }
+  }
+  
+  return true;
+};
+
+// Difficulty settings - defines parameters for each difficulty level
+const difficultySettings = {
+  easy: {
+    size: { rows: 7, cols: 10 }, // 7x10 grid
+    islandCount: 12, // Adjust based on grid size
+    maxValue: 3,
+    advancedTactics: false
+  },
+  medium: {
+    size: { rows: 8, cols: 12 }, // 8x12 grid
+    islandCount: 20, // Adjust based on grid size
+    maxValue: 4,
+    advancedTactics: false
+  },
+  hard: {
+    size: { rows: 10, cols: 14 }, // 10x14 grid
+    islandCount: 30, // Adjust based on grid size
+    maxValue: 5,
+    advancedTactics: true
+  },
+  expert: {
+    size: { rows: 12, cols: 16 }, // 12x16 grid
+    islandCount: 40, // Adjust based on grid size
+    maxValue: 6,
+    advancedTactics: true
+  }
+};
+
+// Check if a position is valid for a new island
+const isValidPosition = (
+  row: number, 
+  col: number, 
+  grid: (Island | null)[][], 
+  gridSize: { rows: number; cols: number },
+  bridgeMap: Map<string, boolean>
+): boolean => {
+  // Check if position is within grid
+  if (row < 0 || row >= gridSize.rows || col < 0 || col >= gridSize.cols) {
+    return false;
+  }
+  
+  // Check if position is already occupied by an island
+  if (grid[row][col] !== null) {
+    return false;
+  }
+  
+  // Check if position is occupied by a bridge
+  const key = `${row},${col}`;
+  if (bridgeMap.has(key)) {
+    return false;
+  }
+  
+  return true;
+};
+
+// Mark path between islands as used by bridges
+const markPath = (
+  island1: Island,
+  island2: Island,
+  bridgeMap: Map<string, boolean>
+): void => {
+  if (island1.row === island2.row) {
+    // Horizontal bridge
+    const r = island1.row;
+    const minCol = Math.min(island1.col, island2.col);
+    const maxCol = Math.max(island1.col, island2.col);
+    
+    for (let c = minCol + 1; c < maxCol; c++) {
+      bridgeMap.set(`${r},${c}`, true);
+    }
+  } else {
+    // Vertical bridge
+    const c = island1.col;
+    const minRow = Math.min(island1.row, island2.row);
+    const maxRow = Math.max(island1.row, island2.row);
+    
+    for (let r = minRow + 1; r < maxRow; r++) {
+      bridgeMap.set(`${r},${c}`, true);
+    }
+  }
+};
+
+// Check if a path between islands is clear
+const isPathClear = (
+  island1: Island,
+  island2: Island,
+  islands: Island[],
+  bridgeMap: Map<string, boolean>
+): boolean => {
+  // Can only connect if they're in the same row or column
+  if (island1.row !== island2.row && island1.col !== island2.col) {
+    return false;
+  }
+  
+  if (island1.row === island2.row) {
+    // Horizontal check
+    const r = island1.row;
+    const minCol = Math.min(island1.col, island2.col);
+    const maxCol = Math.max(island1.col, island2.col);
+    
+    // Check for islands in between
+    const hasIslandBetween = islands.some(island => 
+      island.row === r && island.col > minCol && island.col < maxCol
+    );
+    
+    if (hasIslandBetween) {
+      return false;
+    }
+    
+    // Check for bridges in between
+    for (let c = minCol + 1; c < maxCol; c++) {
+      if (bridgeMap.has(`${r},${c}`)) {
+        return false;
+      }
+    }
+  } else {
+    // Vertical check
+    const c = island1.col;
+    const minRow = Math.min(island1.row, island2.row);
+    const maxRow = Math.max(island1.row, island2.row);
+    
+    // Check for islands in between
+    const hasIslandBetween = islands.some(island => 
+      island.col === c && island.row > minRow && island.row < maxRow
+    );
+    
+    if (hasIslandBetween) {
+      return false;
+    }
+    
+    // Check for bridges in between
+    for (let r = minRow + 1; r < maxRow; r++) {
+      if (bridgeMap.has(`${r},${c}`)) {
+        return false;
+      }
+    }
+  }
+  
+  return true;
+};
+
+// Find possible islands to connect to
+const findConnectableIslands = (
+  targetIsland: Island,
+  islands: Island[],
+  bridgeMap: Map<string, boolean>,
+  maxValue: number
+): Island[] => {
+  return islands.filter(island => 
+    island.id !== targetIsland.id && 
+    island.value < maxValue && 
+    targetIsland.value < maxValue &&
+    isPathClear(targetIsland, island, islands, bridgeMap)
+  );
+};
+
+// Create complex island connections that might require logical deduction
+const createAdvancedTacticsConnection = (
+  islands: Island[],
+  bridges: { startIslandId: string, endIslandId: string, count: 1 | 2, orientation: 'horizontal' | 'vertical' }[],
+  grid: (Island | null)[][],
+  bridgeMap: Map<string, boolean>,
+  random: () => number,
+  maxValue: number
+): boolean => {
+  // Find islands that could be part of a logical deduction chain
+  const candidateIslands = islands.filter(island => island.value < maxValue - 1);
+  if (candidateIslands.length < 3) return false;
+  
+  // Pick a chain of islands that will require logical deduction
+  const startIsland = candidateIslands[Math.floor(random() * candidateIslands.length)];
+  
+  // Find islands that can connect to our start island
+  const connectable = findConnectableIslands(startIsland, islands, bridgeMap, maxValue);
+  if (connectable.length < 2) return false;
+  
+  // Pick two islands to connect to our start island
+  const island1 = connectable[Math.floor(random() * connectable.length)];
+  
+  // Remove the first selected island and choose another
+  const otherConnectable = connectable.filter(i => i.id !== island1.id);
+  if (otherConnectable.length === 0) return false;
+  
+  const island2 = otherConnectable[Math.floor(random() * otherConnectable.length)];
+  
+  // Create a situation where the only solution requires deduction:
+  // - Connect start island to both island1 and island2 with a single bridge each
+  // - Make either island1 or island2 have a value that forces connection to the start island
+  
+  // Connect start island to island1
+  bridges.push({
+    startIslandId: startIsland.id,
+    endIslandId: island1.id,
+    count: 1,
+    orientation: startIsland.row === island1.row ? 'horizontal' : 'vertical'
+  });
+  
+  startIsland.value += 1;
+  island1.value += 1;
+  markPath(startIsland, island1, bridgeMap);
+  
+  // Connect start island to island2
+  bridges.push({
+    startIslandId: startIsland.id,
+    endIslandId: island2.id,
+    count: 1,
+    orientation: startIsland.row === island2.row ? 'horizontal' : 'vertical'
+  });
+  
+  startIsland.value += 1;
+  island2.value += 1;
+  markPath(startIsland, island2, bridgeMap);
+  
+  // Make one of the islands require an additional connection
+  if (random() < 0.5 && island1.value < maxValue - 1) {
+    island1.value += 1;
+  } else if (island2.value < maxValue - 1) {
+    island2.value += 1;
+  }
+  
+  return true;
+}
+
+export const customGridSizeOptions = [
+  { label: "7x10", value: { rows: 7, cols: 10 } },
+  { label: "8x12", value: { rows: 8, cols: 12 } },
+  { label: "10x14", value: { rows: 10, cols: 14 } },
+  { label: "12x16", value: { rows: 12, cols: 16 } },
+  { label: "13x18", value: { rows: 13, cols: 18 } },
+  { label: "15x20", value: { rows: 15, cols: 20 } }
+];

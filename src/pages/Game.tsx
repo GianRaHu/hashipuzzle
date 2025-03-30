@@ -319,6 +319,8 @@ const Game: React.FC = () => {
       
       setTimeout(() => {
         try {
+          console.log(`Restarting puzzle with seed: ${puzzle.seed}`);
+          
           // Create custom options if needed
           const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
             ? {
@@ -330,9 +332,10 @@ const Game: React.FC = () => {
           // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
           const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
           
+          // Ensure we use the exact same seed to restart the puzzle
           const newPuzzle = generatePuzzle(
             difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
-            puzzle.seed,
+            puzzle.seed, // Use the exact same seed
             customOptions
           );
           
@@ -423,9 +426,9 @@ const Game: React.FC = () => {
         timer={timer}
         bestTime={bestTime}
         handleUndo={handleUndo}
-        restartPuzzle={restartPuzzle} // Pass the function directly without confirmation
-        setShowRestartDialog={setRestartConfirmOpen} // Pass the state setter instead
-        showRestartDialog={restartConfirmOpen} // Pass the state
+        restartPuzzle={restartPuzzle}
+        setShowRestartDialog={setRestartConfirmOpen}
+        showRestartDialog={restartConfirmOpen}
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
       />
@@ -446,8 +449,6 @@ const Game: React.FC = () => {
             seed={puzzle.seed}
           />
         )}
-        
-        {/* Remove duplicate AlertDialog here since we'll handle it in the GameHeader */}
       </main>
     </div>
   );
