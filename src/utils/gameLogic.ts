@@ -19,14 +19,17 @@ export type Bridge = {
 export type Puzzle = {
   id: string;
   difficulty: 'easy' | 'medium' | 'hard' | 'expert';
-  size: number;
+  size: {
+    rows: number;
+    cols: number;
+  };
   islands: Island[];
   bridges: Bridge[];
   solved: boolean;
   startTime?: number;
   endTime?: number;
-  seed?: number;  // Added seed for reproducible puzzles
-  requiresAdvancedTactics?: boolean; // Whether this puzzle requires advanced tactics
+  seed?: number;
+  requiresAdvancedTactics?: boolean;
 };
 
 // Generate a unique ID

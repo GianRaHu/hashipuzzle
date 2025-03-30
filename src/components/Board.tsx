@@ -26,8 +26,21 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const [dragPosition, setDragPosition] = useState<{x: number, y: number} | null>(null);
   const [dragOverIsland, setDragOverIsland] = useState<IslandType | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
-  const isDesktop = useMediaQuery('(min-width: 768px)');
-  
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+    // Update the grid layout CSS to handle rectangular grids
+    const gridStyle = {
+      display: 'grid',
+      gridTemplateRows: `repeat(${puzzle.size.rows}, 1fr)`,
+      gridTemplateColumns: `repeat(${puzzle.size.cols}, 1fr)`,
+      gap: '2px',
+      padding: '8px',
+      backgroundColor: 'var(--grid-bg)',
+      borderRadius: '8px',
+      width: '100%',
+      maxWidth: `${puzzle.size.cols * 40}px`, // Adjust cell size as needed
+      aspectRatio: `${puzzle.size.cols} / ${puzzle.size.rows}`,
+      margin: '0 auto'
+    };
   // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
     if (selectedIsland) {
