@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
@@ -141,9 +142,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     const draggedOverIsland = puzzle.islands.find(island => {
       if (island.id === dragStartIsland.id) return false;
       
-      const cellSize = 100 / puzzle.size;
-      const islandX = (island.col * cellSize + cellSize / 2) * boardRect.width / 100;
-      const islandY = (island.row * cellSize + cellSize / 2) * boardRect.height / 100;
+      const cellSizeX = 100 / puzzle.size.cols;
+      const cellSizeY = 100 / puzzle.size.rows;
+      
+      const islandX = (island.col * cellSizeX + cellSizeX / 2) * boardRect.width / 100;
+      const islandY = (island.row * cellSizeY + cellSizeY / 2) * boardRect.height / 100;
       
       // Check if pointer is within island radius (using 30px as approximate radius)
       const dx = relativeX - islandX;
