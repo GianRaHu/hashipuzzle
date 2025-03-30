@@ -8,7 +8,7 @@ interface IslandProps {
   onClick: () => void;
   onDragStart: (event: React.MouseEvent | React.TouchEvent) => void;
   onDragEnd: () => void;
-  gridSize: number;
+  gridSize: { rows: number; cols: number };
 }
 
 const Island: React.FC<IslandProps> = ({ 
@@ -23,10 +23,11 @@ const Island: React.FC<IslandProps> = ({
   const touchTimerRef = useRef<number | null>(null);
   const moveDetectedRef = useRef<boolean>(false);
   
-  // Calculate the size and position
-  const cellSize = 100 / gridSize;
-  const xPos = island.col * cellSize + cellSize / 2;
-  const yPos = island.row * cellSize + cellSize / 2;
+  // Calculate the size and position based on grid dimensions
+  const cellSizeX = 100 / gridSize.cols;
+  const cellSizeY = 100 / gridSize.rows;
+  const xPos = island.col * cellSizeX + cellSizeX / 2;
+  const yPos = island.row * cellSizeY + cellSizeY / 2;
   
   // Connection completeness (for visual feedback)
   const connectionsNeeded = island.value;
@@ -38,10 +39,11 @@ const Island: React.FC<IslandProps> = ({
   
   // Responsive node sizing based on grid size
   const getNodeSize = () => {
-    if (gridSize <= 7) return 'w-8 h-8 text-base';
-    if (gridSize <= 10) return 'w-7 h-7 text-sm';
-    if (gridSize <= 12) return 'w-6 h-6 text-xs';
-    return 'w-5 h-5 text-xs'; // For largest grids (14x14)
+    const minGridSize = Math.min(gridSize.rows, gridSize.cols);
+    if (minGridSize <= 7) return 'w-8 h-8 text-base';
+    if (minGridSize <= 10) return 'w-7 h-7 text-sm';
+    if (minGridSize <= 12) return 'w-6 h-6 text-xs';
+    return 'w-5 h-5 text-xs'; // For largest grids
   };
   
   const nodeSize = getNodeSize();
