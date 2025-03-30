@@ -2,187 +2,183 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RotateCw, Wand2 } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Slider } from '@/components/ui/slider';
+import { Info } from 'lucide-react';
+import { availableGridSizes } from '@/utils/puzzleGenerator';
 
 const CustomGame = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [seed, setSeed] = useState('');
-  const [config, setConfig] = useState({
-    gridSize: 7,
-    advancedTactics: false
-  });
-
-  const handleSeedSubmit = (e: React.FormEvent) => {
+  const [activeTab, setActiveTab] = useState<string>('size');
+  const [seedMode, setSeedMode] = useState<boolean>(false);
+  const [seed, setSeed] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<{ width: number, height: number }>(availableGridSizes[2]); // Default to 10x14
+  const [advancedTactics, setAdvancedTactics] = useState<boolean>(false);
+  
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!seed.trim()) {
-      toast({
-        title: "Seed required",
-        description: "Please enter a seed value",
-        variant: "destructive"
-      });
-      return;
+    
+    // Build URL
+    const params = new URLSearchParams();
+    
+    if (seedMode && seed) {
+      params.append('seed', seed);
     }
-
-    // Convert seed to a number
-    const seedNumber = parseInt(seed, 10) || Math.abs(seed.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0));
-
-    // When using a seed, we don't need to pass advancedTactics parameter as it is
-    // deterministically generated from the seed
-    navigate(`/game/custom?seed=${seedNumber}`);
+    
+    params.append('gridSize', `${selectedSize.width}x${selectedSize.height}`);
+    params.append('advancedTactics', advancedTactics.toString());
+    
+    navigate(`/game/custom?${params.toString()}`);
   };
-
-  const generateRandomSeed = () => {
-    const randomSeed = Math.floor(Math.random() * 1000000);
-    setSeed(randomSeed.toString());
-  };
-
-  const handleCreateCustomGame = () => {
-    // Pass gridSize and advanced tactics as URL parameters
-    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}`);
-  };
-
+  
   return (
-    <div className="content-container max-w-4xl animate-fade-in page-transition">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-medium mb-2">Custom Game</h1>
-        <p className="text-foreground/70">Create a customized Hashi puzzle</p>
+    <div className="content-container max-w-md animate-fade-in page-transition">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-center">Custom Game</h1>
+        <p className="text-muted-foreground text-center">Create a custom Hashi puzzle</p>
       </div>
-
-      <Tabs defaultValue="seed" className="w-full">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-          <TabsTrigger value="seed">By Seed</TabsTrigger>
-          <TabsTrigger value="custom">Custom Configuration</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="seed">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generate by Seed</CardTitle>
-              <CardDescription>
-                Enter a seed value to generate a reproducible puzzle
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSeedSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="seed">Seed Value</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="seed"
-                      placeholder="Enter seed value"
-                      value={seed}
-                      onChange={(e) => setSeed(e.target.value)}
-                      className="flex-1"
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Tabs defaultValue="size" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="size">Grid Size</TabsTrigger>
+            <TabsTrigger value="seed">Seed</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="size" className="space-y-6 pt-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium">Select Grid Size</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Choose a size for your custom puzzle
+                </p>
+              </div>
+              
+              <RadioGroup 
+                defaultValue={`${selectedSize.width}x${selectedSize.height}`} 
+                onValueChange={(value) => {
+                  const [width, height] = value.split('x').map(Number);
+                  setSelectedSize({ width, height });
+                }}
+                className="grid grid-cols-2 gap-3"
+              >
+                {availableGridSizes.map(size => (
+                  <div key={`${size.width}x${size.height}`} className="flex items-center space-x-2">
+                    <RadioGroupItem 
+                      value={`${size.width}x${size.height}`} 
+                      id={`size-${size.width}x${size.height}`}
                     />
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={generateRandomSeed}
-                    >
-                      <RotateCw className="h-4 w-4 mr-2" />
-                      Random
-                    </Button>
+                    <Label htmlFor={`size-${size.width}x${size.height}`} className="flex-1">
+                      {size.label}
+                    </Label>
                   </div>
-                </div>
-
-                {/* Removed advanced tactics toggle for seed mode */}
-
-                <Button type="submit" className="w-full">
-                  Generate Puzzle
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="custom">
-          <Card>
-            <CardHeader>
-              <CardTitle>Custom Configuration</CardTitle>
-              <CardDescription>
-                Configure your puzzle parameters
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label>Grid Size</Label>
-                  <RadioGroup 
-                    value={config.gridSize.toString()}
-                    onValueChange={(value) => setConfig({...config, gridSize: parseInt(value)})}
-                    className="grid grid-cols-3 gap-4 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="6" id="size-6" />
-                      <Label htmlFor="size-6">6x6</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="7" id="size-7" />
-                      <Label htmlFor="size-7">7x7</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="8" id="size-8" />
-                      <Label htmlFor="size-8">8x8</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="9" id="size-9" />
-                      <Label htmlFor="size-9">9x9</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="10" id="size-10" />
-                      <Label htmlFor="size-10">10x10</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="12" id="size-12" />
-                      <Label htmlFor="size-12">12x12</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="14" id="size-14" />
-                      <Label htmlFor="size-14">14x14</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <Separator />
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="custom-advanced-tactics">Advanced Tactics</Label>
-                    <Switch 
-                      id="custom-advanced-tactics"
-                      checked={config.advancedTactics}
-                      onCheckedChange={(checked) => setConfig({...config, advancedTactics: checked})}
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Puzzles with advanced tactics require more logical deduction to solve
+                ))}
+              </RadioGroup>
+              
+              <div className="flex items-center justify-between pt-4">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="advanced-tactics" className="font-medium">
+                    Advanced Tactics
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Require logical deduction beyond simple counting
                   </p>
                 </div>
-
-                <Button 
-                  className="w-full mt-4" 
-                  onClick={handleCreateCustomGame}
-                >
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  Create Puzzle
-                </Button>
+                <Switch
+                  id="advanced-tactics"
+                  checked={advancedTactics}
+                  onCheckedChange={setAdvancedTactics}
+                />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              
+              <Alert className="bg-muted/50 mt-4">
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  Larger grids have more islands and are more challenging. Advanced tactics require logical deduction rather than just counting.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="seed" className="space-y-6 pt-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium">Use Seed</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Enter a seed number to generate a specific puzzle
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="seed">Seed Number</Label>
+                <Input
+                  id="seed"
+                  type="number"
+                  min="0"
+                  max="999999"
+                  placeholder="Enter a number (e.g. 123456)"
+                  value={seed}
+                  onChange={(e) => setSeed(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use the same seed to generate the same puzzle again
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2">
+                <div className="space-y-0.5 flex-1">
+                  <Label htmlFor="seed-mode" className="font-medium">
+                    Use Seed Mode
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Enable to use a specific seed number
+                  </p>
+                </div>
+                <Switch
+                  id="seed-mode"
+                  checked={seedMode}
+                  onCheckedChange={setSeedMode}
+                />
+              </div>
+              
+              <div className="pt-4">
+                <Label className="mb-2 block">Select Grid Size</Label>
+                <RadioGroup 
+                  defaultValue={`${selectedSize.width}x${selectedSize.height}`} 
+                  onValueChange={(value) => {
+                    const [width, height] = value.split('x').map(Number);
+                    setSelectedSize({ width, height });
+                  }}
+                  className="grid grid-cols-2 gap-3"
+                >
+                  {availableGridSizes.map(size => (
+                    <div key={`seed-${size.width}x${size.height}`} className="flex items-center space-x-2">
+                      <RadioGroupItem 
+                        value={`${size.width}x${size.height}`} 
+                        id={`seed-size-${size.width}x${size.height}`}
+                      />
+                      <Label htmlFor={`seed-size-${size.width}x${size.height}`} className="flex-1">
+                        {size.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <Button type="submit" className="w-full">
+          Generate Puzzle
+        </Button>
+      </form>
     </div>
   );
 };
