@@ -6,129 +6,142 @@ interface BridgeProps {
   bridge: BridgeType;
   startIsland: Island;
   endIsland: Island;
-  gridSize: { width: number, height: number };
+  gridSize: number;
   animate?: boolean;
   onClick?: () => void;
-  scaleFactor?: number;
 }
 
-const Bridge: React.FC<BridgeProps> = ({ 
-  bridge, 
-  startIsland, 
-  endIsland, 
-  gridSize, 
-  animate = true,
-  onClick,
-  scaleFactor = 1
-}) => {
-  // Calculate the position and dimensions based on grid size
-  const { orientation, count } = bridge;
-  const cellWidth = 100 / gridSize.width;
-  const cellHeight = 100 / gridSize.height;
+const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true, onClick }) => {
+  const cellSize = 100 / gridSize;
   
-  // Bridge thickness scales with grid size
-  const baseThickness = Math.min(2, Math.min(cellWidth, cellHeight) * 0.15);
-  const thickness = baseThickness * scaleFactor;
+  const bridgeStyle: React.CSSProperties = {
+    position: 'absolute',
+    backgroundColor: 'hsl(var(--gameAccent)/0.8)',
+    transition: 'all 0.3s ease',
+    zIndex: 5
+  };
   
-  // Increased island padding to prevent bridges from overlapping islands
-  const islandPadding = Math.min(cellWidth, cellHeight) * 0.45 * scaleFactor;
+  const isHorizontal = bridge.orientation === 'horizontal';
+  const isSingleBridge = bridge.count === 1;
   
-  // Calculate bridge position
-  let left, top, width, height;
+  // Determine node radius as a percentage of cell size based on grid size
+  const getNodeRadiusPercent = () => {
+    if (gridSize <= 7) return 18; // Increased from 16 to 18 for better spacing
+    if (gridSize <= 10) return 16;
+    if (gridSize <= 12) return 14;
+    return 12; // For largest grids (14x14)
+  };
   
-  if (orientation === 'horizontal') {
-    // Horizontal bridge
-    const startCol = Math.min(startIsland.col, endIsland.col);
-    const endCol = Math.max(startIsland.col, endIsland.col);
+  // Node radius as a percentage of cell size for better scaling
+  const nodeRadiusPercent = getNodeRadiusPercent();
+  
+  if (isHorizontal) {
+    const minCol = Math.min(startIsland.col, endIsland.col);
+    const maxCol = Math.max(startIsland.col, endIsland.col);
+    const width = (maxCol - minCol) * cellSize;
+    const xPos = minCol * cellSize + cellSize / 2;
+    const yPos = startIsland.row * cellSize + cellSize / 2;
     
-    // Position at the middle of the row
-    top = `${startIsland.row * cellHeight + (cellHeight / 2) - (thickness / 2)}%`;
+    // Calculate bridge start and end positions to avoid overlapping with islands
+    const nodeOffsetX = (nodeRadiusPercent / 100) * cellSize;
+    const adjustedWidth = width - (nodeOffsetX * 2);
+    const adjustedPos = xPos + nodeOffsetX;
     
-    // Start after the first island and end before the second island
-    left = `${startCol * cellWidth + islandPadding}%`;
-    width = `${(endCol - startCol) * cellWidth - (islandPadding * 2)}%`;
-    height = `${thickness}%`;
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
-    // For double bridges, adjust positioning
-    if (count === 2) {
-      return (
-        <>
+    const firstBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${adjustedPos}%`,
+      top: `${yPos - firstBridgeOffset}%`,
+      width: animate ? '0%' : `${adjustedWidth}%`,
+      height: '2px',
+      transform: 'translateY(-50%)',
+      cursor: 'pointer'
+    };
+    
+    const secondBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${adjustedPos}%`,
+      top: `${yPos + secondBridgeOffset}%`,
+      width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
+      height: '2px',
+      transform: 'translateY(-50%)',
+      opacity: bridge.count === 2 ? 1 : 0,
+      cursor: 'pointer'
+    };
+    
+    return (
+      <div className="bridge-container" onClick={onClick}>
+        <div 
+          className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+          style={firstBridgeStyle}
+          aria-hidden="true"
+        />
+        {bridge.count === 2 && (
           <div 
-            className={`absolute bg-foreground ${animate ? 'animate-fade-in' : ''} cursor-pointer`}
-            style={{ 
-              left, 
-              top: `calc(${top} - ${thickness * 0.75}%)`, 
-              width, 
-              height: `${thickness}%`,
-              zIndex: 1
-            }}
-            onClick={onClick}
+            className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+            style={secondBridgeStyle}
+            aria-hidden="true"
           />
-          <div 
-            className={`absolute bg-foreground ${animate ? 'animate-fade-in' : ''} cursor-pointer`}
-            style={{ 
-              left, 
-              top: `calc(${top} + ${thickness * 0.75}%)`, 
-              width, 
-              height: `${thickness}%`,
-              zIndex: 1
-            }}
-            onClick={onClick}
-          />
-        </>
-      );
-    }
+        )}
+      </div>
+    );
   } else {
-    // Vertical bridge
-    const startRow = Math.min(startIsland.row, endIsland.row);
-    const endRow = Math.max(startIsland.row, endIsland.row);
+    const minRow = Math.min(startIsland.row, endIsland.row);
+    const maxRow = Math.max(startIsland.row, endIsland.row);
+    const height = (maxRow - minRow) * cellSize;
+    const xPos = startIsland.col * cellSize + cellSize / 2;
+    const yPos = minRow * cellSize + cellSize / 2;
     
-    // Position at the middle of the column
-    left = `${startIsland.col * cellWidth + (cellWidth / 2) - (thickness / 2)}%`;
+    // Calculate bridge start and end positions to avoid overlapping with islands
+    const nodeOffsetY = (nodeRadiusPercent / 100) * cellSize;
+    const adjustedHeight = height - (nodeOffsetY * 2);
+    const adjustedPos = yPos + nodeOffsetY;
     
-    // Start after the first island and end before the second island
-    top = `${startRow * cellHeight + islandPadding}%`;
-    height = `${(endRow - startRow) * cellHeight - (islandPadding * 2)}%`;
-    width = `${thickness}%`;
+    // Reduced spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
-    // For double bridges, adjust positioning
-    if (count === 2) {
-      return (
-        <>
+    const firstBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${xPos - firstBridgeOffset}%`,
+      top: `${adjustedPos}%`,
+      width: '2px',
+      height: animate ? '0%' : `${adjustedHeight}%`,
+      transform: 'translateX(-50%)',
+      cursor: 'pointer'
+    };
+    
+    const secondBridgeStyle: React.CSSProperties = {
+      ...bridgeStyle,
+      left: `${xPos + secondBridgeOffset}%`,
+      top: `${adjustedPos}%`,
+      width: '2px',
+      height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
+      transform: 'translateX(-50%)',
+      opacity: bridge.count === 2 ? 1 : 0,
+      cursor: 'pointer'
+    };
+    
+    return (
+      <div className="bridge-container" onClick={onClick}>
+        <div 
+          className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+          style={firstBridgeStyle}
+          aria-hidden="true"
+        />
+        {bridge.count === 2 && (
           <div 
-            className={`absolute bg-foreground ${animate ? 'animate-fade-in' : ''} cursor-pointer`}
-            style={{ 
-              top, 
-              left: `calc(${left} - ${thickness * 0.75}%)`, 
-              height, 
-              width: `${thickness}%`,
-              zIndex: 1
-            }}
-            onClick={onClick}
+            className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
+            style={secondBridgeStyle}
+            aria-hidden="true"
           />
-          <div 
-            className={`absolute bg-foreground ${animate ? 'animate-fade-in' : ''} cursor-pointer`}
-            style={{ 
-              top, 
-              left: `calc(${left} + ${thickness * 0.75}%)`, 
-              height, 
-              width: `${thickness}%`,
-              zIndex: 1
-            }}
-            onClick={onClick}
-          />
-        </>
-      );
-    }
+        )}
+      </div>
+    );
   }
-  
-  return (
-    <div 
-      className={`absolute bg-foreground ${animate ? 'animate-fade-in' : ''} cursor-pointer`}
-      style={{ left, top, width, height, zIndex: 1 }}
-      onClick={onClick}
-    />
-  );
 };
 
 export default Bridge;

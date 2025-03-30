@@ -1,3 +1,4 @@
+
 import { Puzzle } from './gameLogic';
 import { format } from 'date-fns';
 
@@ -27,7 +28,6 @@ export interface GameStats {
 // Game settings interface
 export interface GameSettings {
   darkMode: boolean;
-  themePreference?: 'light' | 'dark' | 'system';
   soundEnabled: boolean;
   analyticsEnabled: boolean;
   showTimer: boolean;
@@ -199,7 +199,6 @@ export const getSettings = (): GameSettings => {
   const settings = localStorage.getItem('hashi_settings');
   return settings ? JSON.parse(settings) : {
     darkMode: false,
-    themePreference: 'system',
     soundEnabled: true,
     analyticsEnabled: true,
     showTimer: true
@@ -210,14 +209,8 @@ export const getSettings = (): GameSettings => {
 export const saveSettings = (settings: GameSettings): void => {
   localStorage.setItem('hashi_settings', JSON.stringify(settings));
   
-  // Apply theme based on preference
-  if (settings.themePreference === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.classList.toggle('dark', prefersDark);
-  } else {
-    // Apply dark mode immediately if using explicit light/dark setting
-    document.documentElement.classList.toggle('dark', settings.themePreference === 'dark');
-  }
+  // Apply dark mode immediately
+  document.documentElement.classList.toggle('dark', settings.darkMode);
 };
 
 // Clear all local data

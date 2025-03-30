@@ -1,110 +1,174 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
-import { cva } from 'class-variance-authority';
 
 interface IslandProps {
   island: IslandType;
   isSelected: boolean;
   onClick: () => void;
-  onDragStart: (e: React.MouseEvent | React.TouchEvent) => void;
+  onDragStart: (event: React.MouseEvent | React.TouchEvent) => void;
   onDragEnd: () => void;
-  gridSize: { width: number, height: number };
-  scaleFactor?: number;
+  gridSize: number;
 }
-
-// Calculate the status of an island based on its value and connections
-const getIslandStatus = (island: IslandType): 'empty' | 'incomplete' | 'complete' | 'overconnected' => {
-  const connectedBridges = island.connectedTo?.length || 0;
-  
-  if (connectedBridges === 0) return 'empty';
-  if (connectedBridges < island.value) return 'incomplete';
-  if (connectedBridges > island.value) return 'overconnected';
-  return 'complete';
-};
-
-// Island component styling variants
-const islandVariants = cva(
-  "absolute flex items-center justify-center rounded-full transition-all cursor-pointer select-none touch-none",
-  {
-    variants: {
-      status: {
-        empty: "bg-background border-2 border-foreground text-foreground",
-        incomplete: "bg-destructive text-destructive-foreground",
-        complete: "bg-green-500 text-white",
-        overconnected: "bg-yellow-500 text-white",
-      },
-      selected: {
-        true: "ring-2 ring-offset-2 ring-primary ring-offset-background scale-110",
-        false: "",
-      },
-    },
-    defaultVariants: {
-      status: "empty",
-      selected: false,
-    },
-  }
-);
 
 const Island: React.FC<IslandProps> = ({ 
   island, 
   isSelected, 
   onClick, 
   onDragStart, 
-  onDragEnd,
-  gridSize,
-  scaleFactor = 1
+  onDragEnd, 
+  gridSize 
 }) => {
-  const status = getIslandStatus(island);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchTimerRef = useRef<number | null>(null);
+  const moveDetectedRef = useRef<boolean>(false);
   
-  // Calculate position based on grid size
-  const cellWidth = 100 / gridSize.width;
-  const cellHeight = 100 / gridSize.height;
+  // Calculate the size and position
+  const cellSize = 100 / gridSize;
+  const xPos = island.col * cellSize + cellSize / 2;
+  const yPos = island.row * cellSize + cellSize / 2;
   
-  // Calculate island size based on grid size
-  const baseSize = Math.min(cellWidth, cellHeight) * 0.7;
-  const size = baseSize * scaleFactor;
+  // Connection completeness (for visual feedback)
+  const connectionsNeeded = island.value;
+  const actualConnections = island.connectedTo.length;
   
-  // Position the island in the center of its cell
-  const left = `${island.col * cellWidth + (cellWidth - size) / 2}%`;
-  const top = `${island.row * cellHeight + (cellHeight - size) / 2}%`;
+  // Determine visual state with fixed sizes and consistent transparency
+  let stateClass = '';
+  let bgColorClass = '';
   
-  // Set font size based on grid size
-  const fontSize = `${Math.max(size * 0.4, 1)}vmin`;
+  // Responsive node sizing based on grid size
+  const getNodeSize = () => {
+    if (gridSize <= 7) return 'w-8 h-8 text-base';
+    if (gridSize <= 10) return 'w-7 h-7 text-sm';
+    if (gridSize <= 12) return 'w-6 h-6 text-xs';
+    return 'w-5 h-5 text-xs'; // For largest grids (14x14)
+  };
   
-  // Handle mouse/touch events
-  const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
-    // Prevent default to avoid issues on touch devices
-    e.preventDefault();
+  const nodeSize = getNodeSize();
+  
+  if (isSelected || isDragging) {
+    stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background';
+    bgColorClass = 'bg-primary/20 text-primary font-bold';
+  } else if (actualConnections === 0) {
+    // No connections yet - white
+    stateClass = 'ring-2 ring-white/70 dark:ring-slate-400';
+    bgColorClass = 'bg-white dark:bg-slate-800 text-foreground';
+  } else if (actualConnections === connectionsNeeded) {
+    // Connections match exactly - green
+    stateClass = 'ring-2 ring-green-500';
+    bgColorClass = 'bg-green-100 dark:bg-green-900/50 text-green-600 font-bold';
+  } else if (actualConnections > connectionsNeeded) {
+    // Too many connections - yellow
+    stateClass = 'ring-2 ring-yellow-500';
+    bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 font-bold';
+  } else if (actualConnections < connectionsNeeded) {
+    // Some connections but not complete - red
+    stateClass = 'ring-2 ring-red-500';
+    bgColorClass = 'bg-red-50 dark:bg-red-900/50 text-red-600';
+  }
+
+  // Handle touch start
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Start a timer to differentiate between tap and drag
+    moveDetectedRef.current = false;
+    
+    touchTimerRef.current = window.setTimeout(() => {
+      if (!moveDetectedRef.current) {
+        // It was a tap, not a drag
+        onClick();
+      }
+      touchTimerRef.current = null;
+    }, 150); // Short delay to detect intention
+  };
+
+  // Handle touch move
+  const handleTouchMove = (e: React.TouchEvent) => {
+    moveDetectedRef.current = true;
+    
+    // If we detect movement, it's a drag
+    if (!isDragging) {
+      setIsDragging(true);
+      onDragStart(e);
+    }
+    
+    // Clear the tap timer if it's still active
+    if (touchTimerRef.current !== null) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
+  // Handle touch end
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // If a drag was in progress, end it
+    if (isDragging) {
+      setIsDragging(false);
+      onDragEnd();
+    }
+    
+    // Clear any active timers
+    if (touchTimerRef.current !== null) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+      
+      // If no movement was detected and timer was canceled before firing,
+      // treat as a tap
+      if (!moveDetectedRef.current) {
+        onClick();
+      }
+    }
+  };
+
+  // Handle mouse events (for desktop)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Enable drag mode immediately for mouse
+    setIsDragging(true);
     onDragStart(e);
   };
-  
-  const handlePointerUp = () => {
-    onClick();
-    onDragEnd();
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    // If was dragging, end drag
+    if (isDragging) {
+      setIsDragging(false);
+      onDragEnd();
+    } else {
+      // Otherwise, it's a click
+      onClick();
+    }
   };
-  
-  // Add event handlers for desktop and mobile
+
+  // Handle mouse click (for desktop - click without drag)
+  const handleClick = (e: React.MouseEvent) => {
+    // Only treat as click if it wasn't part of a drag
+    if (!isDragging) {
+      onClick();
+    }
+    e.preventDefault();
+  };
+
   return (
-    <div
-      className={islandVariants({ status, selected: isSelected })}
-      style={{ 
-        left, 
-        top, 
-        width: `${size}%`, 
-        height: `${size}%`,
-        fontSize,
-        zIndex: isSelected ? 5 : 2
+    <button
+      type="button"
+      className={`${nodeSize} rounded-full flex items-center justify-center font-medium transition-all duration-200 ${bgColorClass} ${stateClass}`}
+      style={{
+        position: 'absolute',
+        left: `${xPos}%`,
+        top: `${yPos}%`,
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10,
+        fontWeight: 600
       }}
-      onMouseDown={handlePointerDown}
-      onMouseUp={handlePointerUp}
-      onTouchStart={handlePointerDown}
-      onTouchEnd={handlePointerUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onClick={handleClick}
       aria-label={`Island with value ${island.value}`}
     >
       {island.value}
-    </div>
+    </button>
   );
 };
 
-export default Island;
+export default React.memo(Island);

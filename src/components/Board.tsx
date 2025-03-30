@@ -28,20 +28,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
-  // Calculate scaling factors based on grid size
-  const getScaleFactor = () => {
-    const { width, height } = puzzle.size;
-    const maxDimension = Math.max(width, height);
-    
-    // Scale down island size as grid gets larger
-    if (maxDimension >= 18) return 0.6;
-    if (maxDimension >= 14) return 0.75;
-    if (maxDimension >= 12) return 0.85;
-    return 1;
-  };
-  
-  const scaleFactor = getScaleFactor();
-  
   // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
     if (selectedIsland) {
@@ -216,29 +202,22 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
 
   // Determine if board should be in portrait or landscape orientation
   const boardOrientationClass = isDesktop ? 'board-landscape' : 'board-portrait';
-  
-  // Calculate aspect ratio based on grid dimensions
-  const aspectRatio = `${puzzle.size.width} / ${puzzle.size.height}`;
 
   return (
     <div 
       ref={boardRef}
-      className={`relative w-full max-w-2xl mx-auto border border-border/30 rounded-lg overflow-hidden ${boardOrientationClass}`}
+      className={`relative w-full max-w-lg mx-auto border border-border/30 rounded-lg overflow-hidden ${boardOrientationClass}`}
       aria-label="Hashi puzzle board"
       style={{ 
         touchAction: "none",
         WebkitUserSelect: "none",
-        userSelect: "none",
-        aspectRatio,
+        userSelect: "none"
       }}
       onMouseMove={handlePointerMove}
       onTouchMove={handlePointerMove}
     >
       {/* Grid Background */}
-      <GridBackground 
-        gridSize={puzzle.size} 
-        islands={puzzle.islands} 
-      />
+      <GridBackground gridSize={puzzle.size} islands={puzzle.islands} />
       
       {/* Bridges */}
       {puzzle.bridges.map(bridge => {
@@ -253,7 +232,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
               startIsland={startIsland}
               endIsland={endIsland}
               gridSize={puzzle.size}
-              scaleFactor={scaleFactor}
               animate={false}
               onClick={() => handleBridgeClick(bridge.startIslandId, bridge.endIslandId)}
             />
@@ -272,7 +250,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
           onDragStart={(e) => handleDragStart(island, e)}
           onDragEnd={() => handleDragEnd(island)}
           gridSize={puzzle.size}
-          scaleFactor={scaleFactor}
         />
       ))}
       
@@ -294,19 +271,18 @@ interface DragLineProps {
   startIsland: IslandType;
   dragPosition: { x: number, y: number };
   boardRef: React.RefObject<HTMLDivElement>;
-  gridSize: { width: number, height: number };
+  gridSize: number;
 }
 
 const DragLine: React.FC<DragLineProps> = ({ startIsland, dragPosition, boardRef, gridSize }) => {
   if (!boardRef.current) return null;
   
   const boardRect = boardRef.current.getBoundingClientRect();
-  const cellWidthPct = 100 / gridSize.width;
-  const cellHeightPct = 100 / gridSize.height;
+  const cellSize = 100 / gridSize;
   
   // Calculate start position (island center) in pixels
-  const startX = (startIsland.col * cellWidthPct + cellWidthPct / 2) * boardRect.width / 100;
-  const startY = (startIsland.row * cellHeightPct + cellHeightPct / 2) * boardRect.height / 100;
+  const startX = (startIsland.col * cellSize + cellSize / 2) * boardRect.width / 100;
+  const startY = (startIsland.row * cellSize + cellSize / 2) * boardRect.height / 100;
   
   // Calculate end position (cursor position relative to board)
   const endX = dragPosition.x - boardRect.left;

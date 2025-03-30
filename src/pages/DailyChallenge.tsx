@@ -27,7 +27,6 @@ const DailyChallenge: React.FC = () => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [showPuzzleList, setShowPuzzleList] = useState<boolean>(true);
   const [moveHistory, setMoveHistory] = useState<Bridge[][]>([]);
-  const [showRestartDialog, setShowRestartDialog] = useState<boolean>(false);
   
   // Calculate date range for calendar
   const today = new Date();
@@ -132,7 +131,6 @@ const DailyChallenge: React.FC = () => {
     setGameStarted(false);
     setTimer(0);
     setGameCompleted(false);
-    setShowRestartDialog(false);
   };
   
   // Go back to puzzle list
@@ -145,7 +143,7 @@ const DailyChallenge: React.FC = () => {
     if (moveHistory.length > 1 && puzzle) {
       // Remove the most recent bridge state
       const newHistory = [...moveHistory];
-      newHistory.pop();
+      newHistory.pop(); // Remove last bridge state
       
       // Get the previous bridge state
       const previousBridges = newHistory[newHistory.length - 1];
@@ -154,7 +152,7 @@ const DailyChallenge: React.FC = () => {
       setPuzzle({
         ...puzzle,
         bridges: [...previousBridges],
-        solved: false
+        solved: false // Reset solved state since we're undoing
       });
       
       // Update the history
@@ -208,16 +206,9 @@ const DailyChallenge: React.FC = () => {
         restartPuzzle={restartPuzzle}
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
-        showRestartDialog={showRestartDialog}
-        setShowRestartDialog={setShowRestartDialog}
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
-        <h1 className="text-lg font-medium mb-4">
-          Daily Challenge: {format(selectedDate, 'MMMM d, yyyy')}
-          {puzzle?.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}
-        </h1>
-        
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         
         {gameCompleted && (
