@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -36,7 +35,10 @@ const Island: React.FC<IslandProps> = ({
   // Determine visual state with fixed sizes and consistent transparency
   let stateClass = '';
   let bgColorClass = '';
-  let textColorClass = '';
+  
+  // Always use consistent text color for better readability
+  // Using text-white for dark mode and text-black for light mode
+  const textColorClass = 'text-white dark:text-black';
   
   // Responsive node sizing based on grid size - make even smaller for larger grids
   const getNodeSize = () => {
@@ -53,27 +55,22 @@ const Island: React.FC<IslandProps> = ({
   if (isSelected || isDragging) {
     stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background';
     bgColorClass = 'bg-primary/20';
-    textColorClass = 'text-primary';
   } else if (actualConnections === 0) {
     // No connections yet - white
     stateClass = 'ring-1 ring-white/70 dark:ring-slate-400';
     bgColorClass = 'bg-white dark:bg-slate-800';
-    textColorClass = 'text-foreground';
   } else if (actualConnections === connectionsNeeded) {
     // Connections match exactly - green
     stateClass = 'ring-1 ring-green-500';
     bgColorClass = 'bg-green-100 dark:bg-green-900/50';
-    textColorClass = 'text-green-600 dark:text-green-400';
   } else if (actualConnections > connectionsNeeded) {
     // Too many connections - yellow
     stateClass = 'ring-1 ring-yellow-500';
     bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/50';
-    textColorClass = 'text-yellow-600 dark:text-yellow-400';
   } else if (actualConnections < connectionsNeeded) {
     // Some connections but not complete - red
     stateClass = 'ring-1 ring-red-500';
     bgColorClass = 'bg-red-50 dark:bg-red-900/50';
-    textColorClass = 'text-red-600 dark:text-red-400';
   }
 
   // Handle touch start

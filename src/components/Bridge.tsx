@@ -19,7 +19,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     position: 'absolute',
     backgroundColor: 'hsl(var(--gameAccent)/0.8)',
     transition: 'all 0.3s ease',
-    zIndex: 5
+    zIndex: 5,
+    cursor: 'pointer'
   };
   
   const isHorizontal = bridge.orientation === 'horizontal';
@@ -45,14 +46,15 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = minCol * cellSizeX + cellSizeX / 2;
     const yPos = startIsland.row * cellSizeY + cellSizeY / 2;
     
-    // Calculate bridge start and end positions to avoid overlapping with islands
+    // Calculate bridge start and end positions with increased spacing to avoid overlapping with islands
+    // Use the full node radius for spacing instead of a fraction
     const nodeOffsetX = (nodeRadiusPercent / 100) * cellSizeX;
     const adjustedWidth = width - (nodeOffsetX * 2);
     const adjustedPos = xPos + nodeOffsetX;
     
-    // Increased spacing between bridges (1px larger)
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.5; // Increased from 0.4
-    const secondBridgeOffset = 0.5; // Increased from 0.4
+    // Increased spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -60,8 +62,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       top: `${yPos - firstBridgeOffset}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
-      transform: 'translateY(-50%)',
-      cursor: 'pointer'
+      transform: 'translateY(-50%)'
     };
     
     const secondBridgeStyle: React.CSSProperties = {
@@ -71,8 +72,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)',
-      opacity: bridge.count === 2 ? 1 : 0,
-      cursor: 'pointer'
+      opacity: bridge.count === 2 ? 1 : 0
     };
     
     return (
@@ -98,14 +98,15 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = startIsland.col * cellSizeX + cellSizeX / 2;
     const yPos = minRow * cellSizeY + cellSizeY / 2;
     
-    // Calculate bridge start and end positions to avoid overlapping with islands
+    // Calculate bridge start and end positions with increased spacing to avoid overlapping with islands
+    // Use the full node radius for spacing instead of a fraction
     const nodeOffsetY = (nodeRadiusPercent / 100) * cellSizeY;
     const adjustedHeight = height - (nodeOffsetY * 2);
     const adjustedPos = yPos + nodeOffsetY;
     
-    // Increased spacing between bridges (1px larger)
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.5; // Increased from 0.4
-    const secondBridgeOffset = 0.5; // Increased from 0.4
+    // Increased spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
+    const secondBridgeOffset = 0.5;
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -113,8 +114,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       top: `${adjustedPos}%`,
       width: '2px',
       height: animate ? '0%' : `${adjustedHeight}%`,
-      transform: 'translateX(-50%)',
-      cursor: 'pointer'
+      transform: 'translateX(-50%)'
     };
     
     const secondBridgeStyle: React.CSSProperties = {
@@ -124,8 +124,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
       transform: 'translateX(-50%)',
-      opacity: bridge.count === 2 ? 1 : 0,
-      cursor: 'pointer'
+      opacity: bridge.count === 2 ? 1 : 0
     };
     
     return (

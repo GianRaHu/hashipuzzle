@@ -11,14 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { difficultySettings } from '@/utils/difficultySettings';
+import { difficultySettings, customGridSizeOptions } from '@/utils/difficultySettings';
 
 const CustomGame = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [seed, setSeed] = useState('');
   const [config, setConfig] = useState({
-    gridSize: 7,
+    gridSize: difficultySettings.medium.size.rows, // Default to medium grid size
     advancedTactics: false
   });
 
@@ -50,8 +50,19 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Pass gridSize and advanced tactics as URL parameters
-    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}`);
+    // Find the selected grid size option
+    const selectedGridSize = customGridSizeOptions.find(
+      option => option.value.rows === config.gridSize
+    );
+    
+    if (selectedGridSize) {
+      // Pass gridSize and advanced tactics as URL parameters
+      navigate(`/game/custom?gridSize=${config.gridSize}&gridCols=${selectedGridSize.value.cols}&advancedTactics=${config.advancedTactics}`);
+    } else {
+      // Fallback to default medium size
+      const mediumSize = difficultySettings.medium.size;
+      navigate(`/game/custom?gridSize=${mediumSize.rows}&gridCols=${mediumSize.cols}&advancedTactics=${config.advancedTactics}`);
+    }
   };
 
   return (
@@ -98,8 +109,6 @@ const CustomGame = () => {
                   </div>
                 </div>
 
-                {/* Removed advanced tactics toggle for seed mode */}
-
                 <Button type="submit" className="w-full">
                   Generate Puzzle
                 </Button>
@@ -125,23 +134,16 @@ const CustomGame = () => {
                     onValueChange={(value) => setConfig({...config, gridSize: parseInt(value)})}
                     className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2"
                   >
-                    {/* Use the same grid sizes from difficultySettings */}
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value={`${difficultySettings.easy.size.rows}`} id="size-easy" />
-                      <Label htmlFor="size-easy">{`${difficultySettings.easy.size.rows}x${difficultySettings.easy.size.cols}`} (Easy)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value={`${difficultySettings.medium.size.rows}`} id="size-medium" />
-                      <Label htmlFor="size-medium">{`${difficultySettings.medium.size.rows}x${difficultySettings.medium.size.cols}`} (Medium)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value={`${difficultySettings.hard.size.rows}`} id="size-hard" />
-                      <Label htmlFor="size-hard">{`${difficultySettings.hard.size.rows}x${difficultySettings.hard.size.cols}`} (Hard)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value={`${difficultySettings.expert.size.rows}`} id="size-expert" />
-                      <Label htmlFor="size-expert">{`${difficultySettings.expert.size.rows}x${difficultySettings.expert.size.cols}`} (Expert)</Label>
-                    </div>
+                    {/* Use the grid sizes from customGridSizeOptions */}
+                    {customGridSizeOptions.map((sizeOption) => (
+                      <div key={sizeOption.label} className="flex items-center space-x-2">
+                        <RadioGroupItem 
+                          value={`${sizeOption.value.rows}`} 
+                          id={`size-${sizeOption.label}`} 
+                        />
+                        <Label htmlFor={`size-${sizeOption.label}`}>{sizeOption.label}</Label>
+                      </div>
+                    ))}
                   </RadioGroup>
                 </div>
 

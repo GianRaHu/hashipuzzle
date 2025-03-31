@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
@@ -28,7 +29,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
   // Lower threshold for starting drag detection (pixels) - reduced for better intuitiveness
-  const DRAG_START_THRESHOLD = 2; // Reduced from 3 to make connections easier
+  const DRAG_START_THRESHOLD = 1.5; // Further reduced from 2 to make connections even easier
   const dragStartPositionRef = useRef<{x: number, y: number} | null>(null);
 
   // Update the grid layout CSS to handle rectangular grids
@@ -67,14 +68,63 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   };
 
-  // Handle bridge click to remove it
+  // Handle bridge click to remove/toggle it
   const handleBridgeClick = (startIslandId: string, endIslandId: string) => {
     const startIsland = getIslandById(puzzle.islands, startIslandId);
     const endIsland = getIslandById(puzzle.islands, endIslandId);
     
     if (startIsland && endIsland) {
-      const updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
-      onUpdate(updatedPuzzle);
+      // Get the existing bridge between these islands
+      const existingBridge = getBridgeBetweenIslands(puzzle.bridges, startIslandId, endIslandId);
+      
+      if (existingBridge) {
+        // Create a modified version of the puzzle with the bridge updated
+        let updatedPuzzle = { ...puzzle };
+        
+        // If it's a double bridge, reduce to a single bridge
+        if (existingBridge.count === 2) {
+          // Find the bridge in the bridges array
+          const bridgeIndex = updatedPuzzle.bridges.findIndex(
+            b => b.id === existingBridge.id
+          );
+          
+          if (bridgeIndex !== -1) {
+            // Update to a single bridge
+            updatedPuzzle.bridges[bridgeIndex] = {
+              ...existingBridge,
+              count: 1
+            };
+            
+            // Remove one connection from each island
+            updatedPuzzle.islands = updatedPuzzle.islands.map(island => {
+              if (island.id === startIslandId || island.id === endIslandId) {
+                // Find the other island's id
+                const otherId = island.id === startIslandId ? endIslandId : startIslandId;
+                
+                // Find the index of the connection to remove (just one of them)
+                const connectionIndex = island.connectedTo.findIndex(id => id === otherId);
+                
+                if (connectionIndex !== -1) {
+                  // Create a new connectedTo array with one connection removed
+                  const newConnectedTo = [...island.connectedTo];
+                  newConnectedTo.splice(connectionIndex, 1);
+                  
+                  return {
+                    ...island,
+                    connectedTo: newConnectedTo
+                  };
+                }
+              }
+              return island;
+            });
+          }
+        } else {
+          // It's a single bridge, remove it completely using the existing toggleBridge function
+          updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
+        }
+        
+        onUpdate(updatedPuzzle);
+      }
     }
   };
 
@@ -162,11 +212,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     // Calculate island detection radius based on grid size
     const getDetectionRadius = () => {
       const minGridSize = Math.min(puzzle.size.rows, puzzle.size.cols);
-      if (minGridSize <= 6) return 40; // Increased from 28
-      if (minGridSize <= 8) return 32; // Increased from 24
-      if (minGridSize <= 10) return 26; // Increased from 20
-      if (minGridSize <= 12) return 22; // Increased from 18
-      return 18; // For largest grids, increased from 16
+      if (minGridSize <= 6) return 45; // Increased from 40 for better detection
+      if (minGridSize <= 8) return 36; // Increased from 32 for better detection
+      if (minGridSize <= 10) return 30; // Increased from 26 for better detection
+      if (minGridSize <= 12) return 26; // Increased from 22 for better detection
+      return 22; // For largest grids, increased from 18
     };
     
     const detectionRadius = getDetectionRadius();
