@@ -39,6 +39,14 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   // Node radius as a percentage of cell size for better scaling
   const nodeRadiusPercent = getNodeRadiusPercent();
   
+  // Handle click with better detection area
+  const handleBridgeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick();
+    }
+  };
+  
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
     const maxCol = Math.max(startIsland.col, endIsland.col);
@@ -47,14 +55,14 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const yPos = startIsland.row * cellSizeY + cellSizeY / 2;
     
     // Calculate bridge start and end positions with increased spacing to avoid overlapping with islands
-    // Use the full node radius for spacing instead of a fraction
+    // Use the full node radius for spacing to match the island radius
     const nodeOffsetX = (nodeRadiusPercent / 100) * cellSizeX;
     const adjustedWidth = width - (nodeOffsetX * 2);
     const adjustedPos = xPos + nodeOffsetX;
     
     // Increased spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
-    const secondBridgeOffset = 0.5;
+    const firstBridgeOffset = isSingleBridge ? 0 : 1.0; // Increased from 0.5
+    const secondBridgeOffset = 1.0; // Increased from 0.5
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -76,7 +84,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     };
     
     return (
-      <div className="bridge-container" onClick={onClick}>
+      <div className="bridge-container" onClick={handleBridgeClick}>
         <div 
           className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
           style={firstBridgeStyle}
@@ -99,14 +107,14 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const yPos = minRow * cellSizeY + cellSizeY / 2;
     
     // Calculate bridge start and end positions with increased spacing to avoid overlapping with islands
-    // Use the full node radius for spacing instead of a fraction
+    // Use the full node radius for spacing to match the island radius
     const nodeOffsetY = (nodeRadiusPercent / 100) * cellSizeY;
     const adjustedHeight = height - (nodeOffsetY * 2);
     const adjustedPos = yPos + nodeOffsetY;
     
     // Increased spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.5;
-    const secondBridgeOffset = 0.5;
+    const firstBridgeOffset = isSingleBridge ? 0 : 1.0; // Increased from 0.5
+    const secondBridgeOffset = 1.0; // Increased from 0.5
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -128,7 +136,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     };
     
     return (
-      <div className="bridge-container" onClick={onClick}>
+      <div className="bridge-container" onClick={handleBridgeClick}>
         <div 
           className={`hashi-bridge rounded-full transition-all ${animate ? 'animate-bridge-draw' : ''}`}
           style={firstBridgeStyle}

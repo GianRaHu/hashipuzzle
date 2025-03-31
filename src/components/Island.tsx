@@ -37,8 +37,8 @@ const Island: React.FC<IslandProps> = ({
   let bgColorClass = '';
   
   // Always use consistent text color for better readability
-  // Using text-white for dark mode and text-black for light mode
-  const textColorClass = 'text-white dark:text-black';
+  // Fixed: Use text-black for light mode and text-white for dark mode (corrected from previous)
+  const textColorClass = 'text-black dark:text-white';
   
   // Responsive node sizing based on grid size - make even smaller for larger grids
   const getNodeSize = () => {

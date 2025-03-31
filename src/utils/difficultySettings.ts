@@ -29,12 +29,11 @@ export const difficultySettings = {
 
 // Custom grid size options for the UI
 export const customGridSizeOptions = [
-  { label: "8x6", value: { rows: 8, cols: 6 } },  // Added new option
+  { label: "8x6", value: { rows: 8, cols: 6 } },
   { label: "10x7", value: { rows: 10, cols: 7 } },
   { label: "12x8", value: { rows: 12, cols: 8 } },
   { label: "14x10", value: { rows: 14, cols: 10 } },
   { label: "16x12", value: { rows: 16, cols: 12 } },
   { label: "18x13", value: { rows: 18, cols: 13 } },
-  { label: "20x15", value: { rows: 20, cols: 15 } },
-  { label: "24x18", value: { rows: 24, cols: 18 } }
+  { label: "20x15", value: { rows: 20, cols: 15 } }
 ];

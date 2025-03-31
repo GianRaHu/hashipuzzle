@@ -12,6 +12,7 @@ import Stats from "./pages/Stats";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
 import Navbar from "./components/Navbar";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/support" element={<Support />} />
+                <Route path="/auth" element={<Auth />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

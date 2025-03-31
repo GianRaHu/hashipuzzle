@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -229,12 +228,21 @@ const Settings = () => {
                 <p className="text-sm">
                   Sign in to save your progress and sync across devices.
                 </p>
-                <Button 
-                  onClick={() => navigate('/login')}
-                  className="w-full"
-                >
-                  Sign In
-                </Button>
+                <div className="flex gap-2 w-full">
+                  <Button 
+                    onClick={() => navigate('/auth')}
+                    className="flex-1"
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/auth?tab=signup')}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    Sign Up
+                  </Button>
+                </div>
               </div>
             )}
           </div>
