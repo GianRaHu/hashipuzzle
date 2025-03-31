@@ -219,6 +219,7 @@ const DailyChallenge: React.FC = () => {
             time={puzzle.endTime! - puzzle.startTime!}
             resetPuzzle={restartPuzzle}
             seed={puzzle.seed}
+            onClose={() => setGameCompleted(false)}
           />
         )}
       </main>
