@@ -39,6 +39,7 @@ const Game: React.FC = () => {
   const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
   const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
+  const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   
   const stats = getStats();
   
@@ -253,6 +254,11 @@ const Game: React.FC = () => {
       
       const completionTime = fullyCompleted.endTime! - fullyCompleted.startTime!;
       updateExtendedStats(validDifficulty, completionTime, true);
+      
+      // Add delay before showing completion modal
+      setTimeout(() => {
+        setShowCompletionModal(true);
+      }, 300); // 300ms delay
     }
   }, [gameCompleted, gameStarted, moveHistory, updateExtendedStats, validDifficulty, userOverrodeConnectivity]);
   
@@ -274,6 +280,11 @@ const Game: React.FC = () => {
       
       const completionTime = updatedPuzzle.endTime! - updatedPuzzle.startTime!;
       updateExtendedStats(validDifficulty, completionTime, true);
+      
+      // Add delay before showing completion modal
+      setTimeout(() => {
+        setShowCompletionModal(true);
+      }, 300); // 300ms delay
     }
   };
   
@@ -282,6 +293,7 @@ const Game: React.FC = () => {
   };
   
   const resetPuzzle = () => {
+    setShowCompletionModal(false);
     if (validDifficulty) {
       setLoading(true);
       setLoadingProgress(0);
@@ -343,9 +355,6 @@ const Game: React.FC = () => {
       }, 1000);
     }
   };
-  
-  // We're removing the confirmRestartPuzzle function and using the restartPuzzle directly
-  // with the dialog state controlled in the GameHeader component
   
   const restartPuzzle = () => {
     setRestartConfirmOpen(false);
@@ -495,11 +504,12 @@ const Game: React.FC = () => {
         
         <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         
-        {gameCompleted && (
+        {gameCompleted && showCompletionModal && (
           <GameCompletedModal 
             time={puzzle.endTime! - puzzle.startTime!}
             resetPuzzle={resetPuzzle}
             seed={puzzle.seed}
+            onClose={() => setShowCompletionModal(false)}
           />
         )}
       </main>

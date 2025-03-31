@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { difficultySettings } from '@/utils/difficultySettings';
 
 const CustomGame = () => {
   const navigate = useNavigate();
@@ -122,35 +123,24 @@ const CustomGame = () => {
                   <RadioGroup 
                     value={config.gridSize.toString()}
                     onValueChange={(value) => setConfig({...config, gridSize: parseInt(value)})}
-                    className="grid grid-cols-3 gap-4 mt-2"
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2"
                   >
+                    {/* Use the same grid sizes from difficultySettings */}
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="6" id="size-6" />
-                      <Label htmlFor="size-6">6x6</Label>
+                      <RadioGroupItem value={`${difficultySettings.easy.size.rows}`} id="size-easy" />
+                      <Label htmlFor="size-easy">{`${difficultySettings.easy.size.rows}x${difficultySettings.easy.size.cols}`} (Easy)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="7" id="size-7" />
-                      <Label htmlFor="size-7">7x7</Label>
+                      <RadioGroupItem value={`${difficultySettings.medium.size.rows}`} id="size-medium" />
+                      <Label htmlFor="size-medium">{`${difficultySettings.medium.size.rows}x${difficultySettings.medium.size.cols}`} (Medium)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="8" id="size-8" />
-                      <Label htmlFor="size-8">8x8</Label>
+                      <RadioGroupItem value={`${difficultySettings.hard.size.rows}`} id="size-hard" />
+                      <Label htmlFor="size-hard">{`${difficultySettings.hard.size.rows}x${difficultySettings.hard.size.cols}`} (Hard)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="9" id="size-9" />
-                      <Label htmlFor="size-9">9x9</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="10" id="size-10" />
-                      <Label htmlFor="size-10">10x10</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="12" id="size-12" />
-                      <Label htmlFor="size-12">12x12</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="14" id="size-14" />
-                      <Label htmlFor="size-14">14x14</Label>
+                      <RadioGroupItem value={`${difficultySettings.expert.size.rows}`} id="size-expert" />
+                      <Label htmlFor="size-expert">{`${difficultySettings.expert.size.rows}x${difficultySettings.expert.size.cols}`} (Expert)</Label>
                     </div>
                   </RadioGroup>
                 </div>
