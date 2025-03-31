@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
@@ -28,8 +27,8 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
-  // Lower threshold for starting drag detection (pixels)
-  const DRAG_START_THRESHOLD = 3;
+  // Lower threshold for starting drag detection (pixels) - reduced for better intuitiveness
+  const DRAG_START_THRESHOLD = 2; // Reduced from 3 to make connections easier
   const dragStartPositionRef = useRef<{x: number, y: number} | null>(null);
 
   // Update the grid layout CSS to handle rectangular grids

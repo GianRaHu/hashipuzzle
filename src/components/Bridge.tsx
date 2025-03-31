@@ -50,9 +50,9 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedWidth = width - (nodeOffsetX * 2);
     const adjustedPos = xPos + nodeOffsetX;
     
-    // Reduced spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.4;
-    const secondBridgeOffset = 0.4;
+    // Increased spacing between bridges (1px larger)
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5; // Increased from 0.4
+    const secondBridgeOffset = 0.5; // Increased from 0.4
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
@@ -103,9 +103,9 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedHeight = height - (nodeOffsetY * 2);
     const adjustedPos = yPos + nodeOffsetY;
     
-    // Reduced spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 0.4;
-    const secondBridgeOffset = 0.4;
+    // Increased spacing between bridges (1px larger)
+    const firstBridgeOffset = isSingleBridge ? 0 : 0.5; // Increased from 0.4
+    const secondBridgeOffset = 0.5; // Increased from 0.4
     
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
