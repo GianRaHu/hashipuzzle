@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -37,7 +38,7 @@ const Island: React.FC<IslandProps> = ({
   let bgColorClass = '';
   
   // Always use consistent text color for better readability
-  // Fixed: Use text-black for light mode and text-white for dark mode (corrected from previous)
+  // Fixed: Use text-white for dark mode and text-black for light mode
   const textColorClass = 'text-black dark:text-white';
   
   // Responsive node sizing based on grid size - make even smaller for larger grids
