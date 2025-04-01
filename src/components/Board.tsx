@@ -71,43 +71,40 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const handleBridgeClick = (startIslandId: string, endIslandId: string) => {
     const startIsland = getIslandById(puzzle.islands, startIslandId);
     const endIsland = getIslandById(puzzle.islands, endIslandId);
-    
+  
     if (startIsland && endIsland) {
       // Get the existing bridge between these islands
-      const existingBridge = getBridgeBetweenIslands(puzzle.bridges, startIslandId, endIslandId);
-      
+       const existingBridge = getBridgeBetweenIslands(puzzle.bridges, startIslandId, endIslandId);
+    
       if (existingBridge) {
         // Create a modified version of the puzzle with the bridge updated
         let updatedPuzzle = { ...puzzle };
-        
+      
         // If it's a double bridge, reduce to a single bridge
         if (existingBridge.count === 2) {
           // Find the bridge in the bridges array
           const bridgeIndex = updatedPuzzle.bridges.findIndex(
             b => b.id === existingBridge.id
           );
-          
+        
           if (bridgeIndex !== -1) {
             // Update to a single bridge
             updatedPuzzle.bridges[bridgeIndex] = {
               ...existingBridge,
               count: 1
             };
-            
+          
             // Remove one connection from each island
             updatedPuzzle.islands = updatedPuzzle.islands.map(island => {
               if (island.id === startIslandId || island.id === endIslandId) {
                 // Find the other island's id
                 const otherId = island.id === startIslandId ? endIslandId : startIslandId;
-                
-                // Find the index of the connection to remove (just one of them)
-                const connectionIndex = island.connectedTo.findIndex(id => id === otherId);
-                
+              
+                // Remove just one connection
+                const connectionIndex = island.connectedTo.lastIndexOf(otherId);
                 if (connectionIndex !== -1) {
-                  // Create a new connectedTo array with one connection removed
                   const newConnectedTo = [...island.connectedTo];
                   newConnectedTo.splice(connectionIndex, 1);
-                  
                   return {
                     ...island,
                     connectedTo: newConnectedTo
@@ -118,14 +115,27 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
             });
           }
         } else {
-          // It's a single bridge, remove it completely using the existing toggleBridge function
-          updatedPuzzle = toggleBridge(startIsland, endIsland, puzzle);
-        }
+          // It's a single bridge, remove it completely
+          updatedPuzzle.bridges = updatedPuzzle.bridges.filter(b => b.id !== existingBridge.id);
         
+          // Remove all connections between these islands
+          updatedPuzzle.islands = updatedPuzzle.islands.map(island => {
+            if (island.id === startIslandId || island.id === endIslandId) {
+              return {
+                ...island,
+                connectedTo: island.connectedTo.filter(id => 
+                  id !== (island.id === startIslandId ? endIslandId : startIslandId)
+                )
+              };
+            }
+            return island;
+          });
+        }
+      
         onUpdate(updatedPuzzle);
       }
     }
-  };
+};
 
   // Handle drag start on island
   const handleDragStart = (island: IslandType, event: React.MouseEvent | React.TouchEvent) => {
