@@ -56,12 +56,16 @@ const CustomGame = () => {
     );
     
     if (selectedGridSize) {
+      // Get the timestamp to ensure a fresh puzzle generation
+      const timestamp = Date.now();
+      
       // Pass gridSize and advanced tactics as URL parameters
-      navigate(`/game/custom?gridSize=${config.gridSize}&gridCols=${selectedGridSize.value.cols}&advancedTactics=${config.advancedTactics}`);
+      navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
     } else {
       // Fallback to default medium size
       const mediumSize = difficultySettings.medium.size;
-      navigate(`/game/custom?gridSize=${mediumSize.rows}&gridCols=${mediumSize.cols}&advancedTactics=${config.advancedTactics}`);
+      const timestamp = Date.now();
+      navigate(`/game/custom?gridSize=${mediumSize.rows}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
     }
   };
 

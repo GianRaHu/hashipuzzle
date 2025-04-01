@@ -179,7 +179,7 @@ const Game: React.FC = () => {
             setMoveHistory([[]]);
             setGameCompleted(false);
             setLoading(false);
-            console.log(`Generated puzzle with seed: ${newPuzzle.seed}, size: ${newPuzzle.size}, advanced tactics: ${newPuzzle.requiresAdvancedTactics}`);
+            console.log(`Generated puzzle with seed: ${newPuzzle.seed}, size: ${newPuzzle.size.rows}x${newPuzzle.size.cols}, advanced tactics: ${newPuzzle.requiresAdvancedTactics}`);
           }, 500);
         } catch (error) {
           console.error("Error generating puzzle:", error);
