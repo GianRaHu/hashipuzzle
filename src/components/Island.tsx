@@ -75,12 +75,12 @@ const Island: React.FC<IslandProps> = ({
   
   // Responsive node sizing based on grid size - make even smaller for larger grids
   const getNodeSize = () => {
-    const minGridSize = Math.min(gridSize.rows, gridSize.cols);
-    if (minGridSize <= 6) return 'w-8 h-8 text-base'; // Increased from w-7 h-7 text-sm
-    if (minGridSize <= 8) return 'w-7 h-7 text-sm';   // Increased from w-6 h-6 text-xs
-    if (minGridSize <= 10) return 'w-6 h-6 text-xs';  // Increased from w-5 h-5 text-xs
-    if (minGridSize <= 12) return 'w-5 h-5 text-xs';  // Increased from w-4 h-4 text-[10px]
-    return 'w-4 h-4 text-[10px]';                     // Increased from w-3.5 h-3.5 text-[9px]
+  const gridArea = gridSize.rows * gridSize.cols;
+    if (gridArea <= 42) return 'w-8 h-8 text-base';      // Small grid
+    if (gridArea <= 96) return 'w-7 h-7 text-sm';        // Medium grid
+    if (gridArea <= 140) return 'w-6 h-6 text-xs';       // Large grid
+    if (gridArea <= 192) return 'w-5 h-5 text-xs';       // Extra large grid
+    return 'w-4 h-4 text-[10px]';                        // Huge grid
   };
   
   const nodeSize = getNodeSize();
