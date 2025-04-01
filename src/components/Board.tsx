@@ -41,8 +41,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     backgroundColor: 'var(--grid-bg)',
     borderRadius: '8px',
     width: '100%',
-    maxWidth: `${puzzle.size.cols * 40}px`, // Adjust cell size as needed
-    aspectRatio: `${puzzle.size.cols} / ${puzzle.size.rows}`,
+    height: '100%', // Use full container height
     margin: '0 auto'
   };
 
