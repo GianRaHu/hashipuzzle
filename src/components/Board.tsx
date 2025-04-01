@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
@@ -28,9 +27,15 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
-  // Lower threshold for starting drag detection (pixels) - reduced for better intuitiveness
-  const DRAG_START_THRESHOLD = 1; // Further reduced from 1.5 to make connections even easier
+  // UPDATED: Reduced threshold for starting drag detection (pixels)
+  const DRAG_START_THRESHOLD = 0.5; // Reduced from 1.0 to make connections even easier
+  
+  // ADDED: Swipe direction detection parameters
+  const SWIPE_THRESHOLD = 5;  // Minimum distance for a swipe
+  const SWIPE_DIRECTION_THRESHOLD = 0.7; // How directional the swipe needs to be (0.7 = 70% in one direction)
+  
   const dragStartPositionRef = useRef<{x: number, y: number} | null>(null);
+  const swipeDirectionRef = useRef<'horizontal' | 'vertical' | null>(null);
 
   // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
@@ -123,7 +128,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     }
   };
 
-  // Handle drag start on island
+  // UPDATED: Handle drag start on island with improved swipe detection
   const handleDragStart = (island: IslandType, event: React.MouseEvent | React.TouchEvent) => {
     setDragStartIsland(island);
     setIsPointerDown(true);
@@ -141,6 +146,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     
     // Store the initial position for threshold checking
     dragStartPositionRef.current = { x: clientX, y: clientY };
+    swipeDirectionRef.current = null;
     
     // Prevent default behavior
     event.preventDefault();
@@ -164,9 +170,10 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     setDragPosition(null);
     setDragOverIsland(null);
     dragStartPositionRef.current = null;
+    swipeDirectionRef.current = null;
   };
   
-  // Handle board mouse/touch move (for drawing drag line)
+  // UPDATED: Handle board mouse/touch move with improved swipe detection
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isPointerDown || !dragStartIsland || !boardRef.current) return;
     
@@ -187,6 +194,18 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       const dy = clientY - dragStartPositionRef.current.y;
       const distanceSquared = dx * dx + dy * dy;
       
+      // Detect swipe direction if we haven't already
+      if (!swipeDirectionRef.current && distanceSquared > SWIPE_THRESHOLD * SWIPE_THRESHOLD) {
+        const absX = Math.abs(dx);
+        const absY = Math.abs(dy);
+        
+        if (absX > absY && absX / (absX + absY) > SWIPE_DIRECTION_THRESHOLD) {
+          swipeDirectionRef.current = 'horizontal';
+        } else if (absY > absX && absY / (absX + absY) > SWIPE_DIRECTION_THRESHOLD) {
+          swipeDirectionRef.current = 'vertical';
+        }
+      }
+      
       // Only start showing the drag line when we exceed the threshold
       if (distanceSquared > DRAG_START_THRESHOLD * DRAG_START_THRESHOLD) {
         setDragPosition({ x: clientX, y: clientY });
@@ -197,7 +216,73 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       setDragPosition({ x: clientX, y: clientY });
     }
     
-    // Check if we're hovering over an island
+    // UPDATED: Check if we can find an island in the swipe direction
+    const findIslandInSwipeDirection = () => {
+      if (!swipeDirectionRef.current || !dragStartIsland) return null;
+      
+      const direction = swipeDirectionRef.current;
+      
+      // Find all islands in the same row or column as the start island
+      const alignedIslands = puzzle.islands.filter(island => {
+        if (island.id === dragStartIsland.id) return false;
+        
+        if (direction === 'horizontal') {
+          return island.row === dragStartIsland.row;
+        } else {
+          return island.col === dragStartIsland.col;
+        }
+      });
+      
+      if (alignedIslands.length === 0) return null;
+      
+      // Determine which aligned island to select based on drag direction
+      let targetIsland: IslandType | null = null;
+      
+      if (direction === 'horizontal') {
+        const dx = clientX - dragStartPositionRef.current!.x;
+        const isMovingRight = dx > 0;
+        
+        // Filter islands that are to the right or left depending on direction
+        const directionFilteredIslands = alignedIslands.filter(island => 
+          isMovingRight ? island.col > dragStartIsland.col : island.col < dragStartIsland.col
+        );
+        
+        if (directionFilteredIslands.length > 0) {
+          // Find the closest island in the swipe direction
+          targetIsland = directionFilteredIslands.reduce((closest, current) => {
+            const distToCurrent = Math.abs(current.col - dragStartIsland.col);
+            const distToClosest = closest ? Math.abs(closest.col - dragStartIsland.col) : Infinity;
+            return distToCurrent < distToClosest ? current : closest;
+          }, null as IslandType | null);
+        }
+      } else {
+        const dy = clientY - dragStartPositionRef.current!.y;
+        const isMovingDown = dy > 0;
+        
+        // Filter islands that are below or above depending on direction
+        const directionFilteredIslands = alignedIslands.filter(island => 
+          isMovingDown ? island.row > dragStartIsland.row : island.row < dragStartIsland.row
+        );
+        
+        if (directionFilteredIslands.length > 0) {
+          // Find the closest island in the swipe direction
+          targetIsland = directionFilteredIslands.reduce((closest, current) => {
+            const distToCurrent = Math.abs(current.row - dragStartIsland.row);
+            const distToClosest = closest ? Math.abs(closest.row - dragStartIsland.row) : Infinity;
+            return distToCurrent < distToClosest ? current : closest;
+          }, null as IslandType | null);
+        }
+      }
+      
+      // Check if we can connect to this island
+      if (targetIsland && canConnect(dragStartIsland, targetIsland, puzzle.islands, puzzle.bridges)) {
+        return targetIsland;
+      }
+      
+      return null;
+    };
+    
+    // Check for islands using standard hover detection
     const boardRect = boardRef.current.getBoundingClientRect();
     const relativeX = clientX - boardRect.left;
     const relativeY = clientY - boardRect.top;
@@ -205,17 +290,17 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     // Calculate island detection radius based on grid size
     const getDetectionRadius = () => {
       const minGridSize = Math.min(puzzle.size.rows, puzzle.size.cols);
-      if (minGridSize <= 6) return 45; // Increased from 40 for better detection
-      if (minGridSize <= 8) return 36; // Increased from 32 for better detection
-      if (minGridSize <= 10) return 30; // Increased from 26 for better detection
-      if (minGridSize <= 12) return 26; // Increased from 22 for better detection
-      return 22; // For largest grids, increased from 18
+      if (minGridSize <= 6) return 48; // Increased for better detection
+      if (minGridSize <= 8) return 40; // Increased for better detection
+      if (minGridSize <= 10) return 34; // Increased for better detection
+      if (minGridSize <= 12) return 30; // Increased for better detection
+      return 26; // For largest grids
     };
     
     const detectionRadius = getDetectionRadius();
     
     // Find if we're over any island (excluding the start island)
-    const draggedOverIsland = puzzle.islands.find(island => {
+    let draggedOverIsland = puzzle.islands.find(island => {
       if (island.id === dragStartIsland.id) return false;
       
       const cellSizeX = boardRect.width / puzzle.size.cols;
@@ -234,6 +319,11 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
       
       return distanceSquared <= radiusSquared;
     });
+    
+    // If we don't have an island under the pointer, check for an island in the swipe direction
+    if (!draggedOverIsland && swipeDirectionRef.current) {
+      draggedOverIsland = findIslandInSwipeDirection();
+    }
     
     setDragOverIsland(draggedOverIsland || null);
     

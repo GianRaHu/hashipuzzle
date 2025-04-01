@@ -37,7 +37,7 @@ const Game: React.FC = () => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [generateError, setGenerateError] = useState<boolean>(false);
   const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
-  const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
+  const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(showConnectionAlert);
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   
@@ -360,6 +360,7 @@ const Game: React.FC = () => {
     setRestartConfirmOpen(false);
     setGameStarted(false);
     setTimer(0);
+    setUserOverrodeConnectivity(false);
     
     if (validDifficulty && puzzle?.seed) {
       setLoading(true);
@@ -376,20 +377,15 @@ const Game: React.FC = () => {
         try {
           console.log(`Restarting puzzle with seed: ${puzzle.seed}`);
           
-          // Create custom options if needed
-          const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
-            ? {
-                gridSize: initialGridSize ? { rows: initialGridSize, cols: initialGridSize } : undefined,
-                advancedTactics: initialAdvancedTactics
-              }
-            : undefined;
+          // Create custom options based on the existing puzzle's properties
+          const customOptions = {
+            gridSize: puzzle.size, // Use the exact same grid size
+            advancedTactics: puzzle.requiresAdvancedTactics // Use the same advanced tactics setting
+          };
           
-          // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
-          const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
-          
-          // Ensure we use the exact same seed to restart the puzzle
+          // Regenerate the exact same puzzle using the stored seed
           const newPuzzle = generatePuzzle(
-            difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
+            puzzle.difficulty as 'easy' | 'medium' | 'hard' | 'expert', 
             puzzle.seed, // Use the exact same seed
             customOptions
           );
@@ -402,7 +398,7 @@ const Game: React.FC = () => {
             setGameCompleted(false);
             setMoveHistory([[]]);
             setLoading(false);
-            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
+            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}, same grid: ${newPuzzle.size.rows}x${newPuzzle.size.cols}`);
           }, 500);
         } catch (error) {
           console.error("Error restarting puzzle:", error);
