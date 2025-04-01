@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Bridge as BridgeType, Island } from '../utils/gameLogic';
 
@@ -20,7 +19,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     backgroundColor: 'hsl(var(--gameAccent)/0.8)',
     transition: 'all 0.3s ease',
     zIndex: 5,
-    cursor: 'pointer'
+    cursor: onClick ? 'pointer' : 'default'
   };
   
   const isHorizontal = bridge.orientation === 'horizontal';

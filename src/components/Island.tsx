@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -19,15 +18,41 @@ const Island: React.FC<IslandProps> = ({
   onDragEnd, 
   gridSize 
 }) => {
+  // Calculate the size and position based on grid dimensions
+  const cellSizeX = 100 / gridSize.cols;
+  const cellSizeY = 100 / gridSize.rows;
+  const xPos = island.col * cellSizeX + cellSizeX / 2;
+  const yPos = island.row * cellSizeY + cellSizeY / 2;
+  
+  // Connection completeness (for visual feedback)
+  const connectionsNeeded = island.value;
+  const actualConnections = island.connectedTo.length;
+  
+  const [isDragging, setIsDragging] = useState(false);
+  const touchTimerRef = useRef<number | null>(null);
+  const moveDetectedRef = useRef<boolean>(false);
+  
+  // Always use consistent text color for better readability
+  const textColorClass = 'text-black dark:text-white';
+  
+  // Responsive node sizing based on grid size
+  const getNodeSize = () => {
+    const minGridSize = Math.min(gridSize.rows, gridSize.cols);
+    if (minGridSize <= 6) return 'w-8 h-8 text-base'; // Increased from w-7 h-7 text-sm
+    if (minGridSize <= 8) return 'w-7 h-7 text-sm';   // Increased from w-6 h-6 text-xs
+    if (minGridSize <= 10) return 'w-6 h-6 text-xs';  // Increased from w-5 h-5 text-xs
+    if (minGridSize <= 12) return 'w-5 h-5 text-xs';  // Increased from w-4 h-4 text-[10px]
+    return 'w-4 h-4 text-[10px]';                     // Increased from w-3.5 h-3.5 text-[9px]
+  };
+  
+  const nodeSize = getNodeSize();
+  
   // Memoize the color calculation based on island state
   const { stateClass, bgColorClass } = useMemo(() => {
-    const connectionsNeeded = island.value;
-    const actualConnections = island.connectedTo.length;
-    
     let stateClass = '';
     let bgColorClass = '';
     
-    if (isSelected) {
+    if (isSelected || isDragging) {
       stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background';
       bgColorClass = 'bg-primary/20';
     } else if (actualConnections === 0) {
@@ -49,62 +74,7 @@ const Island: React.FC<IslandProps> = ({
     }
     
     return { stateClass, bgColorClass };
-  }, [island.value, island.connectedTo.length, isSelected]);
-
-  const [isDragging, setIsDragging] = useState(false);
-  const touchTimerRef = useRef<number | null>(null);
-  const moveDetectedRef = useRef<boolean>(false);
-  
-  // Calculate the size and position based on grid dimensions
-  const cellSizeX = 100 / gridSize.cols;
-  const cellSizeY = 100 / gridSize.rows;
-  const xPos = island.col * cellSizeX + cellSizeX / 2;
-  const yPos = island.row * cellSizeY + cellSizeY / 2;
-  
-  // Connection completeness (for visual feedback)
-  const connectionsNeeded = island.value;
-  const actualConnections = island.connectedTo.length;
-  
-  // Determine visual state with fixed sizes and consistent transparency
-  let stateClass = '';
-  let bgColorClass = '';
-  
-  // Always use consistent text color for better readability
-  // Fixed: Use text-white for dark mode and text-black for light mode
-  const textColorClass = 'text-black dark:text-white';
-  
-  // Responsive node sizing based on grid size - make even smaller for larger grids
-  const getNodeSize = () => {
-  const gridArea = gridSize.rows * gridSize.cols;
-    if (gridArea <= 42) return 'w-8 h-8 text-base';      // Small grid
-    if (gridArea <= 96) return 'w-7 h-7 text-sm';        // Medium grid
-    if (gridArea <= 140) return 'w-6 h-6 text-xs';       // Large grid
-    if (gridArea <= 192) return 'w-5 h-5 text-xs';       // Extra large grid
-    return 'w-4 h-4 text-[10px]';                        // Huge grid
-  };
-  
-  const nodeSize = getNodeSize();
-  
-  if (isSelected || isDragging) {
-    stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background';
-    bgColorClass = 'bg-primary/20';
-  } else if (actualConnections === 0) {
-    // No connections yet - white
-    stateClass = 'ring-1 ring-white/70 dark:ring-slate-400';
-    bgColorClass = 'bg-white dark:bg-slate-800';
-  } else if (actualConnections === connectionsNeeded) {
-    // Connections match exactly - green
-    stateClass = 'ring-1 ring-green-500';
-    bgColorClass = 'bg-green-100 dark:bg-green-900/50';
-  } else if (actualConnections > connectionsNeeded) {
-    // Too many connections - yellow
-    stateClass = 'ring-1 ring-yellow-500';
-    bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/50';
-  } else if (actualConnections < connectionsNeeded) {
-    // Some connections but not complete - red
-    stateClass = 'ring-1 ring-red-500';
-    bgColorClass = 'bg-red-50 dark:bg-red-900/50';
-  }
+  }, [island.value, island.connectedTo.length, isSelected, isDragging, actualConnections, connectionsNeeded]);
 
   // Handle touch start
   const handleTouchStart = (e: React.TouchEvent) => {
