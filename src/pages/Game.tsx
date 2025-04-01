@@ -423,22 +423,42 @@ const Game: React.FC = () => {
   };
 
   const handleUndo = useCallback(() => {
-    if (moveHistory.length > 1 && puzzle) {
-      // Remove the most recent bridge state
-      const newHistory = [...moveHistory];
-      newHistory.pop(); // Remove last bridge state
+  if (moveHistory.length > 1 && puzzle) {
+    // Remove the most recent bridge state
+    const newHistory = [...moveHistory];
+    newHistory.pop();
+    
+    // Get the previous bridge state
+    const previousBridges = newHistory[newHistory.length - 1];
+    
+    // Create a new puzzle state with the previous bridges
+    const updatedPuzzle = {
+      ...puzzle,
+      bridges: [...previousBridges],
+      islands: puzzle.islands.map(island => {
+        // Reset connections for this island
+        const connections = previousBridges.reduce((count, bridge) => {
+          if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
+            return count + bridge.count;
+          }
+          return count;
+        }, 0);
+        
+        // Calculate connected islands
+        const connectedTo = previousBridges
+          .filter(bridge => bridge.startIslandId === island.id || bridge.endIslandId === island.id)
+          .map(bridge => bridge.startIslandId === island.id ? bridge.endIslandId : bridge.startIslandId);
+        
+        return {
+          ...island,
+          connectedTo: connectedTo
+        };
+      }),
+      solved: false
+    };      
       
-      // Get the previous bridge state
-      const previousBridges = newHistory[newHistory.length - 1];
-      
-      // Update the puzzle with the previous bridges
-      setPuzzle({
-        ...puzzle,
-        bridges: [...previousBridges],
-        solved: false // Reset solved state since we're undoing
-      });
-      
-      // Update the history
+      // Update the puzzle state
+      setPuzzle(updatedPuzzle);
       setMoveHistory(newHistory);
     }
   }, [moveHistory, puzzle]);
