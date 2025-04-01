@@ -239,7 +239,7 @@ export const generatePuzzle = (
         const numericSize = customOptions.gridSize;
       if (typeof numericSize === 'number') {
         // Change this line to use the correct grid size from customOptions
-        size = { rows: customOptions.gridSize.rows, cols: customOptions.gridSize.cols };
+        size = { rows: customOptions.gridSize.rows, cols: customOptions.gridSize.cols, 
       }
         
       // Adjust island count based on grid size
