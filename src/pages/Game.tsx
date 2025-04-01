@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
@@ -157,10 +156,7 @@ const Game: React.FC = () => {
           // Create custom options if needed
           const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
             ? {
-                gridSize: initialGridSize ? { 
-                  rows: initialGridSize, 
-                  cols: initialGridSize 
-                } : undefined,
+                gridSize: initialGridSize,
                 advancedTactics: initialAdvancedTactics
               }
             : undefined;
@@ -314,10 +310,7 @@ const Game: React.FC = () => {
           // Create custom options if needed
           const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
             ? {
-                gridSize: initialGridSize ? { 
-                  rows: initialGridSize, 
-                  cols: initialGridSize 
-                } : undefined,
+                gridSize: initialGridSize,
                 advancedTactics: initialAdvancedTactics
               }
             : undefined;
@@ -386,10 +379,7 @@ const Game: React.FC = () => {
           // Create custom options if needed
           const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
             ? {
-                gridSize: initialGridSize ? { 
-                  rows: initialGridSize, 
-                  cols: initialGridSize 
-                } : undefined,
+                gridSize: initialGridSize,
                 advancedTactics: initialAdvancedTactics
               }
             : undefined;
