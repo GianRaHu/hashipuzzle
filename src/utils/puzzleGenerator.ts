@@ -231,14 +231,17 @@ export const generatePuzzle = (
   
   // Apply custom options if provided
   if (customOptions) {
-    if (customOptions.gridSize) {
-      // Convert numeric grid size to object if needed (for backward compatibility)
-      const numericSize = customOptions.gridSize;
+      if (customOptions.gridSize) {
+        // Ensure gridSize includes both rows and cols
+        const { rows, cols } = customOptions.gridSize;
+        size = { rows, cols };
+        // Convert numeric grid size to object if needed (for backward compatibility)
+        const numericSize = customOptions.gridSize;
       if (typeof numericSize === 'number') {
-        // Use a square grid based on the numeric size
-        size = { rows: numericSize, cols: numericSize };
+        // Change this line to use the correct grid size from customOptions
+        size = { rows: customOptions.gridSize.rows, cols: customOptions.gridSize.cols;
       }
-      
+        
       // Adjust island count based on grid size
       islandCount = Math.max(Math.floor((size.rows * size.cols) * 0.25), islandCount);
     }
