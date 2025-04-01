@@ -280,9 +280,10 @@ export const generatePuzzle = (
     bridgeConnections.length = 0;
     
     // Place first island in a somewhat central position
-    const centerOffset = Math.floor(size.rows / 3);
-    const startRow = Math.floor(random() * centerOffset) + centerOffset;
-    const startCol = Math.floor(random() * centerOffset) + centerOffset;
+    const rowCenterOffset = Math.floor(size.rows / 3);
+    const colCenterOffset = Math.floor(size.cols / 3);
+    const startRow = Math.floor(random() * rowCenterOffset) + rowCenterOffset;
+    const startCol = Math.floor(random() * colCenterOffset) + colCenterOffset;
     
     const firstIsland: Island = {
       id: generateId(),
