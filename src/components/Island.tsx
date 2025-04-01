@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
 interface IslandProps {

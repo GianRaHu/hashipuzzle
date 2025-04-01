@@ -1,4 +1,7 @@
 
+// Tell TypeScript this is a module to allow exports
+export {};
+
 import { Island, Bridge, Puzzle } from './gameLogic';
 import { difficultySettings, customGridSizeOptions } from './difficultySettings';
 
@@ -220,7 +223,7 @@ export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert',
   seed?: number,
   customOptions?: {
-    gridSize?: number;
+    gridSize?: { rows: number; cols: number };
     advancedTactics?: boolean;
   }
 ): Puzzle => {
@@ -231,17 +234,10 @@ export const generatePuzzle = (
   
   // Apply custom options if provided
   if (customOptions) {
-      if (customOptions.gridSize) {
-        // Ensure gridSize includes both rows and cols
-        const { rows, cols } = customOptions.gridSize;
-        size = { rows, cols };
-        // Convert numeric grid size to object if needed (for backward compatibility)
-        const numericSize = customOptions.gridSize;
-      if (typeof numericSize === 'number') {
-        // Change this line to use the correct grid size from customOptions
-        size = { rows: customOptions.gridSize.rows, cols: customOptions.gridSize.cols, 
-      }
-        
+    if (customOptions.gridSize) {
+      // Ensure gridSize includes both rows and cols
+      size = customOptions.gridSize;
+      
       // Adjust island count based on grid size
       islandCount = Math.max(Math.floor((size.rows * size.cols) * 0.25), islandCount);
     }
