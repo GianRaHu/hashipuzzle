@@ -123,13 +123,9 @@
   }
   
   /* Add portrait/landscape orientation utility classes */
-  .board-portrait {
-    @apply aspect-[4/5] md:aspect-square;
-  }
-  
-  .board-landscape {
-    @apply aspect-square md:aspect-[5/4];
-  }
+  .board-container {
+  @apply w-full h-full max-h-[80vh] max-w-[90vw] md:max-w-[80vw];
+}
   
   /* Scrollable container */
   .scrollable-container {
