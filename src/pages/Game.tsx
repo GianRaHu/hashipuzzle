@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
@@ -523,13 +522,26 @@ const Game: React.FC = () => {
           />
         )}
         
-        <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+        {loading ? (
+          <div className="w-full max-w-md space-y-4">
+            <Progress value={loadingProgress} className="h-2 w-full" />
+            <p className="text-center text-sm text-muted-foreground">
+              {generateError ? "Error generating puzzle..." : "Generating puzzle..."}
+            </p>
+          </div>
+        ) : puzzle ? (
+          <div className="game-container w-full max-w-lg mx-auto">
+            <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+          </div>
+        ) : (
+          <div className="animate-pulse">Loading puzzle...</div>
+        )}
         
         {gameCompleted && showCompletionModal && (
           <GameCompletedModal 
-            time={puzzle.endTime! - puzzle.startTime!}
+            time={puzzle?.endTime! - puzzle?.startTime!}
             resetPuzzle={resetPuzzle}
-            seed={puzzle.seed}
+            seed={puzzle?.seed}
             onClose={() => setShowCompletionModal(false)}
           />
         )}

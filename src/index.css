@@ -124,8 +124,15 @@
   
   /* Add portrait/landscape orientation utility classes */
   .board-container {
-  @apply w-full h-full max-h-[80vh] max-w-[90vw] md:max-w-[80vw];
-}
+    @apply w-full h-full max-h-[80vh] max-w-[90vw] md:max-w-[80vw];
+  }
+  
+  /* Game container styles */
+  .game-container {
+    @apply flex flex-col items-center w-full;
+    max-width: min(100vw - 1rem, 600px);
+    margin: 0 auto;
+  }
   
   /* Scrollable container */
   .scrollable-container {

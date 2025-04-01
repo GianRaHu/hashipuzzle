@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Puzzle, 
@@ -30,20 +31,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   // Lower threshold for starting drag detection (pixels) - reduced for better intuitiveness
   const DRAG_START_THRESHOLD = 1; // Further reduced from 1.5 to make connections even easier
   const dragStartPositionRef = useRef<{x: number, y: number} | null>(null);
-
-  // Update the grid layout CSS to handle rectangular grids
-  const gridStyle = {
-    display: 'grid',
-    gridTemplateRows: `repeat(${puzzle.size.rows}, 1fr)`,
-    gridTemplateColumns: `repeat(${puzzle.size.cols}, 1fr)`,
-    gap: '2px',
-    padding: '8px',
-    backgroundColor: 'var(--grid-bg)',
-    borderRadius: '8px',
-    width: '100%',
-    height: '100%', // Use full container height
-    margin: '0 auto'
-  };
 
   // Island click handler (for both mobile and desktop)
   const handleIslandClick = (island: IslandType) => {
@@ -134,7 +121,7 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
         onUpdate(updatedPuzzle);
       }
     }
-};
+  };
 
   // Handle drag start on island
   const handleDragStart = (island: IslandType, event: React.MouseEvent | React.TouchEvent) => {
@@ -154,8 +141,6 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
     
     // Store the initial position for threshold checking
     dragStartPositionRef.current = { x: clientX, y: clientY };
-    
-    // Don't set dragPosition yet - we'll wait until we exceed the threshold
     
     // Prevent default behavior
     event.preventDefault();
@@ -317,12 +302,16 @@ const Board: React.FC<BoardProps> = ({ puzzle, onUpdate }) => {
   return (
     <div 
       ref={boardRef}
-      className={`relative w-full max-w-lg mx-auto border border-border/30 rounded-lg overflow-hidden ${boardOrientationClass}`}
+      className={`relative board-container border border-border/30 rounded-lg overflow-hidden ${boardOrientationClass}`}
       aria-label="Hashi puzzle board"
       style={{ 
         touchAction: "none",
         WebkitUserSelect: "none",
-        userSelect: "none"
+        userSelect: "none",
+        width: '100%',
+        maxWidth: '100%',
+        aspectRatio: `${puzzle.size.cols} / ${puzzle.size.rows}`,
+        margin: '0 auto'
       }}
       onMouseMove={handlePointerMove}
       onTouchMove={handlePointerMove}

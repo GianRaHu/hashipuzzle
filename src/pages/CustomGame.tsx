@@ -39,9 +39,12 @@ const CustomGame = () => {
       return a & a;
     }, 0));
 
+    // Ensure a fresh puzzle generation with timestamp 
+    const timestamp = Date.now();
+    
     // When using a seed, we don't need to pass advancedTactics parameter as it is
     // deterministically generated from the seed
-    navigate(`/game/custom?seed=${seedNumber}`);
+    navigate(`/game/custom?seed=${seedNumber}&t=${timestamp}`);
   };
 
   const generateRandomSeed = () => {
@@ -50,23 +53,11 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Find the selected grid size option
-    const selectedGridSize = customGridSizeOptions.find(
-      option => option.value.rows === config.gridSize
-    );
+    // Get the timestamp to ensure a fresh puzzle generation
+    const timestamp = Date.now();
     
-    if (selectedGridSize) {
-      // Get the timestamp to ensure a fresh puzzle generation
-      const timestamp = Date.now();
-      
-      // Pass gridSize and advanced tactics as URL parameters
-      navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
-    } else {
-      // Fallback to default medium size
-      const mediumSize = difficultySettings.medium.size;
-      const timestamp = Date.now();
-      navigate(`/game/custom?gridSize=${mediumSize.rows}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
-    }
+    // Pass gridSize and advanced tactics as URL parameters
+    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
   };
 
   return (
