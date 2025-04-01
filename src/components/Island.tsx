@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
 interface IslandProps {
@@ -19,6 +18,38 @@ const Island: React.FC<IslandProps> = ({
   onDragEnd, 
   gridSize 
 }) => {
+  // Memoize the color calculation based on island state
+  const { stateClass, bgColorClass } = useMemo(() => {
+    const connectionsNeeded = island.value;
+    const actualConnections = island.connectedTo.length;
+    
+    let stateClass = '';
+    let bgColorClass = '';
+    
+    if (isSelected) {
+      stateClass = 'ring-2 ring-primary ring-offset-1 ring-offset-background';
+      bgColorClass = 'bg-primary/20';
+    } else if (actualConnections === 0) {
+      // No connections yet - base color
+      stateClass = 'ring-1 ring-white/70 dark:ring-slate-400';
+      bgColorClass = 'bg-white dark:bg-slate-800';
+    } else if (actualConnections === connectionsNeeded) {
+      // Connections match exactly - green
+      stateClass = 'ring-1 ring-green-500';
+      bgColorClass = 'bg-green-100 dark:bg-green-900/50';
+    } else if (actualConnections > connectionsNeeded) {
+      // Too many connections - yellow
+      stateClass = 'ring-1 ring-yellow-500';
+      bgColorClass = 'bg-yellow-100 dark:bg-yellow-900/50';
+    } else if (actualConnections < connectionsNeeded) {
+      // Some connections but not complete - red
+      stateClass = 'ring-1 ring-red-500';
+      bgColorClass = 'bg-red-50 dark:bg-red-900/50';
+    }
+    
+    return { stateClass, bgColorClass };
+  }, [island.value, island.connectedTo.length, isSelected]);
+
   const [isDragging, setIsDragging] = useState(false);
   const touchTimerRef = useRef<number | null>(null);
   const moveDetectedRef = useRef<boolean>(false);
