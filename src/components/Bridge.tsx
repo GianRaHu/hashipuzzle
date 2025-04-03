@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Bridge as BridgeType, Island } from '../utils/gameLogic';
+import { useMediaQuery } from '@/hooks/use-mobile';
 
 interface BridgeProps {
   bridge: BridgeType;
@@ -14,6 +15,7 @@ interface BridgeProps {
 const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSize, animate = true, onClick }) => {
   const cellSizeX = 100 / gridSize.cols;
   const cellSizeY = 100 / gridSize.rows;
+  const isMobile = useMediaQuery('(max-width: 768px)');
   
   const bridgeStyle: React.CSSProperties = {
     position: 'absolute',
@@ -25,17 +27,26 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   
   const isHorizontal = bridge.orientation === 'horizontal';
   
-  // Determine node radius as a percentage of cell size based on grid size
+  // Dynamic bridge thickness based on grid size
+  const getBridgeThickness = () => {
+    if (isMobile) {
+      return gridSize.rows > 7 ? 1 : 2; // Thinner on small mobile screens with many islands
+    }
+    return gridSize.rows > 7 ? 2 : 2; // Standard thickness otherwise
+  };
+
+  const bridgeThickness = getBridgeThickness();
+  
+  // Get node radius as a percentage of cell size (improved calculation)
   const getNodeRadiusPercent = () => {
-    const cellArea = (100 / gridSize.rows) * (100 / gridSize.cols); // Calculate cell area in percentage
-    if (cellArea >= 250) return 14;      // Very large cells
-    if (cellArea >= 150) return 12;      // Large cells
-    if (cellArea >= 100) return 10;      // Medium cells
-    if (cellArea >= 70) return 8;        // Small cells
-    return 6;                            // Very small cells
+    const cellArea = (100 / gridSize.rows) * (100 / gridSize.cols);
+    if (cellArea >= 250) return 15;      // Very large cells
+    if (cellArea >= 150) return 13;      // Large cells
+    if (cellArea >= 100) return 11;      // Medium cells
+    if (cellArea >= 70) return 9;        // Small cells
+    return 7;                            // Very small cells
   };
   
-  // Get node radius as a percentage of cell size
   const nodeRadiusPercent = getNodeRadiusPercent();
   const nodeRadiusX = (nodeRadiusPercent / 100) * cellSizeX;
   const nodeRadiusY = (nodeRadiusPercent / 100) * cellSizeY;
@@ -48,8 +59,16 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     }
   };
   
-  // Calculate bridge spacing as a fixed value (not percentage-based)
-  const bridgeSpacing = 0.3; // Fixed small spacing value that works across grid sizes
+  // Calculate bridge spacing based on grid size (smaller for larger grids)
+  const getBridgeSpacing = () => {
+    const baseSpacing = 0.2;
+    if (gridSize.rows > 7 || gridSize.cols > 7) {
+      return baseSpacing * 0.8; // Reduce spacing for larger grids
+    }
+    return baseSpacing;
+  };
+  
+  const bridgeSpacing = getBridgeSpacing();
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
@@ -69,7 +88,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       left: `${adjustedStartX}%`,
       top: `${yPos - bridgeSpacing}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
-      height: '2px',
+      height: `${bridgeThickness}px`,
       transform: 'translateY(-50%)'
     };
     
@@ -78,7 +97,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       left: `${adjustedStartX}%`,
       top: `${yPos + bridgeSpacing}%`,
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
-      height: '2px',
+      height: `${bridgeThickness}px`,
       transform: 'translateY(-50%)',
       opacity: bridge.count === 2 ? 1 : 0
     };
@@ -116,7 +135,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       ...bridgeStyle,
       left: `${xPos - bridgeSpacing}%`,
       top: `${adjustedStartY}%`,
-      width: '2px',
+      width: `${bridgeThickness}px`,
       height: animate ? '0%' : `${adjustedHeight}%`,
       transform: 'translateX(-50%)'
     };
@@ -125,7 +144,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       ...bridgeStyle,
       left: `${xPos + bridgeSpacing}%`,
       top: `${adjustedStartY}%`,
-      width: '2px',
+      width: `${bridgeThickness}px`,
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
       transform: 'translateX(-50%)',
       opacity: bridge.count === 2 ? 1 : 0

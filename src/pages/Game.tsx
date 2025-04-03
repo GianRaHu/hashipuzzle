@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
@@ -11,6 +12,8 @@ import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import ConnectivityAlert from '../components/ConnectivityAlert';
+import TutorialOverlay from '../components/game/TutorialOverlay';
+import FirstTimePrompt from '../components/game/FirstTimePrompt';
 import { supabase } from '@/integrations/supabase/client';
 
 const Game: React.FC = () => {
@@ -41,12 +44,45 @@ const Game: React.FC = () => {
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   
+  // New states for tutorial and first-time user experience
+  const [showTutorial, setShowTutorial] = useState<boolean>(false);
+  const [showFirstTimePrompt, setShowFirstTimePrompt] = useState<boolean>(false);
+  
   const stats = getStats();
   
   const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'custom'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
     ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'custom'
     : 'easy';
+  
+  // Check if first time playing this difficulty
+  useEffect(() => {
+    const hasPlayedBefore = localStorage.getItem(`played_${validDifficulty}`);
+    if (!hasPlayedBefore && !seedParam) {
+      setShowFirstTimePrompt(true);
+      localStorage.setItem(`played_${validDifficulty}`, 'true');
+    }
+  }, [validDifficulty, seedParam]);
+  
+  // Handle tutorial display
+  const handleShowTutorial = () => {
+    setShowFirstTimePrompt(false);
+    setShowTutorial(true);
+  };
+  
+  const handleSkipTutorial = () => {
+    setShowFirstTimePrompt(false);
+  };
+  
+  const handleTutorialFinish = () => {
+    setShowTutorial(false);
+    // Optional: Show a toast to remind player about help availability
+    toast({
+      title: "Help is always available",
+      description: "Click the question mark icon in the header anytime you need help.",
+      duration: 4000,
+    });
+  };
   
   // Update extended stats in Supabase
   const updateExtendedStats = async (
@@ -463,10 +499,11 @@ const Game: React.FC = () => {
   }, [moveHistory, puzzle]);
 
   const showHelp = () => {
+    setShowTutorial(true);
     toast({
-      title: "How to Play",
-      description: "Connect islands with bridges. Each island must have exactly the number of bridges shown on it. Bridges can't cross each other. All islands must be connected to each other.",
-      duration: 5000,
+      title: "Tutorial Activated",
+      description: "Learn how to play Hashi with our step-by-step guide.",
+      duration: 3000,
     });
   };
   
@@ -505,6 +542,7 @@ const Game: React.FC = () => {
         showRestartDialog={restartConfirmOpen}
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
+        onShowHelp={showHelp}
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
@@ -544,6 +582,22 @@ const Game: React.FC = () => {
             onClose={() => setShowCompletionModal(false)}
           />
         )}
+        
+        {/* Add the first-time tutorial prompt */}
+        <FirstTimePrompt 
+          isOpen={showFirstTimePrompt}
+          onClose={() => setShowFirstTimePrompt(false)}
+          onShowTutorial={handleShowTutorial}
+          onSkipTutorial={handleSkipTutorial}
+        />
+        
+        {/* Add the tutorial overlay */}
+        <TutorialOverlay 
+          isOpen={showTutorial}
+          onClose={() => setShowTutorial(false)}
+          onFinish={handleTutorialFinish}
+          targetDifficulty={validDifficulty}
+        />
       </main>
     </div>
   );
