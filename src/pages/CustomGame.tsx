@@ -39,6 +39,9 @@ const CustomGame = () => {
       return a & a;
     }, 0));
     
+    // Add a timestamp to ensure unique URL for navigation
+    const timestamp = Date.now();
+    
     // When using a seed, we don't need to pass advancedTactics parameter as it is
     // deterministically generated from the seed
     navigate(`/game/custom?seed=${seedNumber}&t=${timestamp}`);
@@ -50,9 +53,8 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Remove the timestamp to ensure puzzles with the same seed are identical
-    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}`);
-  };
+    // Add a timestamp to ensure unique URL for navigation
+    const timestamp = Date.now();
     
     // Pass gridSize and advanced tactics as URL parameters
     navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
