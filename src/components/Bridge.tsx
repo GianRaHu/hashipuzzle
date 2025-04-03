@@ -28,15 +28,17 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   // Determine node radius as a percentage of cell size based on grid size
   const getNodeRadiusPercent = () => {
     const cellArea = (100 / gridSize.rows) * (100 / gridSize.cols); // Calculate cell area in percentage
-    if (cellArea >= 250) return 16;      // Very large cells
-    if (cellArea >= 150) return 14;      // Large cells
-    if (cellArea >= 100) return 12;      // Medium cells
-    if (cellArea >= 70) return 10;       // Small cells
-    return 8;                           // Very small cells
+    if (cellArea >= 250) return 14;      // Very large cells
+    if (cellArea >= 150) return 12;      // Large cells
+    if (cellArea >= 100) return 10;      // Medium cells
+    if (cellArea >= 70) return 8;        // Small cells
+    return 6;                            // Very small cells
   };
   
-  // Node radius as a percentage of cell size for better scaling
+  // Get node radius as a percentage of cell size
   const nodeRadiusPercent = getNodeRadiusPercent();
+  const nodeRadiusX = (nodeRadiusPercent / 100) * cellSizeX;
+  const nodeRadiusY = (nodeRadiusPercent / 100) * cellSizeY;
   
   // Handle click with better detection area
   const handleBridgeClick = (e: React.MouseEvent) => {
@@ -46,33 +48,26 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     }
   };
   
-  // Calculate bridge spacing as a percentage of the cell size, scaled by grid dimensions
-  const getBridgeSpacing = () => {
-    const minCellSize = Math.min(cellSizeX, cellSizeY);
-    // Further reduce the spacing for better visibility
-    const spacing = minCellSize * 0.08; 
-    return Math.max(spacing, 0.4); // Smaller minimum spacing for better visuals
-  };
-  
-  const bridgeSpacing = getBridgeSpacing();
+  // Calculate bridge spacing as a fixed value (not percentage-based)
+  const bridgeSpacing = 0.3; // Fixed small spacing value that works across grid sizes
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
     const maxCol = Math.max(startIsland.col, endIsland.col);
-    const width = (maxCol - minCol) * cellSizeX;
     const xPos = minCol * cellSizeX + cellSizeX / 2;
     const yPos = startIsland.row * cellSizeY + cellSizeY / 2;
     
-    // Calculate bridge start and end positions with more precise spacing to avoid overlapping with islands
-    const nodeRadiusX = (nodeRadiusPercent / 100) * cellSizeX;
-    const adjustedWidth = width - (nodeRadiusX * 1.5); // Reduced to prevent extending into island
-    const adjustedPos = xPos + (nodeRadiusX * 0.75); // Refined start position to edge of island
+    // Calculate bridge length
+    const bridgeLength = (maxCol - minCol) * cellSizeX;
     
-    // Use an even smaller bridge spacing for better visual appearance
+    // Adjust for node radius to prevent overlap
+    const adjustedStartX = xPos + nodeRadiusX;
+    const adjustedWidth = bridgeLength - (nodeRadiusX * 2);
+    
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${adjustedPos}%`,
-      top: `${yPos - bridgeSpacing/4}%`,
+      left: `${adjustedStartX}%`,
+      top: `${yPos - bridgeSpacing}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)'
@@ -80,8 +75,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${adjustedPos}%`,
-      top: `${yPos + bridgeSpacing/4}%`,
+      left: `${adjustedStartX}%`,
+      top: `${yPos + bridgeSpacing}%`,
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)',
@@ -107,20 +102,20 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   } else {
     const minRow = Math.min(startIsland.row, endIsland.row);
     const maxRow = Math.max(startIsland.row, endIsland.row);
-    const height = (maxRow - minRow) * cellSizeY;
     const xPos = startIsland.col * cellSizeX + cellSizeX / 2;
     const yPos = minRow * cellSizeY + cellSizeY / 2;
     
-    // Calculate bridge start and end positions with more precise spacing for vertical bridges
-    const nodeRadiusY = (nodeRadiusPercent / 100) * cellSizeY;
-    const adjustedHeight = height - (nodeRadiusY * 1.5); // Reduced to prevent extending into island
-    const adjustedPos = yPos + (nodeRadiusY * 0.75); // Refined start position to edge of island
+    // Calculate bridge length
+    const bridgeLength = (maxRow - minRow) * cellSizeY;
     
-    // Use an even smaller bridge spacing for vertical bridges as well
+    // Adjust for node radius to prevent overlap
+    const adjustedStartY = yPos + nodeRadiusY;
+    const adjustedHeight = bridgeLength - (nodeRadiusY * 2);
+    
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos - bridgeSpacing/4}%`,
-      top: `${adjustedPos}%`,
+      left: `${xPos - bridgeSpacing}%`,
+      top: `${adjustedStartY}%`,
       width: '2px',
       height: animate ? '0%' : `${adjustedHeight}%`,
       transform: 'translateX(-50%)'
@@ -128,8 +123,8 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos + bridgeSpacing/4}%`,
-      top: `${adjustedPos}%`,
+      left: `${xPos + bridgeSpacing}%`,
+      top: `${adjustedStartY}%`,
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
       transform: 'translateX(-50%)',

@@ -318,10 +318,10 @@ const Game: React.FC = () => {
           // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
           const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
           
-          // Generate a new puzzle with a different seed
+          // Generate a new puzzle with a different seed to ensure uniqueness
           const newPuzzle = generatePuzzle(
             difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
-            undefined, // No seed for new puzzle
+            undefined, // No seed for new puzzle to ensure it's different
             customOptions
           );
           
@@ -389,7 +389,8 @@ const Game: React.FC = () => {
             })),
             solved: false,
             startTime: undefined,
-            endTime: undefined
+            endTime: undefined,
+            allIslandsConnected: false  // Reset connectivity status
           };
           
           clearInterval(loadingInterval);
