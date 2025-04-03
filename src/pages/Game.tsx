@@ -37,7 +37,7 @@ const Game: React.FC = () => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [generateError, setGenerateError] = useState<boolean>(false);
   const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
-  const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(showConnectionAlert);
+  const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   
