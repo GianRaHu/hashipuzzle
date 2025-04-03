@@ -49,9 +49,9 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   // Calculate bridge spacing as a percentage of the cell size, scaled by grid dimensions
   const getBridgeSpacing = () => {
     const minCellSize = Math.min(cellSizeX, cellSizeY);
-    // Reduce the spacing to avoid bridges being positioned too far apart
-    const spacing = minCellSize * 0.1; 
-    return Math.max(spacing, 0.5); // Ensure minimum spacing but keep it small
+    // Further reduce the spacing for better visibility
+    const spacing = minCellSize * 0.08; 
+    return Math.max(spacing, 0.4); // Smaller minimum spacing for better visuals
   };
   
   const bridgeSpacing = getBridgeSpacing();
@@ -63,16 +63,16 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = minCol * cellSizeX + cellSizeX / 2;
     const yPos = startIsland.row * cellSizeY + cellSizeY / 2;
     
-    // Calculate bridge start and end positions with precise spacing to avoid overlapping with islands
+    // Calculate bridge start and end positions with more precise spacing to avoid overlapping with islands
     const nodeRadiusX = (nodeRadiusPercent / 100) * cellSizeX;
-    const adjustedWidth = width - (nodeRadiusX * 1.7); // Reduce slightly to prevent extending into island
-    const adjustedPos = xPos + (nodeRadiusX * 0.85); // Move start position to edge of island
+    const adjustedWidth = width - (nodeRadiusX * 1.5); // Reduced to prevent extending into island
+    const adjustedPos = xPos + (nodeRadiusX * 0.75); // Refined start position to edge of island
     
-    // Use a smaller bridge spacing for better visual appearance
+    // Use an even smaller bridge spacing for better visual appearance
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
-      top: `${yPos - bridgeSpacing/3}%`,
+      top: `${yPos - bridgeSpacing/4}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)'
@@ -81,7 +81,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
-      top: `${yPos + bridgeSpacing/3}%`,
+      top: `${yPos + bridgeSpacing/4}%`,
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)',
@@ -111,15 +111,15 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const xPos = startIsland.col * cellSizeX + cellSizeX / 2;
     const yPos = minRow * cellSizeY + cellSizeY / 2;
     
-    // Calculate bridge start and end positions with precise spacing to avoid overlapping with islands
+    // Calculate bridge start and end positions with more precise spacing for vertical bridges
     const nodeRadiusY = (nodeRadiusPercent / 100) * cellSizeY;
-    const adjustedHeight = height - (nodeRadiusY * 1.7); // Reduce slightly to prevent extending into island
-    const adjustedPos = yPos + (nodeRadiusY * 0.85); // Move start position to edge of island
+    const adjustedHeight = height - (nodeRadiusY * 1.5); // Reduced to prevent extending into island
+    const adjustedPos = yPos + (nodeRadiusY * 0.75); // Refined start position to edge of island
     
-    // Use a smaller bridge spacing for vertical bridges as well
+    // Use an even smaller bridge spacing for vertical bridges as well
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos - bridgeSpacing/3}%`,
+      left: `${xPos - bridgeSpacing/4}%`,
       top: `${adjustedPos}%`,
       width: '2px',
       height: animate ? '0%' : `${adjustedHeight}%`,
@@ -128,7 +128,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos + bridgeSpacing/3}%`,
+      left: `${xPos + bridgeSpacing/4}%`,
       top: `${adjustedPos}%`,
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,

@@ -19,7 +19,7 @@ const Game: React.FC = () => {
   const { difficulty } = useParams<{ difficulty: string }>();
   const location = useLocation();
   
-  // Get URL parameters
+  // Get URL parameters without timestamp
   const urlParams = new URLSearchParams(location.search);
   const seedParam = urlParams.get('seed');
   const initialSeed = seedParam ? parseInt(seedParam, 10) : undefined;
@@ -199,7 +199,7 @@ const Game: React.FC = () => {
       
       return () => clearInterval(loadingInterval);
     }
-  }, [validDifficulty, location.search, navigate, toast, initialSeed, initialGridSize, initialAdvancedTactics]);
+  }, [validDifficulty, initialSeed, initialGridSize, initialAdvancedTactics, navigate, toast]);
   
   useEffect(() => {
     if (!puzzle || gameCompleted || loading) return;
@@ -318,6 +318,7 @@ const Game: React.FC = () => {
           // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
           const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
           
+          // Generate a new puzzle with a different seed
           const newPuzzle = generatePuzzle(
             difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
             undefined, // No seed for new puzzle
