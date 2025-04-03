@@ -24,7 +24,6 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   };
   
   const isHorizontal = bridge.orientation === 'horizontal';
-  const isSingleBridge = bridge.count === 1;
   
   // Determine node radius as a percentage of cell size based on grid size
   const getNodeRadiusPercent = () => {
@@ -47,7 +46,6 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     }
   };
   
-  // UPDATED: Consistent spacing for both horizontal and vertical bridges
   // Calculate bridge spacing as a percentage of the cell size, scaled by grid dimensions
   const getBridgeSpacing = () => {
     const minCellSize = Math.min(cellSizeX, cellSizeY);
@@ -69,7 +67,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedWidth = width - (nodeOffsetX * 2);
     const adjustedPos = xPos + nodeOffsetX;
     
-    // UPDATED: Use the same bridge spacing for both bridges
+    // Use the same bridge spacing for both bridges
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
@@ -117,7 +115,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedHeight = height - (nodeOffsetY * 2);
     const adjustedPos = yPos + nodeOffsetY;
     
-    // UPDATED: Use the same bridge spacing for both bridges, maintaining consistency with horizontal bridges
+    // Use the same bridge spacing for both bridges, maintaining consistency with horizontal bridges
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${xPos - bridgeSpacing/2}%`,

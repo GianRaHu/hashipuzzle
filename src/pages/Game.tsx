@@ -362,7 +362,7 @@ const Game: React.FC = () => {
     setTimer(0);
     setUserOverrodeConnectivity(false);
     
-    if (validDifficulty && puzzle?.seed) {
+    if (validDifficulty && puzzle) {
       setLoading(true);
       setLoadingProgress(0);
       
@@ -377,28 +377,29 @@ const Game: React.FC = () => {
         try {
           console.log(`Restarting puzzle with seed: ${puzzle.seed}`);
           
-          // Create custom options based on the existing puzzle's properties
-          const customOptions = {
-            gridSize: puzzle.size, // Use the exact same grid size
-            advancedTactics: puzzle.requiresAdvancedTactics // Use the same advanced tactics setting
+          // Instead of generating a new puzzle, we use the original puzzle's state
+          // and just reset the bridges and connections
+          const restartedPuzzle = {
+            ...puzzle,
+            bridges: [],  // Clear all bridges
+            islands: puzzle.islands.map(island => ({
+              ...island,
+              connectedTo: []  // Clear all connections
+            })),
+            solved: false,
+            startTime: undefined,
+            endTime: undefined
           };
-          
-          // Regenerate the exact same puzzle using the stored seed
-          const newPuzzle = generatePuzzle(
-            puzzle.difficulty as 'easy' | 'medium' | 'hard' | 'expert', 
-            puzzle.seed, // Use the exact same seed
-            customOptions
-          );
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
           
           setTimeout(() => {
-            setPuzzle(newPuzzle);
+            setPuzzle(restartedPuzzle);
             setGameCompleted(false);
-            setMoveHistory([[]]);
+            setMoveHistory([[]]);  // Reset move history
             setLoading(false);
-            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}, same grid: ${newPuzzle.size.rows}x${newPuzzle.size.cols}`);
+            console.log(`Restarted puzzle with seed: ${restartedPuzzle.seed}, same grid: ${restartedPuzzle.size.rows}x${restartedPuzzle.size.cols}`);
           }, 500);
         } catch (error) {
           console.error("Error restarting puzzle:", error);
