@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -102,8 +101,8 @@ export default {
 					"50%": { opacity: "0.8" }
 				},
 				"bridge-draw": {
-					"0%": { width: "0%" },
-					"100%": { width: "100%" }
+					"0%": { width: "0%", height: "0%" },
+					"100%": { width: "100%", height: "100%" }
 				}
 			},
 			animation: {
