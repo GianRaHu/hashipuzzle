@@ -38,8 +38,8 @@ const CustomGame = () => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0));
-    
-    // Add a timestamp to ensure unique URL for navigation
+
+    // Ensure a fresh puzzle generation with timestamp 
     const timestamp = Date.now();
     
     // When using a seed, we don't need to pass advancedTactics parameter as it is
@@ -53,7 +53,7 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Add a timestamp to ensure unique URL for navigation
+    // Get the timestamp to ensure a fresh puzzle generation
     const timestamp = Date.now();
     
     // Pass gridSize and advanced tactics as URL parameters

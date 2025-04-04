@@ -29,11 +29,11 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
   // Determine node radius as a percentage of cell size based on grid size
   const getNodeRadiusPercent = () => {
     const cellArea = (100 / gridSize.rows) * (100 / gridSize.cols); // Calculate cell area in percentage
-    if (cellArea >= 250) return 16;      // Very large cells
-    if (cellArea >= 150) return 14;      // Large cells
-    if (cellArea >= 100) return 12;      // Medium cells
-    if (cellArea >= 70) return 10;       // Small cells
-    return 8;                            // Very small cells
+    if (cellArea >= 250) return 14;      // Very large cells
+    if (cellArea >= 150) return 12;      // Large cells
+    if (cellArea >= 100) return 10;      // Medium cells
+    if (cellArea >= 70) return 8;       // Small cells
+    return 7;                           // Very small cells
   };
   
   // Node radius as a percentage of cell size for better scaling
@@ -47,16 +47,6 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     }
   };
   
-  // UPDATED: Consistent spacing for both horizontal and vertical bridges
-  // Calculate bridge spacing as a percentage of the cell size, scaled by grid dimensions
-  const getBridgeSpacing = () => {
-    const minCellSize = Math.min(cellSizeX, cellSizeY);
-    const spacing = minCellSize * 0.15; // Consistent relative spacing
-    return Math.max(spacing, 0.8); // Ensure minimum spacing
-  };
-  
-  const bridgeSpacing = getBridgeSpacing();
-  
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
     const maxCol = Math.max(startIsland.col, endIsland.col);
@@ -65,15 +55,19 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const yPos = startIsland.row * cellSizeY + cellSizeY / 2;
     
     // Calculate bridge start and end positions with increased spacing to avoid overlapping with islands
+    // Use the full node radius for spacing to match the island radius
     const nodeOffsetX = (nodeRadiusPercent / 100) * cellSizeX;
     const adjustedWidth = width - (nodeOffsetX * 2);
     const adjustedPos = xPos + nodeOffsetX;
     
-    // UPDATED: Use the same bridge spacing for both bridges
+    // Increased spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 1.0; // Increased from 0.5
+    const secondBridgeOffset = 1.0; // Increased from 0.5
+    
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
-      top: `${yPos - bridgeSpacing/2}%`,
+      top: `${yPos - firstBridgeOffset}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)'
@@ -82,7 +76,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
-      top: `${yPos + bridgeSpacing/2}%`,
+      top: `${yPos + secondBridgeOffset}%`,
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)',
@@ -113,14 +107,18 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const yPos = minRow * cellSizeY + cellSizeY / 2;
     
     // Calculate bridge start and end positions with increased spacing to avoid overlapping with islands
+    // Use the full node radius for spacing to match the island radius
     const nodeOffsetY = (nodeRadiusPercent / 100) * cellSizeY;
     const adjustedHeight = height - (nodeOffsetY * 2);
     const adjustedPos = yPos + nodeOffsetY;
     
-    // UPDATED: Use the same bridge spacing for both bridges, maintaining consistency with horizontal bridges
+    // Increased spacing between bridges
+    const firstBridgeOffset = isSingleBridge ? 0 : 1.0; // Increased from 0.5
+    const secondBridgeOffset = 1.0; // Increased from 0.5
+    
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos - bridgeSpacing/2}%`,
+      left: `${xPos - firstBridgeOffset}%`,
       top: `${adjustedPos}%`,
       width: '2px',
       height: animate ? '0%' : `${adjustedHeight}%`,
@@ -129,7 +127,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos + bridgeSpacing/2}%`,
+      left: `${xPos + secondBridgeOffset}%`,
       top: `${adjustedPos}%`,
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,

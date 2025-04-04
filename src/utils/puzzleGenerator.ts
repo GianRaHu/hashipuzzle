@@ -1,3 +1,4 @@
+
 // Tell TypeScript this is a module to allow exports
 export {};
 
@@ -145,15 +146,14 @@ const findConnectableIslands = (
   );
 };
 
-// UPDATED: Create advanced tactics that ensure there is only one solution
+// Create complex island connections that might require logical deduction
 const createAdvancedTacticsConnection = (
   islands: Island[],
   bridges: Bridge[],
   grid: (Island | null)[][],
   bridgeMap: Map<string, boolean>,
   random: () => number,
-  maxValue: number,
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert'
+  maxValue: number
 ): boolean => {
   // Find islands that could be part of a logical deduction chain
   const candidateIslands = islands.filter(island => island.value < maxValue - 1);
@@ -175,8 +175,9 @@ const createAdvancedTacticsConnection = (
   
   const island2 = otherConnectable[Math.floor(random() * otherConnectable.length)];
   
-  // UPDATED: Create a situation that forces a specific logical deduction pattern
-  // based on the difficulty level
+  // Create a situation where the only solution requires deduction:
+  // - Connect start island to both island1 and island2 with a single bridge each
+  // - Make either island1 or island2 have a value that forces connection to the start island
   
   // Connect start island to island1
   const bridge1: Bridge = {
@@ -208,109 +209,15 @@ const createAdvancedTacticsConnection = (
   island2.value += 1;
   markPath(startIsland, island2, bridgeMap);
   
-  // Create difficulty-specific logic patterns
-  if (difficulty === 'hard' || difficulty === 'expert') {
-    // For harder difficulties, create more complex logical deductions
-    // Find a third island that can connect to either island1 or island2
-    const thirdLevelConnectable = findConnectableIslands(island1, islands, bridgeMap, maxValue);
-    
-    if (thirdLevelConnectable.length > 0) {
-      const island3 = thirdLevelConnectable[Math.floor(random() * thirdLevelConnectable.length)];
-      
-      // Connect island1 to island3
-      const bridge3: Bridge = {
-        id: generateId(),
-        startIslandId: island1.id,
-        endIslandId: island3.id,
-        count: 1,
-        orientation: island1.row === island3.row ? 'horizontal' : 'vertical'
-      };
-      
-      bridges.push(bridge3);
-      
-      island1.value += 1;
-      island3.value += 1;
-      markPath(island1, island3, bridgeMap);
-      
-      // Set island values to force specific logical deductions
-      if (random() < 0.5) {
-        // Pattern where island1 can only have one more connection to island3
-        island1.value = Math.min(island1.value + 1, maxValue - 1);
-      } else {
-        // Pattern where island3 must connect to island1
-        island3.value = Math.min(island3.value + 1, maxValue - 1);
-      }
-    }
-  } else {
-    // For easier difficulties, create simpler patterns
-    // Make one of the islands require an additional connection
-    if (random() < 0.5 && island1.value < maxValue - 1) {
-      island1.value += 1;
-    } else if (island2.value < maxValue - 1) {
-      island2.value += 1;
-    }
+  // Make one of the islands require an additional connection
+  if (random() < 0.5 && island1.value < maxValue - 1) {
+    island1.value += 1;
+  } else if (island2.value < maxValue - 1) {
+    island2.value += 1;
   }
   
   return true;
 };
-
-// UPDATED: Verify that the puzzle has a single solution
-const ensureSingleSolution = (
-  puzzle: Puzzle,
-  difficulty: 'easy' | 'medium' | 'hard' | 'expert'
-): void => {
-  // For easier difficulties, keep connections more straightforward
-  if (difficulty === 'easy' || difficulty === 'medium') {
-    // Ensure islands don't have too many potential connections
-    puzzle.islands.forEach(island => {
-      // Count potential connections
-      const potentialConnections = puzzle.islands.filter(otherIsland => 
-        island.id !== otherIsland.id && 
-        (island.row === otherIsland.row || island.col === otherIsland.col)
-      ).length;
-      
-      // Make sure there aren't too many potential connections relative to the required value
-      if (potentialConnections > island.value + 1) {
-        // Adjust island value to make the solution more constrained
-        island.value = Math.min(island.value + 1, Math.min(potentialConnections - 1, 8));
-      }
-    });
-  }
-  
-  // For harder difficulties, create more complex constraints
-  if (difficulty === 'hard' || difficulty === 'expert') {
-    // Identify critical islands (those with exactly the right number of connections)
-    const criticalIslands = puzzle.islands.filter(island => {
-      const potentialConnections = puzzle.islands.filter(otherIsland => 
-        island.id !== otherIsland.id && 
-        (island.row === otherIsland.row || island.col === otherIsland.col)
-      ).length;
-      
-      return potentialConnections === island.value;
-    });
-    
-    // Make sure there are enough critical islands to force a unique solution
-    if (criticalIslands.length < puzzle.islands.length / 3) {
-      // Add more constraints to some islands
-      const nonCriticalIslands = puzzle.islands.filter(island => 
-        !criticalIslands.some(ci => ci.id === island.id)
-      );
-      
-      // Add constraints to a few non-critical islands
-      const constrainCount = Math.min(
-        Math.ceil(puzzle.islands.length / 6), 
-        nonCriticalIslands.length
-      );
-      
-      for (let i = 0; i < constrainCount; i++) {
-        if (i < nonCriticalIslands.length) {
-          const island = nonCriticalIslands[i];
-          island.value = Math.min(island.value + 1, 8);
-        }
-      }
-    }
-  }
-}
 
 export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert',
@@ -528,7 +435,7 @@ export const generatePuzzle = (
           const numAdvancedSituations = Math.min(3, Math.floor(Math.min(size.rows, size.cols) / 4));
           
           for (let i = 0; i < numAdvancedSituations; i++) {
-            createAdvancedTacticsConnection(islands, bridgeConnections, grid, bridgeMap, random, maxValue, difficulty);
+            createAdvancedTacticsConnection(islands, bridgeConnections, grid, bridgeMap, random, maxValue);
           }
         }
         
@@ -598,22 +505,17 @@ export const generatePuzzle = (
   }
   
   // Create the puzzle
-  const puzzle = {
+  return {
     id: generateId(),
     difficulty,
     size,
-    islands: islands,
+    islands,
     bridges: [], // Start with no bridges for gameplay
     solved: false,
     startTime: Date.now(),
     seed: puzzleSeed,
     requiresAdvancedTactics: advancedTactics
   };
-  
-  // UPDATED: Ensure the puzzle has a single logical solution
-  ensureSingleSolution(puzzle, difficulty);
-  
-  return puzzle;
 };
 
 // Generate a daily challenge
