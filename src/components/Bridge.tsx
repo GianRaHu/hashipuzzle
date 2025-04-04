@@ -47,13 +47,9 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     }
   };
 
-  // Dynamic bridge spacing - center single bridges, space apart double bridges
+  // Dynamic bridge spacing - properly centered for single bridges, spaced for double bridges
   const getBridgeSpacing = () => {
-    if (isSingleBridge) {
-      return 0; // Center the single bridge
-    } else {
-      return 1.0; // Space apart double bridges
-    }
+    return isSingleBridge ? 0 : 1.0; // Center single bridges, space double bridges
   };
   
   // Calculate bridge spacing based on count
