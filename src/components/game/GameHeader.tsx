@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { formatTime } from '../../utils/time';
+import { formatTime } from '@/utils/time';
 import { Button } from '@/components/ui/button';
 import { X, Home, RotateCcw, Undo, HelpCircle } from 'lucide-react';
 import { 
