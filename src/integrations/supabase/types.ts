@@ -163,6 +163,36 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          background_music: boolean
+          created_at: string
+          haptic_feedback: boolean
+          id: string
+          updated_at: string
+          user_id: string
+          volume: number
+        }
+        Insert: {
+          background_music?: boolean
+          created_at?: string
+          haptic_feedback?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+          volume?: number
+        }
+        Update: {
+          background_music?: boolean
+          created_at?: string
+          haptic_feedback?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+          volume?: number
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null

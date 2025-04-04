@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { UserSettings, UserSettingsInsert } from '@/types/user-settings';
+import { UserSettings, UserSettingsInsert, isUserSettings } from '@/types/user-settings';
 
 // Default settings
 export const defaultSettings = {
@@ -36,15 +37,14 @@ export const loadUserSettings = async () => {
     if (userData?.user) {
       // Get user settings from Supabase
       const { data: userSettingsData, error } = await supabase
-        .from('user_settings')
+        .from('user_settings' as any) // Type assertion to bypass TypeScript error temporarily
         .select('*')
         .eq('user_id', userData.user.id)
         .single();
       
-      if (userSettingsData && !error) {
-        // Cast to our temporary type and format for the application
-        const userSettings = userSettingsData as unknown as UserSettings;
-        return formatSettingsFromDb(userSettings);
+      if (userSettingsData && !error && isUserSettings(userSettingsData)) {
+        // Format for the application
+        return formatSettingsFromDb(userSettingsData);
       }
     }
     
@@ -74,7 +74,7 @@ export const saveUserSettings = async (settings: any) => {
       const settingsToUpsert = formatSettingsForDb(settings, userData.user.id);
       
       await supabase
-        .from('user_settings')
+        .from('user_settings' as any) // Type assertion to bypass TypeScript error temporarily
         .upsert(settingsToUpsert);
     }
     
