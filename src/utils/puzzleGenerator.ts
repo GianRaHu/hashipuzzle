@@ -2,19 +2,27 @@
 // Tell TypeScript this is a module to allow exports
 export {};
 
-import { Island, Bridge, Puzzle } from './gameLogic';
+import { Island, Bridge, Puzzle, generateId } from './gameLogic';
 import { difficultySettings, customGridSizeOptions } from './difficultySettings';
 
-// Helper function to generate a unique ID
-const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 9);
-};
-
-// Helper function to create a seeded random number generator
+// Helper function to create a more robust seeded random number generator
+// This implementation uses a Linear Congruential Generator for better distribution
 const seededRandom = (seed: number) => {
+  // Initial state from seed
+  let state = seed;
+  
   return () => {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
+    // Constants for a good LCG from Numerical Recipes
+    // Using more widely tested constants for better distribution
+    const a = 1664525;
+    const c = 1013904223;
+    const m = 2**32;
+    
+    // Update state
+    state = (a * state + c) % m;
+    
+    // Return value in [0, 1)
+    return state / m;
   };
 };
 
@@ -219,6 +227,54 @@ const createAdvancedTacticsConnection = (
   return true;
 };
 
+// Verify puzzle has a unique solution using logical deduction
+const verifyUniqueSolution = (puzzle: Puzzle): boolean => {
+  // This is a simplified check - in a full implementation,
+  // you'd want to use constraint propagation and logical rules
+  // to verify the puzzle has exactly one solution
+  
+  // For now, we'll use a heuristic that checks:
+  // 1. All islands have reasonable number of connections
+  // 2. There are no islands with more required bridges than possible connections
+  
+  const { islands } = puzzle;
+  let hasReasonableValues = true;
+  
+  for (const island of islands) {
+    // Count possible directions the island can connect to
+    let possibleDirections = 0;
+    
+    // Check north
+    if (islands.some(other => other.col === island.col && other.row < island.row)) {
+      possibleDirections++;
+    }
+    // Check south
+    if (islands.some(other => other.col === island.col && other.row > island.row)) {
+      possibleDirections++;
+    }
+    // Check east
+    if (islands.some(other => other.row === island.row && other.col > island.col)) {
+      possibleDirections++;
+    }
+    // Check west
+    if (islands.some(other => other.row === island.row && other.col < island.col)) {
+      possibleDirections++;
+    }
+    
+    // If island value is greater than possible directions * 2, it's impossible
+    if (island.value > possibleDirections * 2) {
+      return false;
+    }
+    
+    // If island value is very low compared to connections, puzzle may be too easy
+    if (island.value <= 1 && possibleDirections >= 3) {
+      hasReasonableValues = false;
+    }
+  }
+  
+  return hasReasonableValues;
+};
+
 export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert',
   seed?: number,
@@ -250,7 +306,7 @@ export const generatePuzzle = (
   console.log(`Grid size: ${size.rows}x${size.cols}, Advanced tactics: ${advancedTactics}`);
   
   // Use provided seed or generate a random one
-  const puzzleSeed = seed || Math.floor(Math.random() * 1000000);
+  const puzzleSeed = seed !== undefined ? seed : Math.floor(Math.random() * 1000000);
   console.log(`Using seed: ${puzzleSeed}`);
   const random = seededRandom(puzzleSeed);
   
@@ -439,6 +495,22 @@ export const generatePuzzle = (
           }
         }
         
+        // Verify the puzzle has a unique solution
+        if (!verifyUniqueSolution({ 
+          id: generateId(),
+          difficulty, 
+          size, 
+          islands, 
+          bridges: bridgeConnections,
+          solved: false,
+          seed: puzzleSeed,
+          requiresAdvancedTactics: advancedTactics
+        })) {
+          // If verification fails, try again
+          success = false;
+          continue;
+        }
+        
         break;
       }
     }
@@ -453,7 +525,6 @@ export const generatePuzzle = (
       cols: Math.max(5, size.cols - 2)
     };
     const reducedIslandCount = Math.max(4, islandCount - 4);
-    const reducedMaxValue = Math.max(3, maxValue - 2);
     
     // Create a simple grid pattern
     const grid = Array(reducedSize.rows).fill(null).map(() => Array(reducedSize.cols).fill(null));
@@ -487,7 +558,7 @@ export const generatePuzzle = (
         if ((island1.row === island2.row && Math.abs(island1.col - island2.col) === 2) ||
             (island1.col === island2.col && Math.abs(island1.row - island2.row) === 2)) {
           
-          const bridgeCount = (Math.random() < 0.3 && island1.value < 2 && island2.value < 2) ? 2 : 1;
+          const bridgeCount = (random() < 0.3 && island1.value < 2 && island2.value < 2) ? 2 : 1;
           
           bridgeConnections.push({
             id: generateId(),

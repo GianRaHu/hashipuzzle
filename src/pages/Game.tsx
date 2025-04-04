@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
@@ -6,6 +7,8 @@ import { savePuzzle, updateStats, getStats } from '../utils/storage';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction, AlertDialogFooter } from '@/components/ui/alert-dialog';
+import { hapticFeedback, isHapticFeedbackAvailable } from '../utils/haptics';
+import audioManager from '../utils/audio';
 
 import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
@@ -29,6 +32,7 @@ const Game: React.FC = () => {
   const initialAdvancedTactics = advancedTacticsParam === 'true';
   
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
+  const [originalPuzzle, setOriginalPuzzle] = useState<Puzzle | null>(null); // Store original puzzle for restart
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [timer, setTimer] = useState<number>(0);
@@ -40,6 +44,10 @@ const Game: React.FC = () => {
   const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
+  const [settings, setSettings] = useState({
+    hapticFeedback: true,
+    backgroundMusic: false
+  });
   
   const stats = getStats();
   
@@ -47,6 +55,63 @@ const Game: React.FC = () => {
   const validDifficulty = validDifficulties.includes(difficulty || '') 
     ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'custom'
     : 'easy';
+  
+  // Load user settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (user?.user) {
+          // Fetch user settings from supabase
+          const { data: userSettings } = await supabase
+            .from('user_settings')
+            .select('haptic_feedback, background_music')
+            .eq('user_id', user.user.id)
+            .single();
+          
+          if (userSettings) {
+            setSettings({
+              hapticFeedback: userSettings.haptic_feedback || true,
+              backgroundMusic: userSettings.background_music || false
+            });
+            
+            // Toggle background music if it's enabled in settings
+            audioManager.toggle(userSettings.background_music || false);
+          }
+        } else {
+          // If no user is logged in, check localStorage for settings
+          const storedSettings = localStorage.getItem('gameSettings');
+          if (storedSettings) {
+            const parsedSettings = JSON.parse(storedSettings);
+            setSettings(parsedSettings);
+            
+            // Toggle background music if it's enabled in settings
+            audioManager.toggle(parsedSettings.backgroundMusic || false);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      }
+    };
+    
+    fetchSettings();
+    
+    // Cleanup function to pause background music when component unmounts
+    return () => {
+      audioManager.pause();
+    };
+  }, []);
+  
+  // Handle haptic feedback on bridge placement
+  const triggerHapticFeedback = useCallback((bridgeCount: number) => {
+    if (settings.hapticFeedback) {
+      if (bridgeCount === 1) {
+        hapticFeedback.light();
+      } else {
+        hapticFeedback.medium();
+      }
+    }
+  }, [settings.hapticFeedback]);
   
   // Update extended stats in Supabase
   const updateExtendedStats = async (
@@ -175,6 +240,7 @@ const Game: React.FC = () => {
           
           setTimeout(() => {
             setPuzzle(newPuzzle);
+            setOriginalPuzzle({...newPuzzle}); // Store a copy of the original puzzle for restart
             setMoveHistory([[]]);
             setGameCompleted(false);
             setLoading(false);
@@ -223,6 +289,18 @@ const Game: React.FC = () => {
       };
     }
     
+    // Determine if a bridge was added (for haptic feedback)
+    const oldBridgeCount = puzzle?.bridges.length || 0;
+    const newBridgeCount = updatedPuzzle.bridges.length || 0;
+    
+    if (newBridgeCount > oldBridgeCount) {
+      // A bridge was added, trigger haptic feedback
+      const newBridge = updatedPuzzle.bridges[updatedPuzzle.bridges.length - 1];
+      if (newBridge) {
+        triggerHapticFeedback(newBridge.count);
+      }
+    }
+    
     setPuzzle(updatedPuzzle);
     
     // Create a new entry in move history - store only bridges
@@ -252,6 +330,11 @@ const Game: React.FC = () => {
       savePuzzle(fullyCompleted);
       updateStats(fullyCompleted);
       
+      // Trigger success haptic feedback
+      if (settings.hapticFeedback) {
+        hapticFeedback.success();
+      }
+      
       const completionTime = fullyCompleted.endTime! - fullyCompleted.startTime!;
       updateExtendedStats(validDifficulty, completionTime, true);
       
@@ -260,7 +343,7 @@ const Game: React.FC = () => {
         setShowCompletionModal(true);
       }, 300); // 300ms delay
     }
-  }, [gameCompleted, gameStarted, moveHistory, updateExtendedStats, validDifficulty, userOverrodeConnectivity]);
+  }, [gameCompleted, gameStarted, moveHistory, puzzle, settings.hapticFeedback, triggerHapticFeedback, updateExtendedStats, validDifficulty, userOverrodeConnectivity]);
   
   const handleContinueAnyway = () => {
     setUserOverrodeConnectivity(true);
@@ -329,6 +412,7 @@ const Game: React.FC = () => {
           
           setTimeout(() => {
             setPuzzle(newPuzzle);
+            setOriginalPuzzle({...newPuzzle}); // Store a copy of the original puzzle for restart
             setGameCompleted(false);
             setMoveHistory([[]]);
             setGameStarted(false);
@@ -356,112 +440,85 @@ const Game: React.FC = () => {
     }
   };
   
+  // Updated restart function to truly restart the same puzzle
   const restartPuzzle = () => {
     setRestartConfirmOpen(false);
-    setGameStarted(false);
-    setTimer(0);
     
-    if (validDifficulty && puzzle?.seed) {
-      setLoading(true);
-      setLoadingProgress(0);
+    // If we have the original puzzle, use it to reset the game
+    if (originalPuzzle) {
+      setGameStarted(false);
+      setTimer(0);
+      setGameCompleted(false);
       
-      const loadingInterval = setInterval(() => {
-        setLoadingProgress(prev => {
-          const newProgress = prev + Math.random() * 15;
-          return newProgress >= 90 ? 90 : newProgress;
-        });
-      }, 200);
+      // Create a fresh copy of the original puzzle to avoid reference issues
+      const restartedPuzzle = {
+        ...originalPuzzle,
+        bridges: [], // Clear all bridges
+        solved: false,
+        startTime: Date.now(), // Reset start time for a fresh timer
+        endTime: undefined  // Clear end time if it was set
+      };
       
-      setTimeout(() => {
-        try {
-          console.log(`Restarting puzzle with seed: ${puzzle.seed}`);
-          
-          // Create custom options if needed
-          const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
-            ? {
-                gridSize: initialGridSize ? { rows: initialGridSize, cols: initialGridSize } : undefined,
-                advancedTactics: initialAdvancedTactics
-              }
-            : undefined;
-          
-          // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
-          const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
-          
-          // Ensure we use the exact same seed to restart the puzzle
-          const newPuzzle = generatePuzzle(
-            difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
-            puzzle.seed, // Use the exact same seed
-            customOptions
-          );
-          
-          clearInterval(loadingInterval);
-          setLoadingProgress(100);
-          
-          setTimeout(() => {
-            setPuzzle(newPuzzle);
-            setGameCompleted(false);
-            setMoveHistory([[]]);
-            setLoading(false);
-            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}`);
-          }, 500);
-        } catch (error) {
-          console.error("Error restarting puzzle:", error);
-          clearInterval(loadingInterval);
-          setLoadingProgress(100);
-          
-          toast({
-            title: "Error restarting puzzle",
-            description: "Please try again.",
-            variant: "destructive",
-            duration: 5000,
-          });
-          
-          setLoading(false);
-        }
-      }, 1000);
+      setPuzzle(restartedPuzzle);
+      setMoveHistory([[]]);
+      
+      if (settings.hapticFeedback) {
+        hapticFeedback.medium();
+      }
+      
+      toast({
+        title: "Puzzle Restarted",
+        description: "The puzzle has been reset to its initial state.",
+        duration: 2000,
+      });
+    } else {
+      console.error("Cannot restart: original puzzle state not found");
+      toast({
+        title: "Error restarting puzzle",
+        description: "Could not restore the original puzzle state.",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
   const handleUndo = useCallback(() => {
-  if (moveHistory.length > 1 && puzzle) {
-    // Remove the most recent bridge state
-    const newHistory = [...moveHistory];
-    newHistory.pop();
-    
-    // Get the previous bridge state
-    const previousBridges = newHistory[newHistory.length - 1];
-    
-    // Create a new puzzle state with the previous bridges
-    const updatedPuzzle = {
-      ...puzzle,
-      bridges: [...previousBridges],
-      islands: puzzle.islands.map(island => {
-        // Reset connections for this island
-        const connections = previousBridges.reduce((count, bridge) => {
-          if (bridge.startIslandId === island.id || bridge.endIslandId === island.id) {
-            return count + bridge.count;
-          }
-          return count;
-        }, 0);
-        
-        // Calculate connected islands
-        const connectedTo = previousBridges
-          .filter(bridge => bridge.startIslandId === island.id || bridge.endIslandId === island.id)
-          .map(bridge => bridge.startIslandId === island.id ? bridge.endIslandId : bridge.startIslandId);
-        
-        return {
-          ...island,
-          connectedTo: connectedTo
-        };
-      }),
-      solved: false
-    };      
+    if (moveHistory.length > 1 && puzzle) {
+      // Remove the most recent bridge state
+      const newHistory = [...moveHistory];
+      newHistory.pop();
       
+      // Get the previous bridge state
+      const previousBridges = newHistory[newHistory.length - 1];
+      
+      // Create a new puzzle state with the previous bridges
+      const updatedPuzzle = {
+        ...puzzle,
+        bridges: [...previousBridges],
+        islands: puzzle.islands.map(island => {
+          // Calculate connected islands
+          const connectedTo = previousBridges
+            .filter(bridge => bridge.startIslandId === island.id || bridge.endIslandId === island.id)
+            .map(bridge => bridge.startIslandId === island.id ? bridge.endIslandId : bridge.startIslandId);
+          
+          return {
+            ...island,
+            connectedTo: connectedTo
+          };
+        }),
+        solved: false
+      };
+        
       // Update the puzzle state
       setPuzzle(updatedPuzzle);
       setMoveHistory(newHistory);
+      
+      // Light haptic feedback for undo
+      if (settings.hapticFeedback) {
+        hapticFeedback.light();
+      }
     }
-  }, [moveHistory, puzzle]);
+  }, [moveHistory, puzzle, settings.hapticFeedback]);
 
   const showHelp = () => {
     toast({

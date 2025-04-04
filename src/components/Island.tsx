@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useRef } from 'react';
 import { Island as IslandType } from '../utils/gameLogic';
 
@@ -19,8 +20,13 @@ const Island: React.FC<IslandProps> = ({
   gridSize 
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const touchStartTimeRef = useRef<number | null>(null);
   const touchTimerRef = useRef<number | null>(null);
   const moveDetectedRef = useRef<boolean>(false);
+  const touchStartPosRef = useRef<{x: number, y: number} | null>(null);
+  
+  // Mobile touch threshold - lower value means more sensitivity (in pixels)
+  const TOUCH_MOVE_THRESHOLD = 5;
   
   // Calculate the size and position based on grid dimensions
   const cellSizeX = 100 / gridSize.cols;
@@ -34,11 +40,11 @@ const Island: React.FC<IslandProps> = ({
   // Responsive node sizing based on grid size
   const getNodeSize = () => {
     const gridArea = gridSize.rows * gridSize.cols;
-    if (gridArea <= 42) return 'w-8 h-8 text-base';      // Small grid
-    if (gridArea <= 96) return 'w-7 h-7 text-sm';        // Medium grid
-    if (gridArea <= 140) return 'w-6 h-6 text-xs';       // Large grid
-    if (gridArea <= 192) return 'w-5 h-5 text-xs';       // Extra large grid
-    return 'w-4 h-4 text-[10px]';                        // Huge grid
+    if (gridArea <= 42) return 'w-9 h-9 text-base';      // Small grid
+    if (gridArea <= 96) return 'w-8 h-8 text-sm';        // Medium grid
+    if (gridArea <= 140) return 'w-7 h-7 text-xs';       // Large grid
+    if (gridArea <= 192) return 'w-6 h-6 text-xs';       // Extra large grid
+    return 'w-5 h-5 text-[10px]';                        // Huge grid
   };
   
   const nodeSize = getNodeSize();
@@ -75,85 +81,95 @@ const Island: React.FC<IslandProps> = ({
     return { stateClass, bgColorClass };
   }, [island.value, island.connectedTo.length, isSelected, isDragging]);
 
-  // Handle touch start
+  // Enhanced touch start - better for mobile experience
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Start a timer to differentiate between tap and drag
+    // Record touch start time and position
+    touchStartTimeRef.current = Date.now();
     moveDetectedRef.current = false;
     
+    if (e.touches.length > 0) {
+      touchStartPosRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+    }
+    
+    // Clear any existing timer
+    if (touchTimerRef.current !== null) {
+      clearTimeout(touchTimerRef.current);
+    }
+    
+    // Start a short timer for tap detection
     touchTimerRef.current = window.setTimeout(() => {
+      // If no movement was detected during this short period, it's likely a tap
       if (!moveDetectedRef.current) {
-        // It was a tap, not a drag
         onClick();
       }
       touchTimerRef.current = null;
-    }, 150); // Short delay to detect intention
+    }, 120); // Shorter time makes it more responsive
   };
 
-  // Handle touch move
+  // Improved touch move detection
   const handleTouchMove = (e: React.TouchEvent) => {
-    moveDetectedRef.current = true;
+    if (e.touches.length === 0 || !touchStartPosRef.current) return;
     
-    // If we detect movement, it's a drag
-    if (!isDragging) {
-      setIsDragging(true);
-      onDragStart(e);
-    }
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const startX = touchStartPosRef.current.x;
+    const startY = touchStartPosRef.current.y;
     
-    // Clear the tap timer if it's still active
-    if (touchTimerRef.current !== null) {
-      clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
-    }
-  };
-
-  // Handle touch end
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    // If a drag was in progress, end it
-    if (isDragging) {
-      setIsDragging(false);
-      onDragEnd();
-    }
+    // Calculate distance moved
+    const dx = currentX - startX;
+    const dy = currentY - startY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Clear any active timers
-    if (touchTimerRef.current !== null) {
-      clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
+    // If moved more than threshold, consider it a drag
+    if (distance > TOUCH_MOVE_THRESHOLD) {
+      moveDetectedRef.current = true;
       
-      // If no movement was detected and timer was canceled before firing,
-      // treat as a tap
-      if (!moveDetectedRef.current) {
-        onClick();
+      // Clear the tap timer if it's still active
+      if (touchTimerRef.current !== null) {
+        clearTimeout(touchTimerRef.current);
+        touchTimerRef.current = null;
+      }
+      
+      // Start drag if not already dragging
+      if (!isDragging) {
+        setIsDragging(true);
+        onDragStart(e);
       }
     }
   };
 
-  // Handle mouse events (for desktop)
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Enable drag mode immediately for mouse
-    setIsDragging(true);
-    onDragStart(e);
-  };
-
-  const handleMouseUp = (e: React.MouseEvent) => {
-    // If was dragging, end drag
+  // Handle touch end with improved logic
+  const handleTouchEnd = () => {
+    const touchDuration = touchStartTimeRef.current 
+      ? Date.now() - touchStartTimeRef.current
+      : 0;
+    
+    // Clear any active timer
+    if (touchTimerRef.current !== null) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+    
+    // If we were dragging, end the drag
     if (isDragging) {
       setIsDragging(false);
       onDragEnd();
-    } else {
-      // Otherwise, it's a click
+    } 
+    // If it was a quick tap without much movement, and not already handled by the timer
+    else if (touchDuration < 300 && !moveDetectedRef.current && touchTimerRef.current === null) {
       onClick();
     }
+    
+    // Reset refs
+    touchStartTimeRef.current = null;
+    touchStartPosRef.current = null;
+    moveDetectedRef.current = false;
   };
 
-  // Handle mouse click (for desktop - click without drag)
-  const handleClick = (e: React.MouseEvent) => {
-    // Only treat as click if it wasn't part of a drag
-    if (!isDragging) {
-      onClick();
-    }
-    e.preventDefault();
-  };
-
+  // For touch devices only - no desktop click/mouse support needed
   return (
     <button
       type="button"
@@ -168,9 +184,6 @@ const Island: React.FC<IslandProps> = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onClick={handleClick}
       aria-label={`Island with value ${island.value}`}
     >
       <span className={`${textColorClass} font-medium`}>

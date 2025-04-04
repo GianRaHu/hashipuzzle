@@ -46,6 +46,10 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
       onClick();
     }
   };
+
+  // Using consistent spacing for both horizontal and vertical bridges
+  // This ensures the spacing looks visually equivalent regardless of orientation
+  const BRIDGE_SPACING = 1.0; // Use the same spacing value for both orientations
   
   if (isHorizontal) {
     const minCol = Math.min(startIsland.col, endIsland.col);
@@ -60,14 +64,10 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedWidth = width - (nodeOffsetX * 2);
     const adjustedPos = xPos + nodeOffsetX;
     
-    // Increased spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 1.0; // Increased from 0.5
-    const secondBridgeOffset = 1.0; // Increased from 0.5
-    
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
-      top: `${yPos - firstBridgeOffset}%`,
+      top: `${yPos - BRIDGE_SPACING}%`,
       width: animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)'
@@ -76,7 +76,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
       left: `${adjustedPos}%`,
-      top: `${yPos + secondBridgeOffset}%`,
+      top: `${yPos + BRIDGE_SPACING}%`,
       width: bridge.count === 2 && animate ? '0%' : `${adjustedWidth}%`,
       height: '2px',
       transform: 'translateY(-50%)',
@@ -112,13 +112,9 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     const adjustedHeight = height - (nodeOffsetY * 2);
     const adjustedPos = yPos + nodeOffsetY;
     
-    // Increased spacing between bridges
-    const firstBridgeOffset = isSingleBridge ? 0 : 1.0; // Increased from 0.5
-    const secondBridgeOffset = 1.0; // Increased from 0.5
-    
     const firstBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos - firstBridgeOffset}%`,
+      left: `${xPos - BRIDGE_SPACING}%`,
       top: `${adjustedPos}%`,
       width: '2px',
       height: animate ? '0%' : `${adjustedHeight}%`,
@@ -127,7 +123,7 @@ const Bridge: React.FC<BridgeProps> = ({ bridge, startIsland, endIsland, gridSiz
     
     const secondBridgeStyle: React.CSSProperties = {
       ...bridgeStyle,
-      left: `${xPos + secondBridgeOffset}%`,
+      left: `${xPos + BRIDGE_SPACING}%`,
       top: `${adjustedPos}%`,
       width: '2px',
       height: bridge.count === 2 && animate ? '0%' : `${adjustedHeight}%`,
