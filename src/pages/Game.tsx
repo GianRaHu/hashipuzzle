@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
@@ -15,6 +14,7 @@ import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import ConnectivityAlert from '../components/ConnectivityAlert';
 import { supabase } from '@/integrations/supabase/client';
+import { UserSettings } from '@/types/user-settings';
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
@@ -63,20 +63,27 @@ const Game: React.FC = () => {
         const { data: user } = await supabase.auth.getUser();
         if (user?.user) {
           // Fetch user settings from supabase
-          const { data: userSettings } = await supabase
+          // Since we may not have types updated yet, use a more generic approach
+          const { data: userSettings, error } = await supabase
             .from('user_settings')
-            .select('haptic_feedback, background_music')
+            .select('*')
             .eq('user_id', user.user.id)
             .single();
           
-          if (userSettings) {
+          if (userSettings && !error) {
+            // Cast the result to our temporary UserSettings type
+            const settings = userSettings as unknown as UserSettings;
+            
             setSettings({
-              hapticFeedback: userSettings.haptic_feedback || true,
-              backgroundMusic: userSettings.background_music || false
+              hapticFeedback: settings.haptic_feedback || true,
+              backgroundMusic: settings.background_music || false
             });
             
             // Toggle background music if it's enabled in settings
-            audioManager.toggle(userSettings.background_music || false);
+            audioManager.toggle(settings.background_music || false);
+            if (settings.background_music) {
+              audioManager.setVolume(settings.volume / 100 || 0.5);
+            }
           }
         } else {
           // If no user is logged in, check localStorage for settings

@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { isHapticFeedbackAvailable } from '@/utils/haptics';
 import audioManager from '@/utils/audio';
 import StatsResetDialog from '@/components/StatsResetDialog';
+import { UserSettings, UserSettingsInsert } from '@/types/user-settings';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -48,13 +49,15 @@ const Settings = () => {
         
         if (userData?.user) {
           // Get user settings from database
-          const { data: userSettings } = await supabase
+          const { data: userSettingsData, error } = await supabase
             .from('user_settings')
             .select('*')
             .eq('user_id', userData.user.id)
             .single();
           
-          if (userSettings) {
+          if (userSettingsData && !error) {
+            // Cast to our temporary type
+            const userSettings = userSettingsData as unknown as UserSettings;
             setSettings({
               hapticFeedback: userSettings.haptic_feedback,
               backgroundMusic: userSettings.background_music,
@@ -82,12 +85,24 @@ const Settings = () => {
               audioManager.setVolume((parsedSettings.volume ?? 50) / 100);
               
               // Save to database for future use
-              await supabase.from('user_settings').insert({
+              const settingsToInsert: UserSettingsInsert = {
                 user_id: userData.user.id,
                 haptic_feedback: parsedSettings.hapticFeedback ?? true,
                 background_music: parsedSettings.backgroundMusic ?? false,
                 volume: parsedSettings.volume ?? 50
-              });
+              };
+              
+              await supabase.from('user_settings').insert(settingsToInsert);
+            } else {
+              // No settings found, create default settings in database
+              const defaultSettings: UserSettingsInsert = {
+                user_id: userData.user.id,
+                haptic_feedback: true,
+                background_music: false,
+                volume: 50
+              };
+              
+              await supabase.from('user_settings').insert(defaultSettings);
             }
           }
         } else {
@@ -130,12 +145,14 @@ const Settings = () => {
       
       // If user is logged in, save to database
       if (user) {
-        await supabase.from('user_settings').upsert({
+        const settingsToUpsert: UserSettingsInsert = {
           user_id: user.id,
           haptic_feedback: newSettings.hapticFeedback,
           background_music: newSettings.backgroundMusic,
           volume: newSettings.volume
-        });
+        };
+        
+        await supabase.from('user_settings').upsert(settingsToUpsert);
       }
       
       // Show success message
@@ -194,6 +211,11 @@ const Settings = () => {
     
     setSettings(newSettings);
     saveSettings(newSettings);
+  };
+
+  const handleResetStats = () => {
+    // Refresh the page after stats reset
+    window.location.reload();
   };
   
   return (
@@ -291,7 +313,8 @@ const Settings = () => {
       {/* Reset Stats Dialog */}
       <StatsResetDialog 
         open={showResetDialog} 
-        onOpenChange={setShowResetDialog} 
+        onOpenChange={setShowResetDialog}
+        onReset={handleResetStats}
       />
     </div>
   );

@@ -17,10 +17,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface StatsResetDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onReset: () => void;
 }
 
-const StatsResetDialog: React.FC<StatsResetDialogProps> = ({ onReset }) => {
+const StatsResetDialog: React.FC<StatsResetDialogProps> = ({ open, onOpenChange, onReset }) => {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -34,11 +36,18 @@ const StatsResetDialog: React.FC<StatsResetDialogProps> = ({ onReset }) => {
       localStorage.removeItem('daily_completed_date');
       localStorage.removeItem('daily_completed_dates');
       localStorage.removeItem('last_streak_date');
+      localStorage.removeItem('gameSettings');
       
       // Clear Supabase stats if user is logged in
       const { data: user } = await supabase.auth.getUser();
       if (user.user) {
         await supabase.rpc('delete_all_user_stats', { user_uuid: user.user.id });
+        
+        // Also delete user settings
+        await supabase
+          .from('user_settings')
+          .delete()
+          .eq('user_id', user.user.id);
       }
       
       toast({
@@ -57,11 +66,14 @@ const StatsResetDialog: React.FC<StatsResetDialogProps> = ({ onReset }) => {
       });
     } finally {
       setIsDeleting(false);
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
     }
   };
   
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" className="gap-2">
           <Trash2 className="h-4 w-4" />
