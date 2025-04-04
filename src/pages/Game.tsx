@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Puzzle, Bridge, checkPuzzleSolved, checkAllIslandsHaveCorrectConnections, checkAllIslandsConnected } from '../utils/gameLogic';
@@ -12,8 +11,6 @@ import Board from '../components/Board';
 import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import ConnectivityAlert from '../components/ConnectivityAlert';
-import TutorialOverlay from '../components/game/TutorialOverlay';
-import FirstTimePrompt from '../components/game/FirstTimePrompt';
 import { supabase } from '@/integrations/supabase/client';
 
 const Game: React.FC = () => {
@@ -22,7 +19,7 @@ const Game: React.FC = () => {
   const { difficulty } = useParams<{ difficulty: string }>();
   const location = useLocation();
   
-  // Get URL parameters without timestamp
+  // Get URL parameters
   const urlParams = new URLSearchParams(location.search);
   const seedParam = urlParams.get('seed');
   const initialSeed = seedParam ? parseInt(seedParam, 10) : undefined;
@@ -44,45 +41,12 @@ const Game: React.FC = () => {
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   
-  // New states for tutorial and first-time user experience
-  const [showTutorial, setShowTutorial] = useState<boolean>(false);
-  const [showFirstTimePrompt, setShowFirstTimePrompt] = useState<boolean>(false);
-  
   const stats = getStats();
   
   const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'custom'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
     ? difficulty as 'easy' | 'medium' | 'hard' | 'expert' | 'custom'
     : 'easy';
-  
-  // Check if first time playing this difficulty
-  useEffect(() => {
-    const hasPlayedBefore = localStorage.getItem(`played_${validDifficulty}`);
-    if (!hasPlayedBefore && !seedParam) {
-      setShowFirstTimePrompt(true);
-      localStorage.setItem(`played_${validDifficulty}`, 'true');
-    }
-  }, [validDifficulty, seedParam]);
-  
-  // Handle tutorial display
-  const handleShowTutorial = () => {
-    setShowFirstTimePrompt(false);
-    setShowTutorial(true);
-  };
-  
-  const handleSkipTutorial = () => {
-    setShowFirstTimePrompt(false);
-  };
-  
-  const handleTutorialFinish = () => {
-    setShowTutorial(false);
-    // Optional: Show a toast to remind player about help availability
-    toast({
-      title: "Help is always available",
-      description: "Click the question mark icon in the header anytime you need help.",
-      duration: 4000,
-    });
-  };
   
   // Update extended stats in Supabase
   const updateExtendedStats = async (
@@ -235,7 +199,7 @@ const Game: React.FC = () => {
       
       return () => clearInterval(loadingInterval);
     }
-  }, [validDifficulty, initialSeed, initialGridSize, initialAdvancedTactics, navigate, toast]);
+  }, [validDifficulty, location.search, navigate, toast, initialSeed, initialGridSize, initialAdvancedTactics]);
   
   useEffect(() => {
     if (!puzzle || gameCompleted || loading) return;
@@ -354,10 +318,9 @@ const Game: React.FC = () => {
           // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
           const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
           
-          // Generate a new puzzle with a different seed to ensure uniqueness
           const newPuzzle = generatePuzzle(
             difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
-            undefined, // No seed for new puzzle to ensure it's different
+            undefined, // No seed for new puzzle
             customOptions
           );
           
@@ -399,7 +362,7 @@ const Game: React.FC = () => {
     setTimer(0);
     setUserOverrodeConnectivity(false);
     
-    if (validDifficulty && puzzle) {
+    if (validDifficulty && puzzle?.seed) {
       setLoading(true);
       setLoadingProgress(0);
       
@@ -414,30 +377,28 @@ const Game: React.FC = () => {
         try {
           console.log(`Restarting puzzle with seed: ${puzzle.seed}`);
           
-          // Instead of generating a new puzzle, we use the original puzzle's state
-          // and just reset the bridges and connections
-          const restartedPuzzle = {
-            ...puzzle,
-            bridges: [],  // Clear all bridges
-            islands: puzzle.islands.map(island => ({
-              ...island,
-              connectedTo: []  // Clear all connections
-            })),
-            solved: false,
-            startTime: undefined,
-            endTime: undefined,
-            allIslandsConnected: false  // Reset connectivity status
+          // Create custom options based on the existing puzzle's properties
+          const customOptions = {
+            gridSize: puzzle.size, // Use the exact same grid size
+            advancedTactics: puzzle.requiresAdvancedTactics // Use the same advanced tactics setting
           };
+          
+          // Regenerate the exact same puzzle using the stored seed
+          const newPuzzle = generatePuzzle(
+            puzzle.difficulty as 'easy' | 'medium' | 'hard' | 'expert', 
+            puzzle.seed, // Use the exact same seed
+            customOptions
+          );
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
           
           setTimeout(() => {
-            setPuzzle(restartedPuzzle);
+            setPuzzle(newPuzzle);
             setGameCompleted(false);
-            setMoveHistory([[]]);  // Reset move history
+            setMoveHistory([[]]);
             setLoading(false);
-            console.log(`Restarted puzzle with seed: ${restartedPuzzle.seed}, same grid: ${restartedPuzzle.size.rows}x${restartedPuzzle.size.cols}`);
+            console.log(`Restarted puzzle with seed: ${newPuzzle.seed}, same grid: ${newPuzzle.size.rows}x${newPuzzle.size.cols}`);
           }, 500);
         } catch (error) {
           console.error("Error restarting puzzle:", error);
@@ -499,11 +460,10 @@ const Game: React.FC = () => {
   }, [moveHistory, puzzle]);
 
   const showHelp = () => {
-    setShowTutorial(true);
     toast({
-      title: "Tutorial Activated",
-      description: "Learn how to play Hashi with our step-by-step guide.",
-      duration: 3000,
+      title: "How to Play",
+      description: "Connect islands with bridges. Each island must have exactly the number of bridges shown on it. Bridges can't cross each other. All islands must be connected to each other.",
+      duration: 5000,
     });
   };
   
@@ -542,7 +502,6 @@ const Game: React.FC = () => {
         showRestartDialog={restartConfirmOpen}
         canUndo={moveHistory.length > 1}
         gameStarted={gameStarted}
-        onShowHelp={showHelp}
       />
       
       <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
@@ -582,22 +541,6 @@ const Game: React.FC = () => {
             onClose={() => setShowCompletionModal(false)}
           />
         )}
-        
-        {/* Add the first-time tutorial prompt */}
-        <FirstTimePrompt 
-          isOpen={showFirstTimePrompt}
-          onClose={() => setShowFirstTimePrompt(false)}
-          onShowTutorial={handleShowTutorial}
-          onSkipTutorial={handleSkipTutorial}
-        />
-        
-        {/* Add the tutorial overlay */}
-        <TutorialOverlay 
-          isOpen={showTutorial}
-          onClose={() => setShowTutorial(false)}
-          onFinish={handleTutorialFinish}
-          targetDifficulty={validDifficulty}
-        />
       </main>
     </div>
   );
