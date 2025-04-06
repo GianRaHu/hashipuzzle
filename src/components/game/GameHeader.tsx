@@ -5,7 +5,6 @@ import { Home, CornerUpLeft, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/storage';
 import HelpDialog from './HelpDialog';
-import { loadUserSettings } from '@/utils/userSettings';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +25,8 @@ interface GameHeaderProps {
   gameStarted: boolean;
   showRestartDialog: boolean;
   setShowRestartDialog: (show: boolean) => void;
+  showTimer?: boolean;
+  showBestTime?: boolean;
 }
 
 const GameHeader: React.FC<GameHeaderProps> = ({
@@ -36,22 +37,11 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   canUndo,
   gameStarted,
   showRestartDialog,
-  setShowRestartDialog
+  setShowRestartDialog,
+  showTimer = true,
+  showBestTime = true
 }) => {
   const navigate = useNavigate();
-  const [showTimer, setShowTimer] = React.useState(true);
-  const [showBestTime, setShowBestTime] = React.useState(true);
-
-  // Load user settings for timer and best time visibility
-  React.useEffect(() => {
-    const loadSettings = async () => {
-      const userSettings = await loadUserSettings();
-      setShowTimer(userSettings.showTimer ?? true);
-      setShowBestTime(userSettings.showBestTime ?? true);
-    };
-    
-    loadSettings();
-  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background z-50 border-b border-border/10 shadow-sm">
