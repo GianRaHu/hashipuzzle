@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -38,13 +37,9 @@ const CustomGame = () => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0));
-
-    // Ensure a fresh puzzle generation with timestamp 
-    const timestamp = Date.now();
     
-    // When using a seed, we don't need to pass advancedTactics parameter as it is
-    // deterministically generated from the seed
-    navigate(`/game/custom?seed=${seedNumber}&t=${timestamp}`);
+    // For seeded games, we don't add a timestamp to ensure consistency
+    navigate(`/game/custom?seed=${seedNumber}`);
   };
 
   const generateRandomSeed = () => {

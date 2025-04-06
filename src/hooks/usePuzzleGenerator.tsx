@@ -27,6 +27,9 @@ export const usePuzzleGenerator = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [generateError, setGenerateError] = useState<boolean>(false);
+  
+  // Store the initial seed to ensure consistency across resets
+  const [storedSeed, setStoredSeed] = useState<number | undefined>(initialSeed);
 
   const generateNewPuzzle = (isReset: boolean = false) => {
     if (validDifficulty) {
@@ -56,14 +59,28 @@ export const usePuzzleGenerator = ({
           // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
           const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
           
-          // Only use the seed for initial puzzle, not for reset
-          const seedToUse = !isReset ? initialSeed : undefined;
+          // Always use the stored seed for reset when a seed was initially provided
+          // This ensures the same puzzle is regenerated
+          let seedToUse: number | undefined;
+          
+          if (storedSeed !== undefined) {
+            // Always use the stored seed for consistency
+            seedToUse = storedSeed;
+          } else if (!isReset) {
+            // Only generate a new seed on the initial puzzle generation (not reset)
+            seedToUse = undefined; // This will make the generator create a random seed
+          }
           
           const newPuzzle = generatePuzzle(
             difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 
             seedToUse, 
             customOptions
           );
+          
+          // Store the seed for future resets if we're not resetting
+          if (!isReset && storedSeed === undefined && newPuzzle.seed !== undefined) {
+            setStoredSeed(newPuzzle.seed);
+          }
           
           clearInterval(loadingInterval);
           setLoadingProgress(100);
@@ -134,6 +151,11 @@ export const usePuzzleGenerator = ({
 
   // Initial puzzle generation on component mount
   useEffect(() => {
+    // Store the initial seed when the component mounts
+    if (initialSeed !== undefined) {
+      setStoredSeed(initialSeed);
+    }
+    
     generateNewPuzzle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [difficulty, validDifficulty, initialSeed, initialGridSize, initialAdvancedTactics]);
