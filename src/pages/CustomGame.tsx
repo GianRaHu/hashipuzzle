@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,8 @@ const CustomGame = () => {
       return a & a;
     }, 0));
     
-    // For seeded games, we don't add a timestamp to ensure consistency
+    // For seeded games, we pass ONLY the seed - no other parameters
+    // to ensure complete determinism from the seed alone
     navigate(`/game/custom?seed=${seedNumber}`);
   };
 

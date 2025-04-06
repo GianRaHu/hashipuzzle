@@ -275,6 +275,19 @@ const verifyUniqueSolution = (puzzle: Puzzle): boolean => {
   return hasReasonableValues;
 };
 
+// Create deterministic ID generator based on seed
+const createDeterministicIdGenerator = (seed: number) => {
+  const random = seededRandom(seed);
+  let counter = 0;
+  
+  return () => {
+    counter++;
+    // Combine counter with random value for uniqueness while maintaining determinism
+    const value = Math.floor(random() * 1000000) + counter;
+    return `id_${value}`;
+  };
+};
+
 export const generatePuzzle = (
   difficulty: 'easy' | 'medium' | 'hard' | 'expert',
   seed?: number,
@@ -308,7 +321,10 @@ export const generatePuzzle = (
   // Use provided seed or generate a random one
   const puzzleSeed = seed !== undefined ? seed : Math.floor(Math.random() * 1000000);
   console.log(`Using seed: ${puzzleSeed}`);
+  
+  // Create deterministic random function and ID generator
   const random = seededRandom(puzzleSeed);
+  const generateDeterministicId = createDeterministicIdGenerator(puzzleSeed);
   
   // Create empty grid for islands
   const grid: (Island | null)[][] = Array(size.rows)
@@ -342,7 +358,7 @@ export const generatePuzzle = (
     const startCol = Math.floor(random() * colCenterOffset) + colCenterOffset;
     
     const firstIsland: Island = {
-      id: generateId(),
+      id: generateDeterministicId(),
       row: startRow,
       col: startCol,
       value: 0,
@@ -367,7 +383,7 @@ export const generatePuzzle = (
         
         if (isValidPosition(row, col, grid, size, bridgeMap)) {
           const newIsland: Island = {
-            id: generateId(),
+            id: generateDeterministicId(),
             row,
             col,
             value: 0, 
@@ -381,11 +397,11 @@ export const generatePuzzle = (
           for (const existingIsland of islands) {
             if (isPathClear(newIsland, existingIsland, islands, bridgeMap)) {
               // Can connect to this island
-              const bridgeCount = Math.random() < 0.3 ? 2 : 1;
+              const bridgeCount = random() < 0.3 ? 2 : 1;
               
               // Create connection
               const newBridge: Bridge = {
-                id: generateId(),
+                id: generateDeterministicId(),
                 startIslandId: existingIsland.id,
                 endIslandId: newIsland.id,
                 count: bridgeCount as 1 | 2,
@@ -431,7 +447,7 @@ export const generatePuzzle = (
             const targetIsland = connectableIslands[Math.floor(random() * connectableIslands.length)];
             
             // Determine bridge count
-            const bridgeCount = Math.random() < 0.3 ? 2 : 1;
+            const bridgeCount = random() < 0.3 ? 2 : 1;
             
             // Check if there's already a bridge between these islands
             const existingConnectionIndex = bridgeConnections.findIndex(
@@ -454,7 +470,7 @@ export const generatePuzzle = (
             } else {
               // Create new bridge
               const newBridge: Bridge = {
-                id: generateId(),
+                id: generateDeterministicId(),
                 startIslandId: island.id,
                 endIslandId: targetIsland.id,
                 count: bridgeCount as 1 | 2,
@@ -497,7 +513,7 @@ export const generatePuzzle = (
         
         // Verify the puzzle has a unique solution
         if (!verifyUniqueSolution({ 
-          id: generateId(),
+          id: generateDeterministicId(),
           difficulty, 
           size, 
           islands, 
@@ -526,10 +542,13 @@ export const generatePuzzle = (
     };
     const reducedIslandCount = Math.max(4, islandCount - 4);
     
-    // Create a simple grid pattern
+    // Create a simple grid pattern with deterministic placement
     const grid = Array(reducedSize.rows).fill(null).map(() => Array(reducedSize.cols).fill(null));
     const islands: Island[] = [];
     const bridgeConnections: Bridge[] = [];
+    
+    // Reset the random generator to ensure determinism even in fallback mode
+    const deterministicRandom = seededRandom(puzzleSeed);
     
     // Add islands in a pattern
     for (let i = 0; i < reducedIslandCount; i++) {
@@ -538,7 +557,7 @@ export const generatePuzzle = (
       
       if (row < reducedSize.rows && col < reducedSize.cols) {
         const island: Island = {
-          id: generateId(),
+          id: generateDeterministicId(),
           row,
           col,
           value: 0,
@@ -558,10 +577,10 @@ export const generatePuzzle = (
         if ((island1.row === island2.row && Math.abs(island1.col - island2.col) === 2) ||
             (island1.col === island2.col && Math.abs(island1.row - island2.row) === 2)) {
           
-          const bridgeCount = (random() < 0.3 && island1.value < 2 && island2.value < 2) ? 2 : 1;
+          const bridgeCount = (deterministicRandom() < 0.3 && island1.value < 2 && island2.value < 2) ? 2 : 1;
           
           bridgeConnections.push({
-            id: generateId(),
+            id: generateDeterministicId(),
             startIslandId: island1.id,
             endIslandId: island2.id,
             count: bridgeCount as 1 | 2,
@@ -577,7 +596,7 @@ export const generatePuzzle = (
   
   // Create the puzzle
   return {
-    id: generateId(),
+    id: generateDeterministicId(),
     difficulty,
     size,
     islands,

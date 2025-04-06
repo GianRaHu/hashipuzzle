@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getStats } from '../utils/storage';
@@ -22,8 +23,12 @@ const Game: React.FC = () => {
   
   // Get URL parameters
   const urlParams = new URLSearchParams(location.search);
+  
+  // For seed-based generation, we only need the seed
   const seedParam = urlParams.get('seed');
   const initialSeed = seedParam ? parseInt(seedParam, 10) : undefined;
+  
+  // For custom configuration generation, we need gridSize and advancedTactics
   const gridSizeParam = urlParams.get('gridSize');
   const initialGridSize = gridSizeParam ? parseInt(gridSizeParam, 10) : undefined;
   const advancedTacticsParam = urlParams.get('advancedTactics');
