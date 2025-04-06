@@ -6,6 +6,9 @@ export interface UserSettings {
   haptic_feedback: boolean;
   background_music: boolean;
   volume: number;
+  show_timer?: boolean;
+  show_best_time?: boolean;
+  theme_mode?: 'light' | 'dark' | 'system';
   created_at: string;
   updated_at: string;
 }
