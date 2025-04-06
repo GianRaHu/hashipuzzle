@@ -2,22 +2,46 @@
 import React, { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { loadUserSettings } from '@/utils/userSettings';
 
 const ThemeToggle: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initTheme = async () => {
+      // Get user settings for theme preference
+      const userSettings = await loadUserSettings();
+      const themeMode = userSettings.themeMode || 'system';
+      
+      if (themeMode === 'system') {
+        // Use system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', prefersDark);
+        localStorage.removeItem('theme');
+      } else {
+        // Use saved preference
+        setTheme(themeMode);
+        document.documentElement.classList.toggle('dark', themeMode === 'dark');
+        localStorage.setItem('theme', themeMode);
+      }
+    };
     
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    } else if (prefersDark) {
-      setTheme('dark');
-      document.documentElement.classList.add('dark');
-    }
+    initTheme();
+    
+    // Listen for system theme changes if using system preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+      if (!savedTheme) {
+        setTheme(e.matches ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', e.matches);
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const toggleTheme = () => {

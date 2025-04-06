@@ -1,67 +1,88 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Music } from 'lucide-react';
+import { Moon, Sun, Monitor } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface AppearanceTabProps {
   settings: {
-    backgroundMusic: boolean;
-    volume: number;
+    themeMode: 'light' | 'dark' | 'system';
   };
-  toggleBackgroundMusic: () => void;
-  handleVolumeChange: (value: number[]) => void;
+  handleThemeChange: (theme: 'light' | 'dark' | 'system') => void;
 }
 
 const AppearanceTab: React.FC<AppearanceTabProps> = ({
   settings,
-  toggleBackgroundMusic,
-  handleVolumeChange
+  handleThemeChange
 }) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Appearance Settings</CardTitle>
-        <CardDescription>Customize how the game looks and sounds</CardDescription>
+        <CardDescription>Customize how the game looks</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Background Music Setting */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center">
-                <Music className="mr-2 h-4 w-4" />
-                <Label htmlFor="background-music">Background Music</Label>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Play relaxing music while solving puzzles
-              </p>
-            </div>
-            <Switch
-              id="background-music"
-              checked={settings.backgroundMusic}
-              onCheckedChange={toggleBackgroundMusic}
-            />
+        {/* Theme Mode Setting */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-medium mb-2">Theme</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Choose your preferred color theme
+            </p>
           </div>
           
-          {/* Volume Slider (only visible if background music is enabled) */}
-          {settings.backgroundMusic && (
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <Label htmlFor="volume">Volume</Label>
-                <span className="text-sm text-muted-foreground">{settings.volume}%</span>
-              </div>
-              <Slider
-                id="volume"
-                defaultValue={[settings.volume]}
-                max={100}
-                step={5}
-                onValueChange={handleVolumeChange}
+          <RadioGroup 
+            value={settings.themeMode} 
+            onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
+            className="grid grid-cols-3 gap-4"
+          >
+            <div>
+              <RadioGroupItem
+                value="light"
+                id="theme-light"
+                className="peer sr-only"
               />
+              <Label
+                htmlFor="theme-light"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+              >
+                <Sun className="h-6 w-6 mb-2" />
+                <span className="text-sm font-medium">Light</span>
+              </Label>
             </div>
-          )}
+            
+            <div>
+              <RadioGroupItem
+                value="dark"
+                id="theme-dark"
+                className="peer sr-only"
+              />
+              <Label
+                htmlFor="theme-dark"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+              >
+                <Moon className="h-6 w-6 mb-2" />
+                <span className="text-sm font-medium">Dark</span>
+              </Label>
+            </div>
+            
+            <div>
+              <RadioGroupItem
+                value="system"
+                id="theme-system"
+                className="peer sr-only"
+              />
+              <Label
+                htmlFor="theme-system"
+                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+              >
+                <Monitor className="h-6 w-6 mb-2" />
+                <span className="text-sm font-medium">System</span>
+              </Label>
+            </div>
+          </RadioGroup>
         </div>
       </CardContent>
     </Card>

@@ -6,7 +6,10 @@ import { UserSettings, UserSettingsInsert, isUserSettings } from '@/types/user-s
 export const defaultSettings = {
   hapticFeedback: true,
   backgroundMusic: false,
-  volume: 50
+  volume: 50,
+  showTimer: true,
+  showBestTime: true,
+  themeMode: 'system' as 'light' | 'dark' | 'system'
 };
 
 // Convert from DB format to app format
@@ -14,7 +17,10 @@ export const formatSettingsFromDb = (dbSettings: UserSettings) => {
   return {
     hapticFeedback: dbSettings.haptic_feedback,
     backgroundMusic: dbSettings.background_music,
-    volume: dbSettings.volume || 50
+    volume: dbSettings.volume || 50,
+    showTimer: dbSettings.show_timer ?? true,
+    showBestTime: dbSettings.show_best_time ?? true,
+    themeMode: dbSettings.theme_mode || 'system'
   };
 };
 
@@ -24,7 +30,10 @@ export const formatSettingsForDb = (settings: any, userId: string): UserSettings
     user_id: userId,
     haptic_feedback: settings.hapticFeedback,
     background_music: settings.backgroundMusic,
-    volume: settings.volume || 50
+    volume: settings.volume || 50,
+    show_timer: settings.showTimer,
+    show_best_time: settings.showBestTime,
+    theme_mode: settings.themeMode || 'system'
   };
 };
 
@@ -37,7 +46,7 @@ export const loadUserSettings = async () => {
     if (userData?.user) {
       // Get user settings from Supabase
       const { data: userSettingsData, error } = await supabase
-        .from('user_settings' as any) // Type assertion to bypass TypeScript error temporarily
+        .from('user_settings' as any)
         .select('*')
         .eq('user_id', userData.user.id)
         .single();
@@ -74,7 +83,7 @@ export const saveUserSettings = async (settings: any) => {
       const settingsToUpsert = formatSettingsForDb(settings, userData.user.id);
       
       await supabase
-        .from('user_settings' as any) // Type assertion to bypass TypeScript error temporarily
+        .from('user_settings' as any)
         .upsert(settingsToUpsert);
     }
     

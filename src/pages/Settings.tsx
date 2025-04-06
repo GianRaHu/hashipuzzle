@@ -11,6 +11,7 @@ import { loadUserSettings, saveUserSettings } from '@/utils/userSettings';
 import AccountTab from '@/components/settings/AccountTab';
 import GameTab from '@/components/settings/GameTab';
 import AppearanceTab from '@/components/settings/AppearanceTab';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -23,7 +24,9 @@ const Settings = () => {
     hapticFeedback: true,
     backgroundMusic: false,
     volume: 50,
-    showTimer: true
+    showTimer: true,
+    showBestTime: true,
+    themeMode: 'system' as 'light' | 'dark' | 'system'
   });
   
   // Load user and settings
@@ -43,7 +46,9 @@ const Settings = () => {
           hapticFeedback: userSettings.hapticFeedback ?? true,
           backgroundMusic: userSettings.backgroundMusic ?? false,
           volume: userSettings.volume ?? 50,
-          showTimer: userSettings.showTimer ?? true
+          showTimer: userSettings.showTimer ?? true,
+          showBestTime: userSettings.showBestTime ?? true,
+          themeMode: userSettings.themeMode ?? 'system'
         });
         
         // Apply the settings
@@ -73,6 +78,28 @@ const Settings = () => {
     saveSettings(newSettings);
   };
   
+  // Handle timer visibility setting change
+  const toggleShowTimer = () => {
+    const newSettings = {
+      ...settings,
+      showTimer: !settings.showTimer
+    };
+    
+    setSettings(newSettings);
+    saveSettings(newSettings);
+  };
+  
+  // Handle best time visibility setting change
+  const toggleShowBestTime = () => {
+    const newSettings = {
+      ...settings,
+      showBestTime: !settings.showBestTime
+    };
+    
+    setSettings(newSettings);
+    saveSettings(newSettings);
+  };
+  
   // Handle background music setting change
   const toggleBackgroundMusic = () => {
     const newSettings = {
@@ -82,17 +109,6 @@ const Settings = () => {
     
     // Update the audio player state
     audioManager.toggle(newSettings.backgroundMusic);
-    
-    setSettings(newSettings);
-    saveSettings(newSettings);
-  };
-
-  // Handle timer visibility setting change
-  const toggleShowTimer = () => {
-    const newSettings = {
-      ...settings,
-      showTimer: !settings.showTimer
-    };
     
     setSettings(newSettings);
     saveSettings(newSettings);
@@ -112,6 +128,27 @@ const Settings = () => {
     
     setSettings(newSettings);
     saveSettings(newSettings);
+  };
+  
+  // Handle theme change
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    const newSettings = {
+      ...settings,
+      themeMode: theme
+    };
+    
+    setSettings(newSettings);
+    saveSettings(newSettings);
+    
+    // Apply theme change
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', prefersDark);
+      localStorage.removeItem('theme');
+    } else {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('theme', theme);
+    }
   };
   
   // Save settings
@@ -169,6 +206,9 @@ const Settings = () => {
             settings={settings}
             toggleHapticFeedback={toggleHapticFeedback}
             toggleShowTimer={toggleShowTimer}
+            toggleShowBestTime={toggleShowBestTime}
+            toggleBackgroundMusic={toggleBackgroundMusic}
+            handleVolumeChange={handleVolumeChange}
           />
         </TabsContent>
         
@@ -176,8 +216,7 @@ const Settings = () => {
         <TabsContent value="appearance" className="space-y-4">
           <AppearanceTab 
             settings={settings}
-            toggleBackgroundMusic={toggleBackgroundMusic}
-            handleVolumeChange={handleVolumeChange}
+            handleThemeChange={handleThemeChange}
           />
         </TabsContent>
       </Tabs>

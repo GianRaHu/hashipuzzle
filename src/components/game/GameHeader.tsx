@@ -5,6 +5,7 @@ import { Home, CornerUpLeft, RotateCcw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/storage';
 import HelpDialog from './HelpDialog';
+import { loadUserSettings } from '@/utils/userSettings';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,19 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   setShowRestartDialog
 }) => {
   const navigate = useNavigate();
+  const [showTimer, setShowTimer] = React.useState(true);
+  const [showBestTime, setShowBestTime] = React.useState(true);
+
+  // Load user settings for timer and best time visibility
+  React.useEffect(() => {
+    const loadSettings = async () => {
+      const userSettings = await loadUserSettings();
+      setShowTimer(userSettings.showTimer ?? true);
+      setShowBestTime(userSettings.showBestTime ?? true);
+    };
+    
+    loadSettings();
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background z-50 border-b border-border/10 shadow-sm">
@@ -52,20 +66,22 @@ const GameHeader: React.FC<GameHeaderProps> = ({
           <Home className="h-5 w-5" />
         </Button>
         
-        <div className="flex gap-2 items-center text-sm">
-          <Clock className="h-4 w-4 text-primary" />
-          <span>{formatTime(timer)}</span>
-          {bestTime > 0 && (
-            <span className="text-muted-foreground text-xs">
-              Best: {formatTime(bestTime)}
-            </span>
-          )}
-          {!gameStarted && timer === 0 && (
-            <span className="text-xs text-muted-foreground italic ml-1">
-              (tap to start)
-            </span>
-          )}
-        </div>
+        {showTimer && (
+          <div className="flex gap-2 items-center text-sm">
+            <Clock className="h-4 w-4 text-primary" />
+            <span>{formatTime(timer)}</span>
+            {showBestTime && bestTime > 0 && (
+              <span className="text-muted-foreground text-xs">
+                Best: {formatTime(bestTime)}
+              </span>
+            )}
+            {!gameStarted && timer === 0 && (
+              <span className="text-xs text-muted-foreground italic ml-1">
+                (tap to start)
+              </span>
+            )}
+          </div>
+        )}
         
         <div className="flex gap-1">
           <Button 
