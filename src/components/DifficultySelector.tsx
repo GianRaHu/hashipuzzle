@@ -22,9 +22,9 @@ const DifficultySelector: React.FC<DifficultySelectorProps> = ({ onSelect }) => 
     if (onSelect) {
       onSelect(difficulty);
     } else {
-      // Force regenerate a new puzzle by adding a timestamp to the URL
-      const timestamp = Date.now();
-      navigate(`/game/${difficulty}?t=${timestamp}`);
+      // Generate a seed right here that will be used consistently
+      const seed = Math.floor(Math.random() * 1000000);
+      navigate(`/game/${difficulty}?seed=${seed}`);
     }
   };
 

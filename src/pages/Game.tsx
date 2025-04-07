@@ -34,6 +34,13 @@ const Game: React.FC = () => {
   const advancedTacticsParam = urlParams.get('advancedTactics');
   const initialAdvancedTactics = advancedTacticsParam === 'true';
   
+  console.log(`Game page loaded with difficulty: ${difficulty}, seed: ${initialSeed}`);
+  
+  // Log all URL parameters for debugging
+  urlParams.forEach((value, key) => {
+    console.log(`URL parameter: ${key} = ${value}`);
+  });
+  
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [restartConfirmOpen, setRestartConfirmOpen] = useState<boolean>(false);
   const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
@@ -61,6 +68,12 @@ const Game: React.FC = () => {
   const stats = getStats();
   const bestTime = stats.bestTime[difficulty as string] || 0;
 
+  // Update extended stats function
+  const updateExtendedStats = (difficultyLevel: string, completionTime?: number | null, completed: boolean = false) => {
+    console.log(`Updating extended stats for ${difficultyLevel} - Time: ${completionTime}, Completed: ${completed}`);
+    // Stats updating logic is handled elsewhere
+  };
+
   // Custom hooks
   const {
     puzzle,
@@ -76,7 +89,7 @@ const Game: React.FC = () => {
     initialSeed,
     initialGridSize,
     initialAdvancedTactics,
-    updateExtendedStats: () => {} // Will be replaced with the actual function
+    updateExtendedStats
   });
 
   const {
@@ -85,7 +98,7 @@ const Game: React.FC = () => {
     handlePuzzleUpdate,
     handleContinueAnyway,
     handleUndo,
-    updateExtendedStats
+    updateExtendedStats: gameLogicUpdateStats
   } = useGameLogic({
     puzzle,
     setPuzzle,
@@ -95,16 +108,6 @@ const Game: React.FC = () => {
     triggerHapticFeedback,
     validDifficulty,
     setShowCompletionModal
-  });
-
-  // Connect the updateExtendedStats function
-  usePuzzleGenerator({
-    difficulty,
-    validDifficulty,
-    initialSeed,
-    initialGridSize,
-    initialAdvancedTactics,
-    updateExtendedStats
   });
 
   const timer = useGameTimer(puzzle, gameCompleted, loading, gameStarted);

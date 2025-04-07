@@ -55,13 +55,18 @@ export const savePuzzle = (puzzle: Puzzle): void => {
     const history = localStorage.getItem('hashi_game_history');
     const gameHistory: GameHistoryEntry[] = history ? JSON.parse(history) : [];
     
-    // Add to history and limit to last 50 games
-    gameHistory.unshift(historyEntry);
-    if (gameHistory.length > 50) {
-      gameHistory.pop();
-    }
+    // Only add to history if it's not already there with the same seed
+    const alreadyExists = gameHistory.some(entry => entry.seed === puzzle.seed);
     
-    localStorage.setItem('hashi_game_history', JSON.stringify(gameHistory));
+    if (!alreadyExists) {
+      // Add to history and limit to last 50 games
+      gameHistory.unshift(historyEntry);
+      if (gameHistory.length > 50) {
+        gameHistory.pop();
+      }
+      
+      localStorage.setItem('hashi_game_history', JSON.stringify(gameHistory));
+    }
   }
 };
 

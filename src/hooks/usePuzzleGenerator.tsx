@@ -46,7 +46,7 @@ export const usePuzzleGenerator = ({
       
       setTimeout(() => {
         try {
-          console.log(`Generating ${isReset ? 'new' : ''} puzzle with difficulty: ${validDifficulty}`);
+          console.log(`Generating ${isReset ? 'new' : ''} puzzle with difficulty: ${validDifficulty}, seed: ${storedSeed}`);
           
           // Create custom options if needed
           const customOptions = validDifficulty === 'custom' || initialGridSize || initialAdvancedTactics !== undefined 
@@ -75,6 +75,7 @@ export const usePuzzleGenerator = ({
           // Store the seed for future resets if we're not resetting
           if (!isReset && storedSeed === undefined && newPuzzle.seed !== undefined) {
             setStoredSeed(newPuzzle.seed);
+            console.log(`Stored new seed: ${newPuzzle.seed} for future resets`);
           }
           
           clearInterval(loadingInterval);
@@ -148,6 +149,7 @@ export const usePuzzleGenerator = ({
   useEffect(() => {
     // Store the initial seed when the component mounts
     if (initialSeed !== undefined) {
+      console.log(`Setting stored seed to initialSeed: ${initialSeed}`);
       setStoredSeed(initialSeed);
     }
     
