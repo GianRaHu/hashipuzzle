@@ -92,10 +92,12 @@
   .hashi-island {
     @apply w-9 h-9 rounded-full flex items-center justify-center bg-secondary font-medium text-foreground transition-all duration-300;
     touch-action: manipulation;
+    /* Remove any transparency effects on press */
+    -webkit-tap-highlight-color: transparent !important;
   }
   
   .hashi-island-selected {
-    @apply ring-1 ring-primary ring-offset-1 ring-offset-background;
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
   }
   
   .hashi-bridge {

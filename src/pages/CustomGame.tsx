@@ -46,7 +46,7 @@ const CustomGame = () => {
     if (!seed.trim()) {
       toast({
         title: "Seed required",
-        description: "Please enter a seed value",
+        description: "Please enter a seed code",
         variant: "destructive"
       });
       return;
@@ -79,26 +79,26 @@ const CustomGame = () => {
 
       <Tabs defaultValue="seed" className="w-full">
         <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-          <TabsTrigger value="seed">By Seed</TabsTrigger>
+          <TabsTrigger value="seed">By Seed Code</TabsTrigger>
           <TabsTrigger value="custom">Custom Configuration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="seed">
           <Card>
             <CardHeader>
-              <CardTitle>Generate by Seed</CardTitle>
+              <CardTitle>Open Game by Seed Code</CardTitle>
               <CardDescription>
-                Enter a seed value to generate a reproducible puzzle
+                Enter a seed code to open a specific puzzle
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSeedSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="seed">Seed Value</Label>
+                  <Label htmlFor="seed">Seed Code</Label>
                   <div className="flex gap-2">
                     <Input
                       id="seed"
-                      placeholder="Enter seed value"
+                      placeholder="Enter seed code"
                       value={seed}
                       onChange={(e) => setSeed(e.target.value)}
                       className="flex-1"
@@ -115,7 +115,7 @@ const CustomGame = () => {
                 </div>
 
                 <Button type="submit" className="w-full">
-                  Generate Puzzle
+                  Open Puzzle
                 </Button>
               </form>
             </CardContent>

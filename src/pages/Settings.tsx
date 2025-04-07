@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +9,7 @@ import audioManager from '@/utils/audio';
 import { loadUserSettings, saveUserSettings } from '@/utils/userSettings';
 import AccountTab from '@/components/settings/AccountTab';
 import GameTab from '@/components/settings/GameTab';
-import AppearanceTab from '@/components/settings/AppearanceTab';
+import ThemeTab from '@/components/settings/ThemeTab';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const Settings = () => {
@@ -190,8 +189,8 @@ const Settings = () => {
           <TabsTrigger value="game">
             <Vibrate className="w-4 h-4 mr-2" /> Game
           </TabsTrigger>
-          <TabsTrigger value="appearance">
-            <Palette className="w-4 h-4 mr-2" /> Appearance
+          <TabsTrigger value="theme">
+            <Palette className="w-4 h-4 mr-2" /> Theme
           </TabsTrigger>
         </TabsList>
         
@@ -212,9 +211,9 @@ const Settings = () => {
           />
         </TabsContent>
         
-        {/* Appearance Tab Content */}
-        <TabsContent value="appearance" className="space-y-4">
-          <AppearanceTab 
+        {/* Theme Tab Content (renamed from Appearance) */}
+        <TabsContent value="theme" className="space-y-4">
+          <ThemeTab 
             settings={settings}
             handleThemeChange={handleThemeChange}
           />

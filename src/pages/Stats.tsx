@@ -28,12 +28,36 @@ const Stats: React.FC = () => {
       if (data.user) {
         loadExtendedStats(data.user.id);
       } else {
+        // Create some local extended stats from the game history
+        createLocalExtendedStats();
         setLoading(false);
       }
     };
     
     checkUser();
   }, []);
+  
+  // Create local extended stats from game history
+  const createLocalExtendedStats = () => {
+    try {
+      // Convert local game history to extended stats format
+      const localExtendedStats = gameHistory.map(game => {
+        return {
+          difficulty: game.difficulty,
+          completion_time: null, // We don't have this in history
+          completed: true, // Assume completed games are in history
+          date_created: game.date,
+          seed: game.seed,
+          user_id: 'local'
+        };
+      });
+      
+      setExtendedStats(localExtendedStats);
+    } catch (error) {
+      console.error('Error creating local extended stats:', error);
+      setExtendedStats([]);
+    }
+  };
   
   const loadExtendedStats = async (userId: string) => {
     try {
@@ -61,12 +85,15 @@ const Stats: React.FC = () => {
     
     if (user) {
       loadExtendedStats(user.id);
+    } else {
+      createLocalExtendedStats();
     }
   };
   
   const clearGameHistory = () => {
     localStorage.removeItem('hashi_game_history');
     setGameHistory([]);
+    createLocalExtendedStats(); // Update extended stats after clearing history
     toast({
       title: "History cleared",
       description: "Your game history has been cleared."
@@ -106,9 +133,12 @@ const Stats: React.FC = () => {
             <Card className="p-8 text-center">
               <p className="text-lg mb-2">No detailed statistics available</p>
               <p className="text-muted-foreground">
-                {user 
-                  ? "Complete some games to see detailed statistics."
-                  : "Sign in to track and view detailed statistics across devices."}
+                Complete some games to see detailed statistics.
+                {!user && (
+                  <span className="block mt-2">
+                    Sign in to sync your statistics across devices.
+                  </span>
+                )}
               </p>
             </Card>
           )}
