@@ -56,20 +56,15 @@ export const usePuzzleGenerator = ({
               }
             : undefined;
           
-          // For 'custom' difficulty, we'll use 'medium' as the base and apply custom settings
-          const difficultyToUse = validDifficulty === 'custom' ? 'medium' : validDifficulty;
+          // For 'custom' difficulty, use 'medium' as the base difficulty level
+          // BUT ONLY if we don't have a seed - if we have a seed, maintain the original difficulty
+          const difficultyToUse = (validDifficulty === 'custom' && !storedSeed) ? 'medium' : validDifficulty;
           
           // Always use the stored seed for reset when a seed was initially provided
           // This ensures the same puzzle is regenerated
-          let seedToUse: number | undefined;
+          let seedToUse = storedSeed;
           
-          if (storedSeed !== undefined) {
-            // Always use the stored seed for consistency
-            seedToUse = storedSeed;
-          } else if (!isReset) {
-            // Only generate a new seed on the initial puzzle generation (not reset)
-            seedToUse = undefined; // This will make the generator create a random seed
-          }
+          console.log(`Using seed: ${seedToUse}, difficulty: ${difficultyToUse}`);
           
           const newPuzzle = generatePuzzle(
             difficultyToUse as 'easy' | 'medium' | 'hard' | 'expert', 

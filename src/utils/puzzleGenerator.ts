@@ -26,6 +26,19 @@ const seededRandom = (seed: number) => {
   };
 };
 
+// Create deterministic ID generator based on seed
+const createDeterministicIdGenerator = (seed: number) => {
+  const random = seededRandom(seed);
+  let counter = 0;
+  
+  return () => {
+    counter++;
+    // Combine counter with random value for uniqueness while maintaining determinism
+    const value = Math.floor(random() * 1000000) + counter;
+    return `id_${value}`;
+  };
+};
+
 // Check if a position is valid for a new island
 const isValidPosition = (
   row: number, 
@@ -273,19 +286,6 @@ const verifyUniqueSolution = (puzzle: Puzzle): boolean => {
   }
   
   return hasReasonableValues;
-};
-
-// Create deterministic ID generator based on seed
-const createDeterministicIdGenerator = (seed: number) => {
-  const random = seededRandom(seed);
-  let counter = 0;
-  
-  return () => {
-    counter++;
-    // Combine counter with random value for uniqueness while maintaining determinism
-    const value = Math.floor(random() * 1000000) + counter;
-    return `id_${value}`;
-  };
 };
 
 export const generatePuzzle = (

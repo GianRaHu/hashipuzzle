@@ -22,6 +22,25 @@ const CustomGame = () => {
     advancedTactics: false
   });
 
+  // Helper function to normalize seed input to a stable number
+  const normalizeSeed = (input: string): number => {
+    if (!input.trim()) {
+      return 0;
+    }
+
+    // Try to parse as a number first
+    const numericSeed = Number(input);
+    if (!isNaN(numericSeed)) {
+      return Math.abs(numericSeed);
+    }
+
+    // If not a number, convert string to a consistent numeric hash
+    return Math.abs(input.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0));
+  };
+
   const handleSeedSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!seed.trim()) {
@@ -33,11 +52,8 @@ const CustomGame = () => {
       return;
     }
 
-    // Convert seed to a number
-    const seedNumber = parseInt(seed, 10) || Math.abs(seed.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0));
+    // Convert seed to a stable number
+    const seedNumber = normalizeSeed(seed);
     
     // For seeded games, we pass ONLY the seed - no other parameters
     // to ensure complete determinism from the seed alone
@@ -50,11 +66,8 @@ const CustomGame = () => {
   };
 
   const handleCreateCustomGame = () => {
-    // Get the timestamp to ensure a fresh puzzle generation
-    const timestamp = Date.now();
-    
-    // Pass gridSize and advanced tactics as URL parameters
-    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}&t=${timestamp}`);
+    // For custom config, we pass the grid size and advanced tactics
+    navigate(`/game/custom?gridSize=${config.gridSize}&advancedTactics=${config.advancedTactics}`);
   };
 
   return (
