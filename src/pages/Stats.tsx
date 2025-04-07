@@ -40,19 +40,27 @@ const Stats: React.FC = () => {
   // Create local extended stats from game history
   const createLocalExtendedStats = () => {
     try {
-      // Convert local game history to extended stats format
-      const localExtendedStats = gameHistory.map(game => {
+      // Process local stats to create extended stats
+      const difficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+      const stats = difficulties.map(difficulty => {
+        const gamesPlayed = localStats.difficultyGamesPlayed?.[difficulty] || 0;
+        const totalTime = localStats.totalTime?.[difficulty] || 0;
+        const avgTime = gamesPlayed > 0 ? Math.floor(totalTime / gamesPlayed) : null;
+        
         return {
-          difficulty: game.difficulty,
-          completion_time: null, // We don't have this in history
-          completed: true, // Assume completed games are in history
-          date_created: game.date,
-          seed: game.seed,
+          id: `local-${difficulty}`,
+          difficulty,
+          games_played: gamesPlayed,
+          games_won: gamesPlayed, // Assuming all completed games are won in local storage
+          total_time: totalTime,
+          avg_completion_time: avgTime,
+          best_completion_time: localStats.bestTime[difficulty] || null,
+          best_time_date: null,
           user_id: 'local'
         };
       });
       
-      setExtendedStats(localExtendedStats);
+      setExtendedStats(stats);
     } catch (error) {
       console.error('Error creating local extended stats:', error);
       setExtendedStats([]);
@@ -127,20 +135,8 @@ const Stats: React.FC = () => {
             <div className="flex justify-center items-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : extendedStats.length > 0 ? (
-            <StatsDetailedView extendedStats={extendedStats} />
           ) : (
-            <Card className="p-8 text-center">
-              <p className="text-lg mb-2">No detailed statistics available</p>
-              <p className="text-muted-foreground">
-                Complete some games to see detailed statistics.
-                {!user && (
-                  <span className="block mt-2">
-                    Sign in to sync your statistics across devices.
-                  </span>
-                )}
-              </p>
-            </Card>
+            <StatsDetailedView extendedStats={extendedStats} />
           )}
         </TabsContent>
         
