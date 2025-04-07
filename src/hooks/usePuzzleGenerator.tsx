@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Puzzle } from '../utils/gameLogic';
 import { generatePuzzle } from '../utils/puzzleGenerator';
@@ -56,9 +55,10 @@ export const usePuzzleGenerator = ({
               }
             : undefined;
           
-          // For 'custom' difficulty, use 'medium' as the base difficulty level
-          // BUT ONLY if we don't have a seed - if we have a seed, maintain the original difficulty
-          const difficultyToUse = (validDifficulty === 'custom' && !storedSeed) ? 'medium' : validDifficulty;
+          // If we have a seed, use the stored difficulty
+          // Otherwise use the current difficulty
+          // This ensures seed-based games are consistent no matter which path they're opened from
+          let difficultyToUse = validDifficulty;
           
           // Always use the stored seed for reset when a seed was initially provided
           // This ensures the same puzzle is regenerated

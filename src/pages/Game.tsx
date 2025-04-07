@@ -1,7 +1,7 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getStats } from '../utils/storage';
+import { getStats, isFirstTimeUser } from '../utils/storage';
 import { useToast } from '@/hooks/use-toast';
 import { hapticFeedback } from '../utils/haptics';
 import { usePuzzleGenerator } from '@/hooks/usePuzzleGenerator';
@@ -14,6 +14,7 @@ import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import ConnectivityAlert from '../components/ConnectivityAlert';
 import GameLoading from '@/components/game/GameLoading';
+import FirstTimeTutorial from '@/components/tutorial/FirstTimeTutorial';
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const Game: React.FC = () => {
   const [showConnectionAlert, setShowConnectionAlert] = useState<boolean>(false);
   const [userOverrodeConnectivity, setUserOverrodeConnectivity] = useState<boolean>(false);
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
+  const [showTutorial, setShowTutorial] = useState<boolean>(false);
   
   const validDifficulties = ['easy', 'medium', 'hard', 'expert', 'custom'];
   const validDifficulty = validDifficulties.includes(difficulty || '') 
@@ -53,6 +55,13 @@ const Game: React.FC = () => {
     : 'easy';
   
   const settings = useGameSettings();
+  
+  useEffect(() => {
+    // Check if this is the user's first time playing
+    if (isFirstTimeUser()) {
+      setShowTutorial(true);
+    }
+  }, []);
   
   // Handle haptic feedback on bridge placement
   const triggerHapticFeedback = useCallback((bridgeCount: number) => {
@@ -188,6 +197,12 @@ const Game: React.FC = () => {
             onClose={() => setShowCompletionModal(false)}
           />
         )}
+
+        {/* First time tutorial */}
+        <FirstTimeTutorial
+          open={showTutorial}
+          onClose={() => setShowTutorial(false)}
+        />
       </main>
     </div>
   );

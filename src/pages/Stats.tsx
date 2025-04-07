@@ -28,7 +28,7 @@ const Stats: React.FC = () => {
       if (data.user) {
         loadExtendedStats(data.user.id);
       } else {
-        // Create some local extended stats from the game history
+        // Create local extended stats from the game history
         createLocalExtendedStats();
         setLoading(false);
       }
@@ -41,7 +41,7 @@ const Stats: React.FC = () => {
   const createLocalExtendedStats = () => {
     try {
       // Process local stats to create extended stats
-      const difficulties = ['easy', 'medium', 'hard', 'expert', 'master'];
+      const difficulties = ['easy', 'medium', 'hard', 'expert'];
       const stats = difficulties.map(difficulty => {
         const gamesPlayed = localStats.difficultyGamesPlayed?.[difficulty] || 0;
         const totalTime = localStats.totalTime?.[difficulty] || 0;
@@ -169,12 +169,23 @@ const Stats: React.FC = () => {
               ) : (
                 <div className="space-y-2">
                   {gameHistory.map((game, index) => (
-                    <div key={index} className="p-3 border rounded-md flex justify-between items-center">
+                    <div key={index} className="p-3 border rounded-md flex justify-between">
                       <div>
                         <p className="font-medium capitalize">{game.difficulty}</p>
                         <p className="text-sm text-muted-foreground">Seed: {game.seed}</p>
                       </div>
-                      <span className="text-sm text-muted-foreground">{game.date}</span>
+                      <div className="text-right">
+                        <p className="text-sm">{game.date}</p>
+                        <p className="text-sm text-muted-foreground capitalize">
+                          {game.status === 'completed' ? (
+                            <span className="text-green-500">Completed {game.time ? `(${formatTime(game.time)})` : ''}</span>
+                          ) : game.status === 'in-progress' ? (
+                            <span className="text-amber-500">In progress</span>
+                          ) : (
+                            <span className="text-gray-500">Generated</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>

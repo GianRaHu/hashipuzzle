@@ -12,7 +12,6 @@ export interface GameStats {
     medium?: number;
     hard?: number;
     expert?: number;
-    master?: number;
     [key: string]: number | undefined;
   };
   // Track games played per difficulty
@@ -38,6 +37,8 @@ export interface GameHistoryEntry {
   seed: number;
   difficulty: string;
   date: string;
+  status: 'generated' | 'in-progress' | 'completed';
+  time?: number;
 }
 
 // Save puzzle to local storage
@@ -49,24 +50,29 @@ export const savePuzzle = (puzzle: Puzzle): void => {
     const historyEntry: GameHistoryEntry = {
       seed: puzzle.seed,
       difficulty: puzzle.difficulty,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString(),
+      status: puzzle.solved ? 'completed' : puzzle.startTime ? 'in-progress' : 'generated',
+      time: puzzle.endTime && puzzle.startTime ? puzzle.endTime - puzzle.startTime : undefined
     };
     
     const history = localStorage.getItem('hashi_game_history');
     const gameHistory: GameHistoryEntry[] = history ? JSON.parse(history) : [];
     
     // Only add to history if it's not already there with the same seed
-    const alreadyExists = gameHistory.some(entry => entry.seed === puzzle.seed);
+    const existingEntryIndex = gameHistory.findIndex(entry => entry.seed === puzzle.seed);
     
-    if (!alreadyExists) {
-      // Add to history and limit to last 50 games
+    if (existingEntryIndex !== -1) {
+      // Update existing entry
+      gameHistory[existingEntryIndex] = historyEntry;
+    } else {
+      // Add new entry and limit to last 50 games
       gameHistory.unshift(historyEntry);
       if (gameHistory.length > 50) {
         gameHistory.pop();
       }
-      
-      localStorage.setItem('hashi_game_history', JSON.stringify(gameHistory));
     }
+    
+    localStorage.setItem('hashi_game_history', JSON.stringify(gameHistory));
   }
 };
 
@@ -87,22 +93,19 @@ export const getStats = (): GameStats => {
       easy: 0,
       medium: 0,
       hard: 0,
-      expert: 0,
-      master: 0
+      expert: 0
     },
     difficultyGamesPlayed: {
       easy: 0,
       medium: 0,
       hard: 0,
-      expert: 0,
-      master: 0
+      expert: 0
     },
     totalTime: {
       easy: 0,
       medium: 0,
       hard: 0,
-      expert: 0,
-      master: 0
+      expert: 0
     }
   };
 };
@@ -146,51 +149,18 @@ export const updateStats = (puzzle: Puzzle) => {
 
 // Format time in a readable way
 export const formatTime = (time: number): string => {
+  if (!time || isNaN(time)) return "00h 00m 00s";
+  
   const seconds = Math.floor((time / 1000) % 60);
   const minutes = Math.floor((time / (1000 * 60)) % 60);
   const hours = Math.floor((time / (1000 * 60 * 60)) % 24);
-  return `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
+  
+  return `${hours > 0 ? hours + 'h ' : ''}${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
 };
 
 // Format a date to a readable string
 export const formatDate = (date: Date): string => {
   return format(date, 'MMMM do, yyyy');
-};
-
-// Check if the daily challenge for a specific date is completed
-export const isDailyCompleted = (date?: Date): boolean => {
-  // If no date is provided, use today's date
-  const targetDate = date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-  const completedDates = localStorage.getItem('daily_completed_dates');
-  
-  if (!completedDates) return false;
-  
-  const datesArray = JSON.parse(completedDates);
-  return datesArray.includes(targetDate);
-};
-
-// Set the daily challenge as completed
-export const setDailyCompleted = (): void => {
-  const today = new Date().toISOString().split('T')[0];
-  localStorage.setItem('daily_completed_date', today);
-  
-  // Update streak
-  const stats = getStats();
-  const lastStreakDate = localStorage.getItem('last_streak_date');
-  const todayDate = new Date();
-  const yesterday = new Date(todayDate);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  if (lastStreakDate === yesterday.toISOString().split('T')[0]) {
-    // Continuing streak
-    stats.dailyStreak += 1;
-  } else if (lastStreakDate !== todayDate.toISOString().split('T')[0]) {
-    // Broken streak, start new
-    stats.dailyStreak = 1;
-  }
-  
-  localStorage.setItem('last_streak_date', todayDate.toISOString().split('T')[0]);
-  localStorage.setItem('hashi_stats', JSON.stringify(stats));
 };
 
 // Get game history
@@ -218,15 +188,23 @@ export const saveSettings = (settings: GameSettings): void => {
   document.documentElement.classList.toggle('dark', settings.darkMode);
 };
 
+// Check if this is the first time the user is playing
+export const isFirstTimeUser = (): boolean => {
+  const firstTimeFlag = localStorage.getItem('hashi_first_time');
+  if (!firstTimeFlag) {
+    localStorage.setItem('hashi_first_time', 'false');
+    return true;
+  }
+  return false;
+};
+
 // Clear all local data
 export const clearAllData = (): void => {
   const keys = [
     'hashi_stats',
     'hashi_game_history',
     'hashi_settings',
-    'daily_completed_date',
-    'daily_completed_dates',
-    'last_streak_date'
+    'hashi_first_time'
   ];
   
   // Clear all game-specific items
@@ -240,3 +218,4 @@ export const clearAllData = (): void => {
     }
   }
 };
+

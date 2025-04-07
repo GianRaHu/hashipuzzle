@@ -17,7 +17,7 @@ const GameStats: React.FC<GameStatsProps> = ({ stats }) => {
       <div className="p-4 rounded-lg border border-border/30">
         <h3 className="text-sm font-medium mb-3">Best Times</h3>
         <div className="space-y-2">
-          {['easy', 'medium', 'hard', 'expert', 'master'].map((difficulty) => (
+          {['easy', 'medium', 'hard', 'expert'].map((difficulty) => (
             <div key={difficulty} className="flex justify-between items-center">
               <span className="capitalize">{difficulty}</span>
               {stats.bestTime[difficulty] ? (

@@ -55,9 +55,9 @@ const CustomGame = () => {
     // Convert seed to a stable number
     const seedNumber = normalizeSeed(seed);
     
-    // For seeded games, we pass ONLY the seed - no other parameters
-    // to ensure complete determinism from the seed alone
-    navigate(`/game/custom?seed=${seedNumber}`);
+    // For seeded games, we use the 'medium' difficulty by default
+    // This ensures the game opens correctly with a standard difficulty
+    navigate(`/game/medium?seed=${seedNumber}`);
   };
 
   const generateRandomSeed = () => {

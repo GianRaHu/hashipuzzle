@@ -2,26 +2,26 @@
 // Difficulty settings - defines parameters for each difficulty level
 export const difficultySettings = {
   easy: {
-    size: { rows: 10, cols: 7 }, // Swapped from 7x10 to 10x7
-    islandCount: 12, // Adjust based on grid size
+    size: { rows: 10, cols: 7 },
+    islandCount: 12,
     maxValue: 3,
     advancedTactics: false
   },
   medium: {
-    size: { rows: 12, cols: 8 }, // Swapped from 8x12 to 12x8
-    islandCount: 20, // Adjust based on grid size
+    size: { rows: 12, cols: 8 },
+    islandCount: 20,
     maxValue: 4,
     advancedTactics: false
   },
   hard: {
-    size: { rows: 14, cols: 10 }, // Swapped from 10x14 to 14x10
-    islandCount: 30, // Adjust based on grid size
+    size: { rows: 14, cols: 10 },
+    islandCount: 30,
     maxValue: 5,
     advancedTactics: true
   },
   expert: {
-    size: { rows: 16, cols: 12 }, // Swapped from 12x16 to 16x12
-    islandCount: 40, // Adjust based on grid size
+    size: { rows: 16, cols: 12 },
+    islandCount: 40,
     maxValue: 6,
     advancedTactics: true
   }
