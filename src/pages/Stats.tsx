@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { getStats, getGameHistory } from '../utils/storage';
+import { getStats, getGameHistory, formatTime } from '../utils/storage';
 import GameStats from '../components/GameStats';
 import StatsResetDialog from '../components/StatsResetDialog';
 import StatsDetailedView from '../components/stats/StatsDetailedView';
