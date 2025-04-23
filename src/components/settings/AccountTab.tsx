@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { User, LogOut, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -83,7 +83,11 @@ const AccountTab: React.FC<AccountTabProps> = ({ user, loading }) => {
   };
   
   return (
-    <Card>
+    <Card className="opacity-50 pointer-events-none relative overflow-hidden">
+      <div className="absolute top-4 right-4 z-10">
+        <Badge variant="secondary">Coming soon</Badge>
+      </div>
+      
       <CardHeader>
         <CardTitle>Account</CardTitle>
         <CardDescription>{user ? "Manage your account settings" : "Sign in to sync your game progress across devices"}</CardDescription>
