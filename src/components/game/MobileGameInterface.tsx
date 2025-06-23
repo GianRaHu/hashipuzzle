@@ -52,7 +52,7 @@ const MobileGameInterface: React.FC<MobileGameInterfaceProps> = ({
   return (
     <>
       {/* Top Header - Always visible */}
-      <div className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-b z-40 safe-area-top">
+      <div className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-b z-40" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="flex items-center justify-between p-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={onHome}>
@@ -85,7 +85,7 @@ const MobileGameInterface: React.FC<MobileGameInterfaceProps> = ({
       </div>
 
       {/* Bottom Controls - Floating */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 z-40" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="p-3">
           <Card className="bg-background/95 backdrop-blur-sm border shadow-lg">
             <div className="p-3">
@@ -191,15 +191,6 @@ const MobileGameInterface: React.FC<MobileGameInterfaceProps> = ({
           </Card>
         </div>
       </div>
-
-      <style jsx>{`
-        .safe-area-top {
-          padding-top: env(safe-area-inset-top);
-        }
-        .safe-area-bottom {
-          padding-bottom: env(safe-area-inset-bottom);
-        }
-      `}</style>
     </>
   );
 };

@@ -9,7 +9,7 @@ import { useGameLogic } from '@/hooks/useGameLogic';
 import { useGameTimer } from '@/hooks/useGameTimer';
 import { useGameSettings } from '@/hooks/useGameSettings';
 
-import Board from '../components/Board';
+import EnhancedBoard from '../components/enhanced/EnhancedBoard';
 import GameHeader from '../components/game/GameHeader';
 import GameCompletedModal from '../components/game/GameCompletedModal';
 import ConnectivityAlert from '../components/ConnectivityAlert';
@@ -186,7 +186,7 @@ const Game: React.FC = () => {
         )}
         
         <div className="game-container w-full max-w-lg mx-auto">
-          <Board puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
+          <EnhancedBoard puzzle={puzzle} onUpdate={handlePuzzleUpdate} />
         </div>
         
         {gameCompleted && showCompletionModal && (
