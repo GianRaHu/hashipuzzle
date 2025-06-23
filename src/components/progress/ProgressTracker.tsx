@@ -16,12 +16,21 @@ interface Achievement {
 }
 
 interface ProgressTrackerProps {
-  stats: any;
+  stats: {
+    gamesPlayed: number;
+    gamesWon: number;
+    difficultyGamesPlayed?: Record<string, number>;
+    bestTime?: Record<string, number>;
+  };
   achievements: Achievement[];
 }
 
 const ProgressTracker: React.FC<ProgressTrackerProps> = ({ stats, achievements }) => {
-  const totalXP = Object.values(stats.difficultyGamesPlayed || {}).reduce((acc: number, curr: any) => acc + (curr * 10), 0);
+  // Calculate total XP with proper type checking
+  const totalXP = stats.difficultyGamesPlayed 
+    ? Object.values(stats.difficultyGamesPlayed).reduce((acc: number, curr: number) => acc + (curr * 10), 0)
+    : 0;
+  
   const currentLevel = Math.floor(totalXP / 100) + 1;
   const xpToNextLevel = 100 - (totalXP % 100);
   const levelProgress = (totalXP % 100);
@@ -62,7 +71,9 @@ const ProgressTracker: React.FC<ProgressTrackerProps> = ({ stats, achievements }
             <div className="space-y-2">
               {recentAchievements.map((achievement) => (
                 <div key={achievement.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
-                  <div className="text-amber-500">{achievement.icon}</div>
+                  <div className="text-amber-500">
+                    {typeof achievement.icon === 'string' ? <Award className="h-5 w-5" /> : achievement.icon}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{achievement.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{achievement.description}</p>
