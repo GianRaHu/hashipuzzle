@@ -171,8 +171,8 @@ const Game: React.FC = () => {
         showBestTime={settings.showBestTime}
       />
       
-      <main className="flex-1 pt-16 pb-6 px-2 flex flex-col items-center justify-center overflow-y-auto">
-        <h1 className="text-lg font-medium capitalize mb-4">
+      <main className="flex-1 pt-14 pb-4 px-2 flex flex-col items-center justify-start overflow-y-auto">
+        <h1 className="text-lg font-medium capitalize mb-3">
           {difficulty} Puzzle 
           {initialSeed && <span className="text-sm text-muted-foreground ml-2">(Seed: {initialSeed})</span>}
           {puzzle?.requiresAdvancedTactics && <span className="text-sm text-amber-500 ml-2">(Advanced)</span>}

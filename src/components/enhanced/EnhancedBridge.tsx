@@ -27,43 +27,43 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
   const isHorizontal = bridge.orientation === 'horizontal';
   const isDouble = bridge.count === 2;
   
-  // Adaptive bridge thickness based on grid size and device
+  // Thinner bridge thickness based on grid size and device
   const getBridgeThickness = () => {
     const gridArea = gridSize.rows * gridSize.cols;
     const isMobile = window.innerWidth < 768;
     
     if (isMobile) {
-      // Thicker bridges on mobile for better touch interaction
-      if (gridArea <= 42) return 4;
-      if (gridArea <= 96) return 3;
-      return 2;
-    } else {
+      // Thinner bridges on mobile
       if (gridArea <= 42) return 3;
       if (gridArea <= 96) return 2;
       return 2;
+    } else {
+      if (gridArea <= 42) return 2;
+      if (gridArea <= 96) return 2;
+      return 1;
     }
   };
 
   const bridgeThickness = getBridgeThickness();
   const bridgeSpacing = isDouble ? bridgeThickness + 1 : 0;
   
-  // Calculate island radius for proper spacing
+  // Calculate island radius for proper spacing - adjusted for smaller islands
   const getIslandRadius = () => {
     const gridArea = gridSize.rows * gridSize.cols;
     const isMobile = window.innerWidth < 768;
     
     if (isMobile) {
-      if (gridArea <= 42) return 24; // w-12 = 48px, radius = 24px
-      if (gridArea <= 96) return 20; // w-10 = 40px, radius = 20px
-      if (gridArea <= 140) return 18; // w-9 = 36px, radius = 18px
-      if (gridArea <= 192) return 16; // w-8 = 32px, radius = 16px
-      return 14; // w-7 = 28px, radius = 14px
+      if (gridArea <= 42) return 20; // w-10 = 40px, radius = 20px
+      if (gridArea <= 96) return 16; // w-8 = 32px, radius = 16px
+      if (gridArea <= 140) return 14; // w-7 = 28px, radius = 14px
+      if (gridArea <= 192) return 12; // w-6 = 24px, radius = 12px
+      return 10; // w-5 = 20px, radius = 10px
     } else {
-      if (gridArea <= 42) return 20;
-      if (gridArea <= 96) return 16;
-      if (gridArea <= 140) return 14;
-      if (gridArea <= 192) return 12;
-      return 10;
+      if (gridArea <= 42) return 16;
+      if (gridArea <= 96) return 12;
+      if (gridArea <= 140) return 10;
+      if (gridArea <= 192) return 8;
+      return 6;
     }
   };
 

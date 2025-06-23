@@ -29,25 +29,25 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
   const [touchStartTime, setTouchStartTime] = useState<number>(0);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   
-  // Adaptive sizing based on grid dimensions and device
+  // Smaller adaptive sizing based on grid dimensions and device
   const getIslandSize = () => {
     const gridArea = gridSize.rows * gridSize.cols;
     const isMobile = window.innerWidth < 768;
     
     if (isMobile) {
-      // Mobile sizes - larger for better touch interaction
-      if (gridArea <= 42) return { size: 'w-12 h-12', text: 'text-lg' };
-      if (gridArea <= 96) return { size: 'w-10 h-10', text: 'text-base' };
-      if (gridArea <= 140) return { size: 'w-9 h-9', text: 'text-sm' };
-      if (gridArea <= 192) return { size: 'w-8 h-8', text: 'text-sm' };
-      return { size: 'w-7 h-7', text: 'text-xs' };
-    } else {
-      // Desktop sizes
+      // Mobile sizes - reduced by about 15-20%
       if (gridArea <= 42) return { size: 'w-10 h-10', text: 'text-base' };
       if (gridArea <= 96) return { size: 'w-8 h-8', text: 'text-sm' };
       if (gridArea <= 140) return { size: 'w-7 h-7', text: 'text-xs' };
       if (gridArea <= 192) return { size: 'w-6 h-6', text: 'text-xs' };
       return { size: 'w-5 h-5', text: 'text-[10px]' };
+    } else {
+      // Desktop sizes - reduced by about 15-20%
+      if (gridArea <= 42) return { size: 'w-8 h-8', text: 'text-sm' };
+      if (gridArea <= 96) return { size: 'w-6 h-6', text: 'text-xs' };
+      if (gridArea <= 140) return { size: 'w-5 h-5', text: 'text-[10px]' };
+      if (gridArea <= 192) return { size: 'w-4 h-4', text: 'text-[8px]' };
+      return { size: 'w-3 h-3', text: 'text-[8px]' };
     }
   };
 
@@ -59,7 +59,7 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
   const xPos = island.col * cellSizeX + cellSizeX / 2;
   const yPos = island.row * cellSizeY + cellSizeY / 2;
   
-  // Connection state styling
+  // Connection state styling - only colors, no numbers
   const getConnectionState = () => {
     const connectionsNeeded = island.value;
     const actualConnections = island.connectedTo.length;
@@ -203,13 +203,6 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
       <span className={`${text} ${connectionState.text} font-bold`}>
         {island.value}
       </span>
-      
-      {/* Connection indicator for better feedback */}
-      {showConnections && island.connectedTo.length > 0 && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full text-[8px] text-white flex items-center justify-center">
-          {island.connectedTo.length}
-        </div>
-      )}
     </div>
   );
 };
