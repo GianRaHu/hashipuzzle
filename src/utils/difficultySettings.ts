@@ -1,39 +1,69 @@
 
-// Difficulty settings - defines parameters for each difficulty level
+// Enhanced difficulty settings with better progression and balance
 export const difficultySettings = {
   easy: {
-    size: { rows: 10, cols: 7 },
-    islandCount: 12,
+    size: { rows: 8, cols: 6 },
+    islandCount: 8,
     maxValue: 3,
-    advancedTactics: false
+    advancedTactics: false,
+    description: "Perfect for beginners",
+    estimatedTime: "2-5 minutes"
   },
   medium: {
-    size: { rows: 12, cols: 8 },
-    islandCount: 20,
+    size: { rows: 10, cols: 8 },
+    islandCount: 15,
     maxValue: 4,
-    advancedTactics: false
+    advancedTactics: false,
+    description: "Getting more challenging",
+    estimatedTime: "5-10 minutes"
   },
   hard: {
-    size: { rows: 14, cols: 10 },
-    islandCount: 30,
+    size: { rows: 12, cols: 10 },
+    islandCount: 25,
     maxValue: 5,
-    advancedTactics: true
+    advancedTactics: true,
+    description: "For experienced players",
+    estimatedTime: "10-20 minutes"
   },
   expert: {
-    size: { rows: 16, cols: 12 },
-    islandCount: 40,
+    size: { rows: 14, cols: 12 },
+    islandCount: 35,
     maxValue: 6,
-    advancedTactics: true
+    advancedTactics: true,
+    description: "Master level challenge",
+    estimatedTime: "20-40 minutes"
   }
 };
 
-// Custom grid size options for the UI
+// Enhanced custom grid size options for better mobile experience
 export const customGridSizeOptions = [
-  { label: "8x6", value: { rows: 8, cols: 6 } },
-  { label: "10x7", value: { rows: 10, cols: 7 } },
-  { label: "12x8", value: { rows: 12, cols: 8 } },
-  { label: "14x10", value: { rows: 14, cols: 10 } },
-  { label: "16x12", value: { rows: 16, cols: 12 } },
-  { label: "18x13", value: { rows: 18, cols: 13 } },
-  { label: "20x15", value: { rows: 20, cols: 15 } }
+  { label: "Small (6x5)", value: { rows: 6, cols: 5 }, description: "Quick puzzle" },
+  { label: "Medium (8x6)", value: { rows: 8, cols: 6 }, description: "Balanced size" },
+  { label: "Large (10x8)", value: { rows: 10, cols: 8 }, description: "More challenge" },
+  { label: "Extra Large (12x10)", value: { rows: 12, cols: 10 }, description: "Expert size" },
+  { label: "Massive (14x12)", value: { rows: 14, cols: 12 }, description: "Maximum challenge" }
 ];
+
+// Difficulty progression rewards and achievements
+export const difficultyRewards = {
+  easy: {
+    completionXP: 10,
+    perfectTimeBonus: 5,
+    achievements: ["First Steps", "Quick Learner"]
+  },
+  medium: {
+    completionXP: 25,
+    perfectTimeBonus: 10,
+    achievements: ["Getting Better", "Steady Progress"]
+  },
+  hard: {
+    completionXP: 50,
+    perfectTimeBonus: 20,
+    achievements: ["Advanced Player", "Logic Master"]
+  },
+  expert: {
+    completionXP: 100,
+    perfectTimeBonus: 40,
+    achievements: ["Expert Solver", "Bridge Master", "Ultimate Challenge"]
+  }
+};

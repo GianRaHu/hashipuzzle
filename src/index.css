@@ -76,9 +76,15 @@
     height: 100%;
     width: 100%;
   }
-  /* Better mobile buttons */
+  /* Better mobile buttons and touch interactions */
   button, a {
     -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Enhanced touch targets for mobile */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
@@ -89,19 +95,33 @@
     overflow-y: auto;
   }
   
+  /* Enhanced island styling for better mobile interaction */
   .hashi-island {
-    @apply w-9 h-9 rounded-full flex items-center justify-center bg-secondary font-medium text-foreground transition-all duration-300;
+    @apply w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-secondary font-medium text-foreground transition-all duration-300 touch-target;
     touch-action: manipulation;
     /* Remove any transparency effects on press */
     -webkit-tap-highlight-color: transparent !important;
+    /* Better shadow for depth */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  
+  .hashi-island:hover {
+    @apply scale-105;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
   .hashi-island-selected {
-    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background scale-110;
+    box-shadow: 0 6px 12px rgba(232, 48, 21, 0.2), 0 2px 4px rgba(232, 48, 21, 0.1);
   }
   
   .hashi-bridge {
-    @apply bg-primary/80 rounded-full transition-all;
+    @apply bg-primary/80 rounded-full transition-all duration-300;
+    box-shadow: 0 1px 3px rgba(232, 48, 21, 0.3);
+  }
+  
+  .hashi-bridge:hover {
+    @apply bg-primary scale-105;
   }
   
   .page-transition {
@@ -119,30 +139,101 @@
     touch-callout: none;
   }
   
-  /* Make difficulty cards smaller and fit better on mobile */
-  :root [class*="difficulty-card"] {
-    @apply py-2 max-w-xs mx-auto;
+  /* Enhanced difficulty cards for mobile */
+  .difficulty-card {
+    @apply py-3 px-4 max-w-none mx-auto transition-all duration-200;
+    min-height: 80px;
   }
   
-  /* Add portrait/landscape orientation utility classes */
+  .difficulty-card:active {
+    @apply scale-95;
+  }
+  
+  /* Responsive board container */
   .board-container {
-    @apply w-full h-full max-h-[80vh] max-w-[90vw] md:max-w-[80vw];
+    @apply w-full h-full max-h-[75vh] max-w-[95vw] md:max-w-[80vw];
+    /* Ensure proper aspect ratio maintenance on mobile */
+    aspect-ratio: auto;
   }
   
-  /* Game container styles */
+  /* Enhanced game container */
   .game-container {
-    @apply flex flex-col items-center w-full;
+    @apply flex flex-col items-center w-full px-2;
     max-width: min(100vw - 1rem, 600px);
     margin: 0 auto;
   }
   
-  /* Scrollable container */
+  /* Improved scrollable container */
   .scrollable-container {
-    @apply overflow-y-auto overscroll-contain max-h-[80vh] pb-24;
+    @apply overflow-y-auto overscroll-contain max-h-[85vh] pb-24;
+    /* Better momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Enhanced button animations */
+  .btn-hover {
+    @apply transition-all duration-200;
+  }
+  
+  .btn-hover:hover {
+    @apply scale-105 shadow-lg;
+  }
+  
+  .btn-hover:active {
+    @apply scale-95;
+  }
+  
+  /* Better card interactions */
+  .card-interactive {
+    @apply cursor-pointer transition-all duration-200 hover:shadow-md active:scale-98;
+  }
+  
+  /* Gradient text utilities */
+  .text-gradient {
+    @apply bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent;
+  }
+  
+  /* Enhanced focus states for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
   }
 }
 
 #root {
   @apply min-h-screen w-full overflow-hidden;
   min-height: 100dvh;
+}
+
+/* Custom animations for better UX */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 0.6s ease-in-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Enhanced loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0) 0%, 
+    rgba(255,255,255,0.2) 50%, 
+    rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
