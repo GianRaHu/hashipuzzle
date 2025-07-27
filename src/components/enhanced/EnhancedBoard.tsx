@@ -310,6 +310,14 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
   const length = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * 180 / Math.PI;
   
+  // Use same thickness calculation as EnhancedBridge
+  const getBridgeThickness = () => {
+    const gridArea = gridSize.rows * gridSize.cols;
+    if (gridArea <= 42) return 2;
+    if (gridArea <= 96) return 1.5;
+    return 1;
+  };
+
   return (
     <div
       className={`
@@ -320,7 +328,7 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
         left: `${startX}px`,
         top: `${startY}px`,
         width: `${length}px`,
-        height: '3px',
+        height: `${getBridgeThickness()}px`,
         opacity: 0.8,
         transformOrigin: '0 0',
         transform: `rotate(${angle}deg)`,
