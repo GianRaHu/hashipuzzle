@@ -44,29 +44,29 @@ const GameHeader: React.FC<GameHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background z-50 border-b border-border/10 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-sm z-50 border-b border-border/20 shadow-elegant">
       <div className="container flex justify-between items-center h-14 px-4 max-w-4xl mx-auto">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={() => navigate('/')}
-          className="rounded-full"
+          className="rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-200"
           aria-label="Back to home"
         >
           <Home className="h-5 w-5" />
         </Button>
         
         {showTimer && (
-          <div className="flex gap-2 items-center text-sm">
-            <Clock className="h-4 w-4 text-primary" />
-            <span>{formatTime(timer)}</span>
+          <div className="flex gap-2 items-center text-sm bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
+            <Clock className="h-4 w-4 text-primary animate-pulse-subtle" />
+            <span className="font-medium">{formatTime(timer)}</span>
             {showBestTime && bestTime > 0 && (
               <span className="text-muted-foreground text-xs">
                 Best: {formatTime(bestTime)}
               </span>
             )}
             {!gameStarted && timer === 0 && (
-              <span className="text-xs text-muted-foreground italic ml-1">
+              <span className="text-xs text-muted-foreground italic ml-1 animate-pulse">
                 (tap to start)
               </span>
             )}
@@ -79,7 +79,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             size="icon" 
             onClick={handleUndo}
             disabled={!canUndo}
-            className="rounded-full h-8 w-8"
+            className="rounded-full h-8 w-8 hover:bg-success/10 hover:text-success transition-all duration-200 disabled:opacity-50"
             aria-label="Undo"
           >
             <CornerUpLeft className="h-4 w-4" />
@@ -89,7 +89,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
             variant="ghost" 
             size="icon" 
             onClick={() => setShowRestartDialog(true)}
-            className="rounded-full h-8 w-8"
+            className="rounded-full h-8 w-8 hover:bg-warning/10 hover:text-warning transition-all duration-200"
             aria-label="Restart puzzle"
             title="Restart with same layout"
           >

@@ -56,7 +56,11 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				// Custom game colors
-				gameAccent: '#E83015',
+				gameAccent: 'hsl(var(--gameAccent))',
+				success: 'hsl(var(--success))',
+				warning: 'hsl(var(--warning))',
+				info: 'hsl(var(--info))',
+				primaryGlow: 'hsl(var(--primary-glow))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

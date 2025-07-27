@@ -167,14 +167,17 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
         flex items-center justify-center 
         font-bold 
         cursor-pointer 
-        transition-all duration-200 
+        transition-all duration-300 
         transform-gpu
-        hover:scale-110 
+        hover:scale-110 hover:shadow-xl
         active:scale-95
         touch-manipulation
         select-none
         shadow-lg
-        ${isDragging ? 'scale-110 z-50' : 'z-20'}
+        ${isDragging ? 'scale-110 z-50 shadow-2xl animate-pulse-subtle' : 'z-20'}
+        ${isSelected ? 'animate-pulse-soft scale-110' : ''}
+        ${isDragTarget ? 'animate-bounce-subtle scale-115 shadow-2xl' : ''}
+        ${isHighlighted ? 'scale-105 shadow-xl' : ''}
       `}
       style={{
         position: 'absolute',

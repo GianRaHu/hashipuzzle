@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 19 29% 76%; /* #D7C4BB */
+    --background: 25 25% 95%; /* Light warm background */
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
@@ -15,12 +15,13 @@
     --popover-foreground: 240 10% 3.9%;
     --primary: 9 86% 50%; /* #E83015 */
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 9 86% 65%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 220 70% 96%;
+    --accent-foreground: 220 90% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
@@ -28,29 +29,46 @@
     --ring: 9 86% 50%; /* #E83015 */
     --radius: 0.75rem;
     --gameAccent: 9 86% 50%; /* #E83015 */
+    --success: 142 71% 45%;
+    --warning: 48 96% 53%;
+    --info: 200 100% 50%;
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--accent)));
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 0 0% 11%; /* #1C1C1C */
-    --foreground: 0 0% 98%;
-    --card: 0 0% 13%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 13%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 9 86% 50%; /* #E83015 */
+    --background: 222 84% 4.9%; /* Rich dark background */
+    --foreground: 210 40% 98%;
+    --card: 222 84% 5.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 84% 5.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 9 86% 55%; /* Slightly brighter in dark mode */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --primary-glow: 9 86% 70%;
+    --secondary: 217 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 9 86% 50%; /* #E83015 */
-    --gameAccent: 9 86% 50%; /* #E83015 */
+    --border: 217 32.6% 17.5%;
+    --input: 217 32.6% 17.5%;
+    --ring: 9 86% 55%;
+    --gameAccent: 9 86% 55%;
+    --success: 142 71% 45%;
+    --warning: 48 96% 53%;
+    --info: 200 100% 50%;
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--accent)));
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.4);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.5);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
