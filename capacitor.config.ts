@@ -9,9 +9,14 @@ const config: CapacitorConfig = {
     url: 'https://9464df3c-5cea-4919-9737-0a39aca6b984.lovableproject.com?forceHideBadge=true',
     cleartext: true
   },
-  // Add proper status bar configuration for a better look on mobile
+  // Portrait-only smartphone configuration
   android: {
     backgroundColor: "#FFFFFF"
+  },
+  plugins: {
+    ScreenOrientation: {
+      orientation: "portrait"
+    }
   }
 };
 

@@ -27,52 +27,32 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
   const isHorizontal = bridge.orientation === 'horizontal';
   const isDouble = bridge.count === 2;
   
-  // Thinner bridge thickness based on grid size and device
+  // Bridge thickness optimized for portrait smartphones
   const getBridgeThickness = () => {
     const gridArea = gridSize.rows * gridSize.cols;
-    const isMobile = window.innerWidth < 768;
-    
-    if (isMobile) {
-      // Thinner bridges on mobile
-      if (gridArea <= 42) return 3;
-      if (gridArea <= 96) return 2;
-      return 2;
-    } else {
-      if (gridArea <= 42) return 2;
-      if (gridArea <= 96) return 2;
-      return 1;
-    }
+    if (gridArea <= 42) return 3;
+    if (gridArea <= 96) return 2;
+    return 2;
   };
 
   const bridgeThickness = getBridgeThickness();
   const bridgeSpacing = isDouble ? bridgeThickness + 1 : 0;
   
-  // Calculate island radius for proper spacing - adjusted for smaller islands
+  // Island radius optimized for portrait smartphones
   const getIslandRadius = () => {
     const gridArea = gridSize.rows * gridSize.cols;
-    const isMobile = window.innerWidth < 768;
-    
-    if (isMobile) {
-      if (gridArea <= 42) return 20; // w-10 = 40px, radius = 20px
-      if (gridArea <= 96) return 16; // w-8 = 32px, radius = 16px
-      if (gridArea <= 140) return 14; // w-7 = 28px, radius = 14px
-      if (gridArea <= 192) return 12; // w-6 = 24px, radius = 12px
-      return 10; // w-5 = 20px, radius = 10px
-    } else {
-      if (gridArea <= 42) return 16;
-      if (gridArea <= 96) return 12;
-      if (gridArea <= 140) return 10;
-      if (gridArea <= 192) return 8;
-      return 6;
-    }
+    if (gridArea <= 42) return 20; // w-10 = 40px, radius = 20px
+    if (gridArea <= 96) return 16; // w-8 = 32px, radius = 16px
+    if (gridArea <= 140) return 14; // w-7 = 28px, radius = 14px
+    if (gridArea <= 192) return 12; // w-6 = 24px, radius = 12px
+    return 10; // w-5 = 20px, radius = 10px
   };
 
   const islandRadius = getIslandRadius();
   
-  // Create larger click/touch area for better interaction
+  // Touch area optimized for portrait smartphones
   const getTouchAreaSize = () => {
-    const isMobile = window.innerWidth < 768;
-    return isMobile ? 16 : 12; // Larger touch area on mobile
+    return 16; // Optimized for portrait smartphone touch
   };
 
   const touchAreaSize = getTouchAreaSize();
