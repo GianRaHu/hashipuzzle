@@ -13,6 +13,7 @@ import EnhancedIsland from './EnhancedIsland';
 import EnhancedBridge from './EnhancedBridge';
 import GridBackground from '../GridBackground';
 import { useMediaQuery } from '@/hooks/use-mobile';
+import { hapticFeedback } from '@/utils/haptics';
 
 interface EnhancedBoardProps {
   puzzle: Puzzle;
@@ -29,10 +30,9 @@ const EnhancedBoard: React.FC<EnhancedBoardProps> = ({ puzzle, onUpdate }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
-  // Improved drag detection with adaptive thresholds
+  // Optimized drag threshold for portrait smartphone
   const getDragThreshold = () => {
-    const isMobile = window.innerWidth < 768;
-    return isMobile ? 12 : 8; // Higher threshold on mobile for better UX
+    return 8; // Consistent threshold for portrait smartphone
   };
 
   // Island interaction handlers
@@ -94,6 +94,9 @@ const EnhancedBoard: React.FC<EnhancedBoardProps> = ({ puzzle, onUpdate }) => {
     setIsPointerDown(true);
     setSelectedIsland(null); // Clear selection when starting drag
     
+    // Haptic feedback for drag start
+    hapticFeedback.light();
+    
     event.preventDefault();
   }, []);
 
@@ -102,6 +105,11 @@ const EnhancedBoard: React.FC<EnhancedBoardProps> = ({ puzzle, onUpdate }) => {
       if (canConnect(dragStartIsland, dragTargetIsland, puzzle.islands, puzzle.bridges)) {
         const updatedPuzzle = toggleBridge(dragStartIsland, dragTargetIsland, puzzle);
         onUpdate(updatedPuzzle);
+        // Haptic feedback for successful connection
+        hapticFeedback.medium();
+      } else {
+        // Haptic feedback for failed connection
+        hapticFeedback.light();
       }
     }
     
@@ -134,24 +142,16 @@ const EnhancedBoard: React.FC<EnhancedBoardProps> = ({ puzzle, onUpdate }) => {
     const relativeX = clientX - boardRect.left;
     const relativeY = clientY - boardRect.top;
     
-    // Adaptive detection radius based on grid size
+    // Optimized detection radius for portrait smartphone
     const getDetectionRadius = () => {
       const minGridSize = Math.min(puzzle.size.rows, puzzle.size.cols);
-      const isMobile = window.innerWidth < 768;
       
-      if (isMobile) {
-        if (minGridSize <= 6) return 60;
-        if (minGridSize <= 8) return 50;
-        if (minGridSize <= 10) return 40;
-        if (minGridSize <= 12) return 35;
-        return 30;
-      } else {
-        if (minGridSize <= 6) return 45;
-        if (minGridSize <= 8) return 36;
-        if (minGridSize <= 10) return 30;
-        if (minGridSize <= 12) return 26;
-        return 22;
-      }
+      // Larger detection radius for better touch targeting
+      if (minGridSize <= 6) return 65;
+      if (minGridSize <= 8) return 55;
+      if (minGridSize <= 10) return 45;
+      if (minGridSize <= 12) return 40;
+      return 35;
     };
     
     const detectionRadius = getDetectionRadius();
@@ -313,8 +313,8 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
   return (
     <div
       className={`
-        absolute pointer-events-none z-30 rounded-full transition-colors
-        ${canConnectToTarget ? 'bg-green-500' : 'bg-primary'}
+        absolute pointer-events-none z-30 rounded-full transition-all duration-200
+        ${canConnectToTarget ? 'bg-green-500 shadow-green-500/50' : 'bg-primary shadow-primary/50'}
       `}
       style={{
         left: `${startX}px`,

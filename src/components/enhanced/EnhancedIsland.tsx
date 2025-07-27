@@ -29,26 +29,16 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
   const [touchStartTime, setTouchStartTime] = useState<number>(0);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   
-  // Smaller adaptive sizing based on grid dimensions and device
+  // Optimized sizing for portrait smartphone - smaller islands for better bridge visibility
   const getIslandSize = () => {
     const gridArea = gridSize.rows * gridSize.cols;
-    const isMobile = window.innerWidth < 768;
     
-    if (isMobile) {
-      // Mobile sizes - reduced by about 15-20%
-      if (gridArea <= 42) return { size: 'w-10 h-10', text: 'text-base' };
-      if (gridArea <= 96) return { size: 'w-8 h-8', text: 'text-sm' };
-      if (gridArea <= 140) return { size: 'w-7 h-7', text: 'text-xs' };
-      if (gridArea <= 192) return { size: 'w-6 h-6', text: 'text-xs' };
-      return { size: 'w-5 h-5', text: 'text-[10px]' };
-    } else {
-      // Desktop sizes - reduced by about 15-20%
-      if (gridArea <= 42) return { size: 'w-8 h-8', text: 'text-sm' };
-      if (gridArea <= 96) return { size: 'w-6 h-6', text: 'text-xs' };
-      if (gridArea <= 140) return { size: 'w-5 h-5', text: 'text-[10px]' };
-      if (gridArea <= 192) return { size: 'w-4 h-4', text: 'text-[8px]' };
-      return { size: 'w-3 h-3', text: 'text-[8px]' };
-    }
+    // Reduced island sizes for better bridge visibility
+    if (gridArea <= 42) return { size: 'w-8 h-8', text: 'text-sm' };
+    if (gridArea <= 96) return { size: 'w-7 h-7', text: 'text-xs' };
+    if (gridArea <= 140) return { size: 'w-6 h-6', text: 'text-xs' };
+    if (gridArea <= 192) return { size: 'w-5 h-5', text: 'text-[10px]' };
+    return { size: 'w-4 h-4', text: 'text-[8px]' };
   };
 
   const { size, text } = getIslandSize();
@@ -137,8 +127,8 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
     const dy = touch.clientY - dragStartRef.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Start drag if moved more than 8px (increased for better mobile UX)
-    if (distance > 8 && !isDragging) {
+    // Start drag if moved more than 5px (optimized for portrait smartphone)
+    if (distance > 5 && !isDragging) {
       setIsDragging(true);
       onDragStart(e);
     }
