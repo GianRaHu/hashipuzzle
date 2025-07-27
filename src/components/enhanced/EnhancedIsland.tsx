@@ -184,7 +184,8 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
-        touchAction: 'none'
+        touchAction: 'none',
+        pointerEvents: isDragging ? 'none' : 'auto'
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

@@ -27,16 +27,16 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
   const isHorizontal = bridge.orientation === 'horizontal';
   const isDouble = bridge.count === 2;
   
-  // Bridge thickness optimized for portrait smartphones
+  // Bridge thickness optimized for portrait smartphones - made thinner
   const getBridgeThickness = () => {
     const gridArea = gridSize.rows * gridSize.cols;
-    if (gridArea <= 42) return 3;
-    if (gridArea <= 96) return 2;
-    return 2;
+    if (gridArea <= 42) return 2;
+    if (gridArea <= 96) return 1.5;
+    return 1;
   };
 
   const bridgeThickness = getBridgeThickness();
-  const bridgeSpacing = isDouble ? bridgeThickness + 1 : 0;
+  const bridgeSpacing = isDouble ? bridgeThickness + 0.5 : 0;
   
   // Island radius optimized for portrait smartphones
   const getIslandRadius = () => {
