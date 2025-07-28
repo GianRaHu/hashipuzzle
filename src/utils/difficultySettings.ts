@@ -7,7 +7,7 @@ export const difficultySettings = {
     maxValue: 3,
     advancedTactics: false,
     description: "Perfect for beginners",
-    estimatedTime: "2-5 minutes"
+    estimatedTime: "0-2 minutes"
   },
   medium: {
     size: { rows: 10, cols: 8 },
@@ -15,7 +15,7 @@ export const difficultySettings = {
     maxValue: 4,
     advancedTactics: false,
     description: "Getting more challenging",
-    estimatedTime: "5-10 minutes"
+    estimatedTime: "1-3 minutes"
   },
   hard: {
     size: { rows: 12, cols: 10 },
@@ -23,7 +23,7 @@ export const difficultySettings = {
     maxValue: 5,
     advancedTactics: true,
     description: "For experienced players",
-    estimatedTime: "10-20 minutes"
+    estimatedTime: "2-5 minutes"
   },
   expert: {
     size: { rows: 14, cols: 12 },
@@ -31,7 +31,7 @@ export const difficultySettings = {
     maxValue: 6,
     advancedTactics: true,
     description: "Master level challenge",
-    estimatedTime: "20-40 minutes"
+    estimatedTime: "2-10 minutes"
   }
 };
 

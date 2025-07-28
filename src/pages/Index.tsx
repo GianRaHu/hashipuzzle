@@ -168,17 +168,6 @@ const Index: React.FC = () => {
         </Card>
       )}
 
-      {/* Bottom Navigation Hints */}
-      <div className="flex justify-center gap-6 text-xs text-muted-foreground mb-4">
-        <button onClick={() => navigate('/stats')} className="flex flex-col items-center gap-1 hover:text-foreground transition-colors">
-          <Trophy className="h-4 w-4" />
-          <span>Stats</span>
-        </button>
-        <button onClick={() => navigate('/settings')} className="flex flex-col items-center gap-1 hover:text-foreground transition-colors">
-          <Settings className="h-4 w-4" />
-          <span>Settings</span>
-        </button>
-      </div>
 
       {/* Tutorial Modal */}
       <FirstTimeTutorial
