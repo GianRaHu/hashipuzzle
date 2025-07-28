@@ -31,10 +31,11 @@ const Index: React.FC = () => {
     return { gamesPlayed, bestTime };
   };
 
-  const formatTime = (seconds: number) => {
-    if (!seconds) return null;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+  const formatTime = (milliseconds: number) => {
+    if (!milliseconds) return null;
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
