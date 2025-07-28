@@ -277,7 +277,7 @@ const EnhancedBoard: React.FC<EnhancedBoardProps> = ({ puzzle, onUpdate }) => {
   );
 };
 
-// Enhanced drag line with better visual feedback
+// Enhanced drag line with smooth directional animation
 interface EnhancedDragLineProps {
   startIsland: IslandType;
   dragPosition: { x: number, y: number };
@@ -296,10 +296,8 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
   if (!boardRef.current) return null;
   
   const boardRect = boardRef.current.getBoundingClientRect();
-  const cellSizeX = 100 / gridSize.cols;
-  const cellSizeY = 100 / gridSize.rows;
   
-  // Calculate exact center position of the starting island without any scaling offsets
+  // Calculate exact center position of the starting island
   const startX = (startIsland.col + 0.5) * (boardRect.width / gridSize.cols);
   const startY = (startIsland.row + 0.5) * (boardRect.height / gridSize.rows);
   
@@ -309,6 +307,10 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
   const dx = endX - startX;
   const dy = endY - startY;
   const length = Math.sqrt(dx * dx + dy * dy);
+  
+  // Prevent drawing very short lines to avoid rotation flicker
+  if (length < 10) return null;
+  
   const angle = Math.atan2(dy, dx) * 180 / Math.PI;
   
   // Use same thickness calculation as EnhancedBridge
@@ -322,18 +324,20 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
   return (
     <div
       className={`
-        absolute pointer-events-none z-30 rounded-full transition-all duration-200
-        ${canConnectToTarget ? 'bg-green-500 shadow-green-500/50' : 'bg-primary shadow-primary/50'}
+        absolute pointer-events-none z-30 rounded-full
+        transition-opacity duration-150 ease-out
+        ${canConnectToTarget ? 'bg-green-500' : 'bg-primary opacity-70'}
       `}
       style={{
         left: `${startX}px`,
         top: `${startY}px`,
         width: `${length}px`,
         height: `${getBridgeThickness()}px`,
-        opacity: 0.8,
-        transformOrigin: '0 0',
+        transformOrigin: '0 50%',
         transform: `rotate(${angle}deg)`,
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        boxShadow: canConnectToTarget 
+          ? '0 0 8px rgba(34, 197, 94, 0.4)' 
+          : '0 0 4px rgba(0,0,0,0.2)'
       }}
     />
   );
