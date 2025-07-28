@@ -90,8 +90,8 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
         {/* First bridge line */}
         <div
           className={`
-            absolute bg-primary transition-all duration-300 rounded-full hover:bg-primary/90 hover:scale-105 animate-bridge-draw
-            ${isHighlighted ? 'bg-primaryGlow shadow-xl ring-2 ring-primary scale-105' : 'hover:shadow-lg'}
+            absolute bg-primary transition-all duration-200 rounded-full hover:bg-primary/90
+            ${isHighlighted ? 'bg-primary shadow-lg ring-1 ring-primary/30' : 'hover:shadow-md'}
             ${isDouble ? '' : 'z-5'}
           `}
           style={{
@@ -108,8 +108,8 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
         {isDouble && (
           <div
             className={`
-              absolute bg-primary transition-all duration-300 rounded-full hover:bg-primary/90 hover:scale-105 animate-bridge-draw
-              ${isHighlighted ? 'bg-primaryGlow shadow-xl ring-2 ring-primary scale-105' : 'hover:shadow-lg'}
+              absolute bg-primary transition-all duration-200 rounded-full hover:bg-primary/90
+              ${isHighlighted ? 'bg-primary shadow-lg ring-1 ring-primary/30' : 'hover:shadow-md'}
             `}
             style={{
               left: `${actualStart}%`,
@@ -157,8 +157,8 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
         {/* First bridge line */}
         <div
           className={`
-            absolute bg-primary transition-all duration-300 rounded-full hover:bg-primary/90 hover:scale-105 animate-bridge-draw
-            ${isHighlighted ? 'bg-primaryGlow shadow-xl ring-2 ring-primary scale-105' : 'hover:shadow-lg'}
+            absolute bg-primary transition-all duration-200 rounded-full hover:bg-primary/90
+            ${isHighlighted ? 'bg-primary shadow-lg ring-1 ring-primary/30' : 'hover:shadow-md'}
             ${isDouble ? '' : 'z-5'}
           `}
           style={{
@@ -175,8 +175,8 @@ const EnhancedBridge: React.FC<EnhancedBridgeProps> = ({
         {isDouble && (
           <div
             className={`
-              absolute bg-primary transition-all duration-300 rounded-full hover:bg-primary/90 hover:scale-105 animate-bridge-draw
-              ${isHighlighted ? 'bg-primaryGlow shadow-xl ring-2 ring-primary scale-105' : 'hover:shadow-lg'}
+              absolute bg-primary transition-all duration-200 rounded-full hover:bg-primary/90
+              ${isHighlighted ? 'bg-primary shadow-lg ring-1 ring-primary/30' : 'hover:shadow-md'}
             `}
             style={{
               left: `${xCenter + bridgeSpacing/2}%`,

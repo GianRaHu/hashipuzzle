@@ -174,9 +174,9 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
         touch-manipulation
         select-none
         shadow-lg
-        ${isDragging ? 'scale-110 z-50 shadow-2xl animate-pulse-subtle' : 'z-20'}
-        ${isSelected ? 'animate-pulse-soft scale-110' : ''}
-        ${isDragTarget ? 'animate-bounce-subtle scale-115 shadow-2xl' : ''}
+        ${isDragging ? 'scale-110 z-50 shadow-2xl animate-gentle-pulse' : 'z-20'}
+        ${isSelected ? 'animate-gentle-pulse scale-110' : ''}
+        ${isDragTarget ? 'animate-gentle-bounce scale-115 shadow-2xl ring-4 ring-green-300' : ''}
         ${isHighlighted ? 'scale-105 shadow-xl' : ''}
       `}
       style={{
@@ -184,8 +184,7 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
         left: `${xPos}%`,
         top: `${yPos}%`,
         transform: 'translate(-50%, -50%)',
-        touchAction: 'none',
-        pointerEvents: isDragging ? 'none' : 'auto'
+        touchAction: 'none'
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

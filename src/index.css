@@ -141,6 +141,35 @@
   .hashi-bridge:hover {
     @apply bg-primary scale-105;
   }
+
+  /* Gentle animations for enhanced UI */
+  .animate-gentle-pulse {
+    animation: gentle-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-gentle-bounce {
+    animation: gentle-bounce 1s ease-in-out infinite;
+  }
+
+  @keyframes gentle-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes gentle-bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
   
   .page-transition {
     @apply transition-all duration-300 ease-in-out;
