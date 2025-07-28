@@ -299,8 +299,9 @@ const EnhancedDragLine: React.FC<EnhancedDragLineProps> = ({
   const cellSizeX = 100 / gridSize.cols;
   const cellSizeY = 100 / gridSize.rows;
   
-  const startX = (startIsland.col * cellSizeX + cellSizeX / 2) * boardRect.width / 100;
-  const startY = (startIsland.row * cellSizeY + cellSizeY / 2) * boardRect.height / 100;
+  // Calculate exact center position of the starting island without any scaling offsets
+  const startX = (startIsland.col + 0.5) * (boardRect.width / gridSize.cols);
+  const startY = (startIsland.row + 0.5) * (boardRect.height / gridSize.rows);
   
   const endX = dragPosition.x - boardRect.left;
   const endY = dragPosition.y - boardRect.top;

@@ -49,7 +49,7 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
   const xPos = island.col * cellSizeX + cellSizeX / 2;
   const yPos = island.row * cellSizeY + cellSizeY / 2;
   
-  // Connection state styling - only colors, no numbers
+  // Connection state styling with stable positioning
   const getConnectionState = () => {
     const connectionsNeeded = island.value;
     const actualConnections = island.connectedTo.length;
@@ -57,24 +57,27 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
     if (isSelected) {
       return {
         bg: 'bg-blue-500 dark:bg-blue-400',
-        ring: 'ring-2 ring-blue-300 ring-offset-2 ring-offset-background',
-        text: 'text-white'
+        ring: 'ring-2 ring-blue-300',
+        text: 'text-white',
+        glow: 'shadow-blue-500/50 shadow-lg'
       };
     }
     
     if (isDragTarget) {
       return {
         bg: 'bg-green-500 dark:bg-green-400',
-        ring: 'ring-2 ring-green-300 ring-offset-2 ring-offset-background',
-        text: 'text-white'
+        ring: 'ring-2 ring-green-300',
+        text: 'text-white',
+        glow: 'shadow-green-500/60 shadow-xl'
       };
     }
     
     if (isHighlighted) {
       return {
         bg: 'bg-amber-500 dark:bg-amber-400',
-        ring: 'ring-2 ring-amber-300 ring-offset-1 ring-offset-background',
-        text: 'text-white'
+        ring: 'ring-2 ring-amber-300',
+        text: 'text-white',
+        glow: 'shadow-amber-500/50 shadow-lg'
       };
     }
     
@@ -82,7 +85,8 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
       return {
         bg: 'bg-slate-100 dark:bg-slate-700',
         ring: 'ring-1 ring-slate-300 dark:ring-slate-500',
-        text: 'text-slate-900 dark:text-slate-100'
+        text: 'text-slate-900 dark:text-slate-100',
+        glow: ''
       };
     }
     
@@ -90,7 +94,8 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
       return {
         bg: 'bg-green-100 dark:bg-green-900/40',
         ring: 'ring-1 ring-green-400 dark:ring-green-500',
-        text: 'text-green-800 dark:text-green-200'
+        text: 'text-green-800 dark:text-green-200',
+        glow: ''
       };
     }
     
@@ -98,14 +103,16 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
       return {
         bg: 'bg-red-100 dark:bg-red-900/40',
         ring: 'ring-1 ring-red-400 dark:ring-red-500',
-        text: 'text-red-800 dark:text-red-200'
+        text: 'text-red-800 dark:text-red-200',
+        glow: ''
       };
     }
     
     return {
       bg: 'bg-orange-100 dark:bg-orange-900/40',
       ring: 'ring-1 ring-orange-400 dark:ring-orange-500',
-      text: 'text-orange-800 dark:text-orange-200'
+      text: 'text-orange-800 dark:text-orange-200',
+      glow: ''
     };
   };
 
@@ -163,21 +170,22 @@ const EnhancedIsland: React.FC<EnhancedIslandProps> = ({
         ${size} 
         ${connectionState.bg} 
         ${connectionState.ring}
+        ${connectionState.glow}
         rounded-full 
         flex items-center justify-center 
         font-bold 
         cursor-pointer 
-        transition-all duration-300 
+        transition-all duration-200 
         transform-gpu
-        hover:scale-110 hover:shadow-xl
-        active:scale-95
+        hover:brightness-110
+        active:brightness-90
         touch-manipulation
         select-none
-        shadow-lg
-        ${isDragging ? 'scale-110 z-50 shadow-2xl animate-gentle-pulse' : 'z-20'}
-        ${isSelected ? 'animate-gentle-pulse scale-110' : ''}
-        ${isDragTarget ? 'animate-gentle-bounce scale-115 shadow-2xl ring-4 ring-green-300' : ''}
-        ${isHighlighted ? 'scale-105 shadow-xl' : ''}
+        shadow-md
+        ${isDragging ? 'z-50 brightness-110' : 'z-20'}
+        ${isSelected ? 'animate-gentle-pulse' : ''}
+        ${isDragTarget ? 'animate-gentle-bounce' : ''}
+        ${isHighlighted ? 'brightness-110' : ''}
       `}
       style={{
         position: 'absolute',
